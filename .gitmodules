@@ -4,3 +4,6 @@
 [submodule "Trc492Lib/src/main/java/TrcFtcLib"]
 	path = Trc492Lib/src/main/java/TrcFtcLib
 	url = https://github.com/trc492/TrcFtcLib
+[submodule "OpenCVLib310"]
+	path = OpenCVLib310
+	url = https://github.com/trc492/OpenCVLib310
