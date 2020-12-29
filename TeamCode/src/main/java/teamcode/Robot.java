@@ -339,7 +339,7 @@ public class Robot
         TrcServo.printElapsedTime(globalTracer);
         TrcServo.setElapsedTimerEnabled(false);
         //
-        // Diable vision.
+        // Disable vision.
         //
         if (vuforiaVision != null)
         {
