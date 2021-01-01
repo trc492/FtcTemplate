@@ -288,7 +288,7 @@ public class VuforiaVision
             {
                 if (robotLocation != null)
                 {
-                    robot.blinkin.setNamedPattern(targetName);
+                    robot.blinkin.setPatternState(targetName, true);
                 }
                 else
                 {
@@ -345,7 +345,7 @@ public class VuforiaVision
         {
             if (robotLocation != null)
             {
-                robot.blinkin.setNamedPattern(lastImageName);
+                robot.blinkin.setPatternState(lastImageName, true);
             }
             else
             {
