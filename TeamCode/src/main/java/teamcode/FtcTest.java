@@ -229,7 +229,7 @@ public class FtcTest extends FtcTeleOp
         }
         else if (test == Test.PURE_PURSUIT_DRIVE)
         {
-            ((CmdPurePursuitDrive)testCommand).start(null, RobotInfo.PURE_PURSUIT_TEST_PATH);
+            ((CmdPurePursuitDrive)testCommand).start(RobotInfo.PURE_PURSUIT_TEST_PATH);
         }
     }   //startMode
 
