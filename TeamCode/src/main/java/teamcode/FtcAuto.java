@@ -226,7 +226,8 @@ public class FtcAuto extends FtcOpMode
 
         if (autoChoices.strategy == AutoStrategy.PURE_PURSUIT_DRIVE)
         {
-            ((CmdPurePursuitDrive)autoCommand).start(RobotInfo.PURE_PURSUIT_TEST_PATH);
+            ((CmdPurePursuitDrive)autoCommand).start(
+                    robot.driveBase.getFieldPosition(), true, RobotInfo.PURE_PURSUIT_TEST_PATH);
         }
 
         robot.dashboard.clearDisplay();
