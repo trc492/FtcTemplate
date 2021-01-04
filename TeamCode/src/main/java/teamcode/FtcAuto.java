@@ -121,7 +121,7 @@ public class FtcAuto extends FtcOpMode
     private static final String moduleName = "FtcAuto";
 
     private Robot robot;
-    private final MatchInfo matchInfo = new MatchInfo();
+    private MatchInfo matchInfo;
     private final AutoChoices autoChoices = new AutoChoices();
     private TrcRobot.RobotCommand autoCommand = null;
 
@@ -142,6 +142,8 @@ public class FtcAuto extends FtcOpMode
         //
         if (Robot.Preferences.useTraceLog)
         {
+            matchInfo = new MatchInfo();
+            doMatchInfoMenus();
             String filePrefix = String.format(Locale.US, "%s%02d", matchInfo.matchType, matchInfo.matchNumber);
             robot.globalTracer.openTraceLog("/sdcard/FIRST/tracelog", filePrefix);
         }
@@ -152,7 +154,6 @@ public class FtcAuto extends FtcOpMode
         //
         // Choice menus.
         //
-        doMatchInfoMenus();
         doAutoChoicesMenus();
         //
         // Strategies.
@@ -214,7 +215,10 @@ public class FtcAuto extends FtcOpMode
             robot.globalTracer.setTraceLogEnabled(true);
         }
         robot.globalTracer.traceInfo(moduleName, "***** Starting autonomous *****");
-        robot.globalTracer.logInfo(moduleName, "MatchInfo", "%s", matchInfo);
+        if (matchInfo != null)
+        {
+            robot.globalTracer.logInfo(moduleName, "MatchInfo", "%s", matchInfo);
+        }
         robot.globalTracer.logInfo(moduleName, "AutoChoices", "%s", autoChoices);
 
         robot.startMode(nextMode);
@@ -317,30 +321,33 @@ public class FtcAuto extends FtcOpMode
      */
     private void doMatchInfoMenus()
     {
-        //
-        // Construct menus.
-        //
-        FtcChoiceMenu<MatchType> matchTypeMenu = new FtcChoiceMenu<>("Match type:", null);
-        FtcValueMenu matchNumberMenu = new FtcValueMenu(
-                "Match number:", matchTypeMenu, 1.0, 50.0, 1.0, 1.0,
-                "%.0f");
-        //
-        // Populate choice menus.
-        //
-        matchTypeMenu.addChoice("Practice", MatchType.PRACTICE, true, matchNumberMenu);
-        matchTypeMenu.addChoice("Qualification", MatchType.QUALIFICATION, false, matchNumberMenu);
-        matchTypeMenu.addChoice("Semi-final", MatchType.SEMI_FINAL, false, matchNumberMenu);
-        matchTypeMenu.addChoice("Final", MatchType.FINAL, false, matchNumberMenu);
-        //
-        // Traverse menus.
-        //
-        FtcMenu.walkMenuTree(matchTypeMenu);
-        //
-        // Fetch choices.
-        //
-        matchInfo.matchDate = new Date();
-        matchInfo.matchType = matchTypeMenu.getCurrentChoiceObject();
-        matchInfo.matchNumber = (int)matchNumberMenu.getCurrentValue();
+        if (matchInfo != null)
+        {
+            //
+            // Construct menus.
+            //
+            FtcChoiceMenu<MatchType> matchTypeMenu = new FtcChoiceMenu<>("Match type:", null);
+            FtcValueMenu matchNumberMenu = new FtcValueMenu(
+                    "Match number:", matchTypeMenu, 1.0, 50.0, 1.0, 1.0,
+                    "%.0f");
+            //
+            // Populate choice menus.
+            //
+            matchTypeMenu.addChoice("Practice", MatchType.PRACTICE, true, matchNumberMenu);
+            matchTypeMenu.addChoice("Qualification", MatchType.QUALIFICATION, false, matchNumberMenu);
+            matchTypeMenu.addChoice("Semi-final", MatchType.SEMI_FINAL, false, matchNumberMenu);
+            matchTypeMenu.addChoice("Final", MatchType.FINAL, false, matchNumberMenu);
+            //
+            // Traverse menus.
+            //
+            FtcMenu.walkMenuTree(matchTypeMenu);
+            //
+            // Fetch choices.
+            //
+            matchInfo.matchDate = new Date();
+            matchInfo.matchType = matchTypeMenu.getCurrentChoiceObject();
+            matchInfo.matchNumber = (int)matchNumberMenu.getCurrentValue();
+        }
     }   //doMatchInfoMenus
 
     /**
