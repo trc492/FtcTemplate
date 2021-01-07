@@ -550,7 +550,11 @@ public class Robot
             // odometry.
             //
             TrcDriveBaseOdometry driveBaseOdometry = new TrcDriveBaseOdometry(
-                    leftFrontWheel, leftBackWheel, rightBackWheel, gyro);
+                    new TrcDriveBaseOdometry.AxisSensor(leftFrontWheel, RobotInfo.X_ODOMETRY_OFFSET),
+                    new TrcDriveBaseOdometry.AxisSensor[] {
+                            new TrcDriveBaseOdometry.AxisSensor(leftBackWheel),
+                            new TrcDriveBaseOdometry.AxisSensor(rightBackWheel)},
+                    gyro);
             //
             // Set the drive base to use the external odometry device overriding the built-in one.
             //

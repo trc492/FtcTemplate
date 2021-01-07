@@ -41,6 +41,7 @@ public class RobotInfo
     static final boolean DRIVE_WHEEL_BRAKE_MODE                 = true;
     static final double TURN_POWER_LIMIT                        = 0.5;
     static final double SLOW_DRIVE_POWER_SCALE                  = 0.5;
+    static final double X_ODOMETRY_OFFSET                       = 8.0;  //8 inches in front of centroid
     //
     // Velocity controlled constants.
     //
