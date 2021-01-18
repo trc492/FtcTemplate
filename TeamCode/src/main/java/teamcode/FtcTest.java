@@ -365,7 +365,7 @@ public class FtcTest extends FtcTeleOp
     }   //runContinuous
 
     //
-    // Overrides TrcGameController.ButtonHandler in FtcTeleOp3543.
+    // Overrides TrcGameController.ButtonHandler in TeleOp.
     //
 
     @Override
@@ -395,7 +395,7 @@ public class FtcTest extends FtcTeleOp
                     break;
             }
             //
-            // If the control was not processed by this method, pass it back to FtcTeleOp3543.
+            // If the control was not processed by this method, pass it back to TeleOp.
             //
             if (!processed)
             {
@@ -431,7 +431,7 @@ public class FtcTest extends FtcTeleOp
                     break;
             }
             //
-            // If the control was not processed by this method, pass it back to FtcTeleOp3543.
+            // If the control was not processed by this method, pass it back to TeleOp.
             //
             if (!processed)
             {
