@@ -32,6 +32,7 @@ import TrcCommonLib.command.CmdTimedDrive;
 import TrcCommonLib.trclib.TrcElapsedTimer;
 import TrcCommonLib.trclib.TrcEvent;
 import TrcCommonLib.trclib.TrcGameController;
+import TrcCommonLib.trclib.TrcPathBuilder;
 import TrcCommonLib.trclib.TrcPose2D;
 import TrcCommonLib.trclib.TrcRobot;
 import TrcCommonLib.trclib.TrcStateMachine;
@@ -229,8 +230,23 @@ public class FtcTest extends FtcTeleOp
         }
         else if (test == Test.PURE_PURSUIT_DRIVE)
         {
-            ((CmdPurePursuitDrive)testCommand).start(
-                    robot.driveBase.getFieldPosition(), true, RobotInfo.PURE_PURSUIT_TEST_PATH);
+            //
+            // Doing a figure 8.
+            //
+            // Set the current position as the absolute field origin so the path can be an absolute path.
+            robot.driveBase.setFieldPosition(new TrcPose2D(0.0, 0.0, 0.0));
+            TrcPathBuilder pathBuilder = new TrcPathBuilder(robot.driveBase.getFieldPosition(), false)
+                .append(new TrcPose2D(-24.0, 0, 45.0))
+                .append(new TrcPose2D(-24.0, 48.0, 135.0))
+                .append(new TrcPose2D(24.0, 48.0, 225.0))
+                .append(new TrcPose2D(24.0, 0.0, 270.0))
+                .append(new TrcPose2D(-24.0, 0.0, 135.0))
+                .append(new TrcPose2D(-24.0, -48.0, 45.0))
+                .append(new TrcPose2D(24.0, -48.0, -45.0))
+                .append(new TrcPose2D(24.0, 0.0, -90.0))
+                .append(new TrcPose2D(0.0, 0.0, 0.0));
+            robot.globalTracer.traceInfo(moduleName, "PurePursuitPath=%s", pathBuilder.toRelativeStartPath());
+            ((CmdPurePursuitDrive)testCommand).start(pathBuilder.toRelativeStartPath());
         }
     }   //startMode
 
