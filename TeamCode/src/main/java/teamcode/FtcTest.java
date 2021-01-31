@@ -272,7 +272,7 @@ public class FtcTest extends FtcTeleOp
                 if (robot.battery != null)
                 {
                     robot.globalTracer.traceInfo("Battery", "Voltage=%5.2fV (%5.2fV)",
-                            robot.battery.getVoltage(), robot.battery.getLowestVoltage());
+                                                 robot.battery.getVoltage(), robot.battery.getLowestVoltage());
                 }
 
                 robot.globalTracer.traceInfo(moduleName, "RobotPose: %s", robot.driveBase.getFieldPosition());
@@ -301,11 +301,13 @@ public class FtcTest extends FtcTeleOp
                 if (!Robot.Preferences.visionOnly)
                 {
                     robot.dashboard.displayPrintf(9, "Timed Drive: %.0f sec", driveTime);
-                    robot.dashboard.displayPrintf(10, "xPos=%.1f,yPos=%.1f,heading=%.1f",
-                            robot.driveBase.getXPosition(), robot.driveBase.getYPosition(), robot.driveBase.getHeading());
-                    robot.dashboard.displayPrintf(11, "raw=lf:%.0f,rf:%.0f,lb:%.0f,rb:%.0f",
-                            robot.leftFrontWheel.getPosition(), robot.rightFrontWheel.getPosition(),
-                            robot.leftBackWheel.getPosition(), robot.rightBackWheel.getPosition());
+                    robot.dashboard.displayPrintf(
+                        10, "xPos=%.1f,yPos=%.1f,heading=%.1f",
+                        robot.driveBase.getXPosition(), robot.driveBase.getYPosition(), robot.driveBase.getHeading());
+                    robot.dashboard.displayPrintf(
+                        11, "raw=lf:%.0f,rf:%.0f,lb:%.0f,rb:%.0f",
+                        robot.leftFrontWheel.getPosition(), robot.rightFrontWheel.getPosition(),
+                        robot.leftBackWheel.getPosition(), robot.rightBackWheel.getPosition());
                 }
                 break;
 
@@ -316,10 +318,10 @@ public class FtcTest extends FtcTeleOp
                 if (!Robot.Preferences.visionOnly)
                 {
                     robot.dashboard.displayPrintf(
-                            9, "xPos=%.1f,yPos=%.1f,heading=%.1f,raw=lf:%.0f,rf:%.0f,lb:%.0f,rb:%.0f",
-                            robot.driveBase.getXPosition(), robot.driveBase.getYPosition(), robot.driveBase.getHeading(),
-                            robot.leftFrontWheel.getPosition(), robot.rightFrontWheel.getPosition(),
-                            robot.leftBackWheel.getPosition(), robot.rightBackWheel.getPosition());
+                        9, "xPos=%.1f,yPos=%.1f,heading=%.1f,raw=lf:%.0f,rf:%.0f,lb:%.0f,rb:%.0f",
+                        robot.driveBase.getXPosition(), robot.driveBase.getYPosition(), robot.driveBase.getHeading(),
+                        robot.leftFrontWheel.getPosition(), robot.rightFrontWheel.getPosition(),
+                        robot.leftBackWheel.getPosition(), robot.rightBackWheel.getPosition());
                     if (robot.encoderXPidCtrl != null)
                     {
                         robot.encoderXPidCtrl.displayPidInfo(10);
@@ -333,8 +335,9 @@ public class FtcTest extends FtcTeleOp
                 if (!Robot.Preferences.visionOnly)
                 {
                     robot.dashboard.displayPrintf(9, "Pure Pursuit Drive: %.0f sec", driveTime);
-                    robot.dashboard.displayPrintf(10, "xPos=%.1f,yPos=%.1f,heading=%.1f",
-                            robot.driveBase.getXPosition(), robot.driveBase.getYPosition(), robot.driveBase.getHeading());
+                    robot.dashboard.displayPrintf(
+                        10, "xPos=%.1f,yPos=%.1f,heading=%.1f",
+                        robot.driveBase.getXPosition(), robot.driveBase.getYPosition(), robot.driveBase.getHeading());
                 }
                 break;
         }
@@ -343,9 +346,9 @@ public class FtcTest extends FtcTeleOp
         {
             elapsedTimer.recordPeriodTime();
             robot.dashboard.displayPrintf(
-                    6, "Period: %.3f(%.3f/%.3f)",
-                    elapsedTimer.getAverageElapsedTime(), elapsedTimer.getMinElapsedTime(),
-                    elapsedTimer.getMaxElapsedTime());
+                6, "Period: %.3f(%.3f/%.3f)",
+                elapsedTimer.getAverageElapsedTime(), elapsedTimer.getMinElapsedTime(),
+                elapsedTimer.getMaxElapsedTime());
         }
     }   //runContinuous
 
@@ -364,7 +367,7 @@ public class FtcTest extends FtcTeleOp
             // FtcTeleOp gamepad actions.
             //
             robot.dashboard.displayPrintf(
-                    7, "%s: %04x->%s", gamepad.toString(), button, pressed ? "Pressed" : "Released");
+                7, "%s: %04x->%s", gamepad.toString(), button, pressed ? "Pressed" : "Released");
             switch (button)
             {
                 case FtcGamepad.GAMEPAD_DPAD_UP:
@@ -400,7 +403,7 @@ public class FtcTest extends FtcTeleOp
             // FtcTeleOp gamepad actions.
             //
             robot.dashboard.displayPrintf(
-                    7, "%s: %04x->%s", gamepad.toString(), button, pressed ? "Pressed" : "Released");
+                7, "%s: %04x->%s", gamepad.toString(), button, pressed ? "Pressed" : "Released");
             switch (button)
             {
                 case FtcGamepad.GAMEPAD_DPAD_UP:
@@ -432,47 +435,38 @@ public class FtcTest extends FtcTeleOp
         //
         FtcChoiceMenu<Test> testMenu = new FtcChoiceMenu<>("Tests:", null);
         FtcValueMenu xTargetMenu = new FtcValueMenu(
-                "xTarget:", testMenu, -10.0, 10.0, 0.5, 0.0,
-                " %.1f ft");
+            "xTarget:", testMenu, -10.0, 10.0, 0.5, 0.0, " %.1f ft");
         FtcValueMenu yTargetMenu = new FtcValueMenu(
-                "yTarget:", testMenu, -10.0, 10.0, 0.5, 0.0,
-                " %.1f ft");
+            "yTarget:", testMenu, -10.0, 10.0, 0.5, 0.0, " %.1f ft");
         FtcValueMenu turnTargetMenu = new FtcValueMenu(
-                "turnTarget:", testMenu, -180.0, 180.0, 5.0, 0.0,
-                " %.0f deg");
+            "turnTarget:", testMenu, -180.0, 180.0, 5.0, 0.0, " %.0f deg");
         FtcValueMenu driveTimeMenu = new FtcValueMenu(
-                "Drive time:", testMenu, 1.0, 10.0, 1.0, 4.0,
-                " %.0f sec");
+            "Drive time:", testMenu, 1.0, 10.0, 1.0, 4.0, " %.0f sec");
         FtcValueMenu drivePowerMenu = new FtcValueMenu(
-                "Drive power:", testMenu, -1.0, 1.0, 0.1, 0.5,
-                " %.1f");
+            "Drive power:", testMenu, -1.0, 1.0, 0.1, 0.5, " %.1f");
 
         if (tuneKpMenu == null)
         {
             tuneKpMenu = new FtcValueMenu(
-                    "Kp:", testMenu, 0.0, 1.0, 0.001, robot.tunePidCoeff.kP,
-                    " %f");
+                "Kp:", testMenu, 0.0, 1.0, 0.001, robot.tunePidCoeff.kP, " %f");
         }
 
         if (tuneKiMenu == null)
         {
             tuneKiMenu = new FtcValueMenu(
-                    "Ki:", testMenu, 0.0, 1.0, 0.0001, robot.tunePidCoeff.kI,
-                    " %f");
+                "Ki:", testMenu, 0.0, 1.0, 0.0001, robot.tunePidCoeff.kI, " %f");
         }
 
         if (tuneKdMenu == null)
         {
             tuneKdMenu = new FtcValueMenu(
-                    "Kd:", testMenu, 0.0, 1.0, 0.0001, robot.tunePidCoeff.kD,
-                    " %f");
+                "Kd:", testMenu, 0.0, 1.0, 0.0001, robot.tunePidCoeff.kD, " %f");
         }
 
         if (tuneKfMenu == null)
         {
             tuneKfMenu = new FtcValueMenu(
-                    "Kf:", testMenu, 0.0, 1.0, 0.001, robot.tunePidCoeff.kF,
-                    " %f");
+                "Kf:", testMenu, 0.0, 1.0, 0.001, robot.tunePidCoeff.kF, " %f");
         }
 
         //
@@ -531,15 +525,16 @@ public class FtcTest extends FtcTeleOp
         if (!Robot.Preferences.visionOnly)
         {
             robot.dashboard.displayPrintf(
-                    9, LABEL_WIDTH, "Enc: ", "lf=%.0f,rf=%.0f,lb=%.0f,rb=%.0f",
-                    robot.leftFrontWheel.getPosition(), robot.rightFrontWheel.getPosition(),
-                    robot.leftBackWheel.getPosition(), robot.rightBackWheel.getPosition());
+                9, LABEL_WIDTH, "Enc: ", "lf=%.0f,rf=%.0f,lb=%.0f,rb=%.0f",
+                robot.leftFrontWheel.getPosition(), robot.rightFrontWheel.getPosition(),
+                robot.leftBackWheel.getPosition(), robot.rightBackWheel.getPosition());
         }
 
         if (robot.gyro != null)
         {
-            robot.dashboard.displayPrintf(10, LABEL_WIDTH, "Gyro: ", "Rate=%.3f,Heading=%.1f",
-                    robot.gyro.getZRotationRate().value, robot.gyro.getZHeading().value);
+            robot.dashboard.displayPrintf(
+                10, LABEL_WIDTH, "Gyro: ", "Rate=%.3f,Heading=%.1f",
+                robot.gyro.getZRotationRate().value, robot.gyro.getZHeading().value);
         }
     }   //doSensorsTest
 
@@ -549,8 +544,9 @@ public class FtcTest extends FtcTeleOp
 //
 //        if (skystonePose != null)
 //        {
-//            robot.dashboard.displayPrintf(12, "%s: x=%.1f, y=%.1f, angle=%.1f",
-//                    robot.targetFinder, skystonePose.x, skystonePose.y, skystonePose.angle);
+//            robot.dashboard.displayPrintf(
+//                12, "%s: x=%.1f, y=%.1f, angle=%.1f",
+//                robot.targetFinder, skystonePose.x, skystonePose.y, skystonePose.angle);
 //        }
 //        else
 //        {
@@ -560,8 +556,8 @@ public class FtcTest extends FtcTeleOp
 //        if (robot.vuforiaVision != null)
 //        {
 //            TrcPose2D robotPose = robot.getRobotPose(null, false);
-//            robot.dashboard.displayPrintf(13, "RobotLocation %s: %s",
-//                    robot.vuforiaVision.getLastSeenImageName(), robotPose);
+//            robot.dashboard.displayPrintf(
+//                13, "RobotLocation %s: %s", robot.vuforiaVision.getLastSeenImageName(), robotPose);
 //        }
 //
 //        if (robot.tensorFlowVision != null)
@@ -597,4 +593,4 @@ public class FtcTest extends FtcTeleOp
         return !Robot.Preferences.visionOnly && test == Test.SUBSYSTEMS_TEST;
     }   //shouldDoTeleOp
 
-}   //class FtcTest3543
+}   //class FtcTest

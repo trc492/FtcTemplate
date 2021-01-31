@@ -64,8 +64,9 @@ public class TensorFlowVision
         int imageHeight;
         Point targetCenter;
 
-        TargetInfo(String label, Rect rect, double angle, double confidence, int imageWidth, int imageHeight,
-                   Point targetCenter)
+        TargetInfo(
+            String label, Rect rect, double angle, double confidence, int imageWidth, int imageHeight,
+            Point targetCenter)
         {
             this.label = label;
             this.rect = rect;
@@ -79,10 +80,10 @@ public class TensorFlowVision
         @Override
         public String toString()
         {
-            return String.format(Locale.US,
-                    "%s: Rect[%d,%d,%d,%d] targetPos[%.1f,%.1f] angle=%.1f, confidence=%.1f, image(w=%d,h=%d)",
-                    label, rect.x, rect.y, rect.width, rect.height, targetCenter.x,
-                    targetCenter.y, angle, confidence, imageWidth, imageHeight);
+            return String.format(
+                Locale.US, "%s: Rect[%d,%d,%d,%d] targetPos[%.1f,%.1f] angle=%.1f, confidence=%.1f, image(w=%d,h=%d)",
+                label, rect.x, rect.y, rect.width, rect.height, targetCenter.x, targetCenter.y, angle, confidence,
+                imageWidth, imageHeight);
         }
     }   //class TargetInfo
 
@@ -102,14 +103,14 @@ public class TensorFlowVision
      * @param tracer specifies the tracer for trace info, null if none provided.
      */
     public TensorFlowVision(
-            FtcVuforia vuforia, int tfodMonitorViewId, TrcHomographyMapper.Rectangle cameraRect,
-            TrcHomographyMapper.Rectangle worldRect, TrcDbgTrace tracer)
+        FtcVuforia vuforia, int tfodMonitorViewId, TrcHomographyMapper.Rectangle cameraRect,
+        TrcHomographyMapper.Rectangle worldRect, TrcDbgTrace tracer)
     {
         this.vuforia = vuforia;
         this.tracer = tracer;
         TFObjectDetector.Parameters tfodParameters =
-                tfodMonitorViewId == -1?
-                        new TFObjectDetector.Parameters() : new TFObjectDetector.Parameters(tfodMonitorViewId);
+            tfodMonitorViewId == -1?
+                new TFObjectDetector.Parameters() : new TFObjectDetector.Parameters(tfodMonitorViewId);
         tfodParameters.minResultConfidence = TFOD_MIN_CONFIDENCE;
         tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia.getLocalizer());
         tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_STONE, LABEL_SKYSTONE);
@@ -226,10 +227,11 @@ public class TensorFlowVision
 
                 if (tracer != null)
                 {
-                    tracer.traceInfo(funcName, "[%d] TensorFlow.%s: x=%.0f, y=%.0f, w=%.0f, h=%.0f, " +
-                            "aspectRatio=%.1f, foundIt=%s, rejected=%s",
-                            i, object.getLabel(), object.getTop(), object.getImageWidth() - object.getRight(),
-                            object.getHeight(), object.getWidth(), aspectRatio, foundIt, rejected);
+                    tracer.traceInfo(
+                        funcName,
+                        "[%d] TensorFlow.%s:x=%.0f,y=%.0f,w=%.0f,h=%.0f,aspectRatio=%.1f,foundIt=%s,rejected=%s",
+                        i, object.getLabel(), object.getTop(), object.getImageWidth() - object.getRight(),
+                        object.getHeight(), object.getWidth(), aspectRatio, foundIt, rejected);
                 }
             }
             //
@@ -271,20 +273,20 @@ public class TensorFlowVision
         double imageWidth = target.getImageWidth();
         double imageHeight = target.getImageHeight();
         Rect targetRect = new Rect(
-                (int)target.getTop(), (int)(imageWidth - target.getRight()),
-                (int)target.getHeight(), (int)target.getWidth());
+            (int)target.getTop(), (int)(imageWidth - target.getRight()),
+            (int)target.getHeight(), (int)target.getWidth());
 //        Point targetBottomCenter = homographyMapper.mapPoint(
-//                new Point(targetRect.x + targetRect.width/2, targetRect.y + targetRect.height));
-        Point targetBottomCenter = new Point(targetRect.x + targetRect.width/2.0 - imageHeight/2.0,
-                targetRect.y + targetRect.height - imageWidth/2.0);
+//            new Point(targetRect.x + targetRect.width/2, targetRect.y + targetRect.height));
+        Point targetBottomCenter = new Point(
+            targetRect.x + targetRect.width/2.0 - imageHeight/2.0, targetRect.y + targetRect.height - imageWidth/2.0);
         TargetInfo targetInfo = new TargetInfo(
-                target.getLabel(), targetRect, target.estimateAngleToObject(AngleUnit.DEGREES),
-                target.getConfidence(), target.getImageHeight(), target.getImageWidth(), targetBottomCenter);
+            target.getLabel(), targetRect, target.estimateAngleToObject(AngleUnit.DEGREES),
+            target.getConfidence(), target.getImageHeight(), target.getImageWidth(), targetBottomCenter);
 
         if (tracer != null)
         {
             tracer.traceInfo(funcName, "Target Point: %.0f, %.0f/%.0f, %.0f",
-                    targetBottomCenter.x, targetBottomCenter.y, imageHeight, imageWidth);
+                             targetBottomCenter.x, targetBottomCenter.y, imageHeight, imageWidth);
             tracer.traceInfo(funcName, "###TargetInfo###: %s", targetInfo);
         }
 
@@ -300,7 +302,7 @@ public class TensorFlowVision
     public TargetInfo[] getDetectedTargetsInfo(String label)
     {
         ArrayList<Recognition> targets = getDetectedTargets(label);
-        TargetInfo[] targetsInfo = targets != null && targets.size() > 0 ? new TargetInfo[targets.size()] : null;
+        TargetInfo[] targetsInfo = targets != null && targets.size() > 0 ?new TargetInfo[targets.size()] :null;
 
         if (targetsInfo != null)
         {

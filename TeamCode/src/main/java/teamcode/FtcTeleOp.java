@@ -121,24 +121,23 @@ public class FtcTeleOp extends FtcOpMode
                     double rightPower = driverGamepad.getRightStickY(true) * drivePowerScale;
                     robot.driveBase.tankDrive(leftPower, rightPower, invertedDrive);
                     robot.dashboard.displayPrintf(1, "Tank:left=%.1f,right=%.1f,inv=%s",
-                            leftPower, rightPower, Boolean.toString(invertedDrive));
+                                                  leftPower, rightPower, Boolean.toString(invertedDrive));
                     break;
 
                 case HOLONOMIC_MODE:
                     double x = driverGamepad.getLeftStickX(true) * drivePowerScale;
                     double y = driverGamepad.getRightStickY(true) * drivePowerScale;
-                    double rot = (driverGamepad.getRightTrigger(true) -
-                            driverGamepad.getLeftTrigger(true)) * drivePowerScale;
+                    double rot = (driverGamepad.getRightTrigger(true) - driverGamepad.getLeftTrigger(true)) *
+                                 drivePowerScale;
                     robot.driveBase.holonomicDrive(x, y, rot, invertedDrive);
                     robot.dashboard.displayPrintf(1, "Mecan:x=%.1f,y=%.1f,rot=%.1f,inv=%s",
-                            x, y, rot, Boolean.toString(invertedDrive));
+                                                  x, y, rot, Boolean.toString(invertedDrive));
                     break;
             }
 
             robot.dashboard.displayPrintf(2, "DriveBase: x=%.2f,y=%.2f,heading=%.2f",
-                    robot.driveBase.getXPosition(),
-                    robot.driveBase.getYPosition(),
-                    robot.driveBase.getHeading());
+                                          robot.driveBase.getXPosition(), robot.driveBase.getYPosition(),
+                                          robot.driveBase.getHeading());
         }
         //
         // Other subsystems.
@@ -156,8 +155,8 @@ public class FtcTeleOp extends FtcOpMode
         }
 
         robot.dashboard.displayPrintf(
-                3, "ElevatorPower=%.1f, ElevatorPos=%.1f, ElevatorLimitSwitch=[%b, %b]",
-                elevatorPower, elevatorPos, elevatorDownSwitch, elevatorUpSwitch);
+            3, "ElevatorPower=%.1f, ElevatorPos=%.1f, ElevatorLimitSwitch=[%b, %b]",
+            elevatorPower, elevatorPos, elevatorDownSwitch, elevatorUpSwitch);
     }   //runPeriodic
 
     //
@@ -174,7 +173,7 @@ public class FtcTeleOp extends FtcOpMode
     public void driverButtonEvent(TrcGameController gamepad, int button, boolean pressed)
     {
         robot.dashboard.displayPrintf(
-                7, "%s: %04x->%s", gamepad.toString(), button, pressed? "Pressed": "Released");
+            7, "%s: %04x->%s", gamepad.toString(), button, pressed? "Pressed": "Released");
 
         switch (button)
         {
@@ -221,7 +220,7 @@ public class FtcTeleOp extends FtcOpMode
     public void operatorButtonEvent(TrcGameController gamepad, int button, boolean pressed)
     {
         robot.dashboard.displayPrintf(
-                7, "%s: %04x->%s", gamepad.toString(), button, pressed? "Pressed": "Released");
+            7, "%s: %04x->%s", gamepad.toString(), button, pressed? "Pressed": "Released");
 
         switch (button)
         {

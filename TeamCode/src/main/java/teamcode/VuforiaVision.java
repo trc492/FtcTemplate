@@ -65,20 +65,20 @@ public class VuforiaVision
     private static final String back1TargetName = "Rear Perimeter 1";
     private static final String back2TargetName = "Rear Perimeter 2";
     private static final TrcHashMap<String, TrcRevBlinkin.LEDPattern> targetLEDPatternMap =
-            new TrcHashMap<String, TrcRevBlinkin.LEDPattern>()
-                    .add(skystoneTargetName, TrcRevBlinkin.LEDPattern.SolidGreen)
-                    .add(blueBridgeBackTargetName, TrcRevBlinkin.LEDPattern.SolidViolet)
-                    .add(redBridgeBackTargetName, TrcRevBlinkin.LEDPattern.SolidAqua)
-                    .add(redBridgeFrontTargetName, TrcRevBlinkin.LEDPattern.SolidYellow)
-                    .add(blueBridgeFrontTargetName, TrcRevBlinkin.LEDPattern.SolidOrange)
-                    .add(red1TargetName, TrcRevBlinkin.LEDPattern.SolidRed)
-                    .add(red2TargetName, TrcRevBlinkin.LEDPattern.FixedStrobeRed)
-                    .add(front1TargetName, TrcRevBlinkin.LEDPattern.SolidGold)
-                    .add(front2TargetName, TrcRevBlinkin.LEDPattern.FixedStrobeGold)
-                    .add(blue1TargetName, TrcRevBlinkin.LEDPattern.SolidBlue)
-                    .add(blue2TargetName, TrcRevBlinkin.LEDPattern.FixedStrobeBlue)
-                    .add(back1TargetName, TrcRevBlinkin.LEDPattern.SolidWhite)
-                    .add(back2TargetName, TrcRevBlinkin.LEDPattern.FixedStrobeWhite);
+        new TrcHashMap<String, TrcRevBlinkin.LEDPattern>()
+            .add(skystoneTargetName, TrcRevBlinkin.LEDPattern.SolidGreen)
+            .add(blueBridgeBackTargetName, TrcRevBlinkin.LEDPattern.SolidViolet)
+            .add(redBridgeBackTargetName, TrcRevBlinkin.LEDPattern.SolidAqua)
+            .add(redBridgeFrontTargetName, TrcRevBlinkin.LEDPattern.SolidYellow)
+            .add(blueBridgeFrontTargetName, TrcRevBlinkin.LEDPattern.SolidOrange)
+            .add(red1TargetName, TrcRevBlinkin.LEDPattern.SolidRed)
+            .add(red2TargetName, TrcRevBlinkin.LEDPattern.FixedStrobeRed)
+            .add(front1TargetName, TrcRevBlinkin.LEDPattern.SolidGold)
+            .add(front2TargetName, TrcRevBlinkin.LEDPattern.FixedStrobeGold)
+            .add(blue1TargetName, TrcRevBlinkin.LEDPattern.SolidBlue)
+            .add(blue2TargetName, TrcRevBlinkin.LEDPattern.FixedStrobeBlue)
+            .add(back1TargetName, TrcRevBlinkin.LEDPattern.SolidWhite)
+            .add(back2TargetName, TrcRevBlinkin.LEDPattern.FixedStrobeWhite);
     //
     // Since ImageTarget trackables use mm to specify their dimensions, we must use mm for all the physical dimension.
     // We will define some constants and conversions here.
@@ -120,8 +120,8 @@ public class VuforiaVision
         vuforia.configVideoSource(IMAGE_WIDTH, IMAGE_HEIGHT, FRAME_QUEUE_CAPACITY);
 
         /*
-         * In order for localization to work, we need to tell the system where each target is on the field, and
-         * where the phone resides on the robot.  These specifications are in the form of <em>transformation matrices.</em>
+         * In order for localization to work, we need to tell the system where each target is on the field, and where
+         * the phone resides on the robot.  These specifications are in the form of <em>transformation matrices.</em>
          * Transformation matrices are a central, important concept in the math here involved in localization.
          * See <a href="https://en.wikipedia.org/wiki/Transformation_matrix">Transformation Matrix</a>
          * for detailed information. Commonly, you'll encounter transformation matrices as instances
@@ -141,77 +141,77 @@ public class VuforiaVision
         // Rotated it to to face forward, and raised it to sit on the ground correctly.
         // This can be used for generic target-centric approach algorithms
         OpenGLMatrix stoneTargetLocation = OpenGLMatrix
-                .translation(0, 0, stoneZ)
-                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, 0));
+            .translation(0, 0, stoneZ)
+            .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, 0));
 
         //Set the position of the bridge support targets with relation to origin (center of field)
         OpenGLMatrix blueFrontBridgeLocation = OpenGLMatrix
-                .translation(-bridgeX, bridgeY, bridgeZ)
-                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 0, bridgeRotY, bridgeRotZ));
+            .translation(-bridgeX, bridgeY, bridgeZ)
+            .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 0, bridgeRotY, bridgeRotZ));
 
         OpenGLMatrix blueRearBridgeLocation = OpenGLMatrix
-                .translation(-bridgeX, bridgeY, bridgeZ)
-                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 0, -bridgeRotY, bridgeRotZ));
+            .translation(-bridgeX, bridgeY, bridgeZ)
+            .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 0, -bridgeRotY, bridgeRotZ));
 
         OpenGLMatrix redFrontBridgeLocation = OpenGLMatrix
-                .translation(-bridgeX, -bridgeY, bridgeZ)
-                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 0, -bridgeRotY, 0));
+            .translation(-bridgeX, -bridgeY, bridgeZ)
+            .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 0, -bridgeRotY, 0));
 
         OpenGLMatrix redRearBridgeLocation = OpenGLMatrix
-                .translation(bridgeX, -bridgeY, bridgeZ)
-                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 0, bridgeRotY, 0));
+            .translation(bridgeX, -bridgeY, bridgeZ)
+            .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 0, bridgeRotY, 0));
 
         //Set the position of the perimeter targets with relation to origin (center of field)
         OpenGLMatrix redPerimeter1Location = OpenGLMatrix
-                .translation(quadField, -halfField, mmTargetHeight)
-                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, 180));
+            .translation(quadField, -halfField, mmTargetHeight)
+            .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, 180));
 
         OpenGLMatrix redPerimeter2Location = OpenGLMatrix
-                .translation(-quadField, -halfField, mmTargetHeight)
-                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, 180));
+            .translation(-quadField, -halfField, mmTargetHeight)
+            .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, 180));
 
         OpenGLMatrix frontPerimeter1Location = OpenGLMatrix
-                .translation(-halfField, -quadField, mmTargetHeight)
-                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0 , 90));
+            .translation(-halfField, -quadField, mmTargetHeight)
+            .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0 , 90));
 
         OpenGLMatrix frontPerimeter2Location = OpenGLMatrix
-                .translation(-halfField, quadField, mmTargetHeight)
-                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, 90));
+            .translation(-halfField, quadField, mmTargetHeight)
+            .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, 90));
 
         OpenGLMatrix bluePerimeter1Location = OpenGLMatrix
-                .translation(-quadField, halfField, mmTargetHeight)
-                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, 0));
+            .translation(-quadField, halfField, mmTargetHeight)
+            .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, 0));
 
         OpenGLMatrix bluePerimeter2Location = OpenGLMatrix
-                .translation(quadField, halfField, mmTargetHeight)
-                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, 0));
+            .translation(quadField, halfField, mmTargetHeight)
+            .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, 0));
 
         OpenGLMatrix rearPerimeter1Location = OpenGLMatrix
-                .translation(halfField, quadField, mmTargetHeight)
-                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0 , -90));
+            .translation(halfField, quadField, mmTargetHeight)
+            .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0 , -90));
 
         OpenGLMatrix rearPerimeter2Location = OpenGLMatrix
-                .translation(halfField, -quadField, mmTargetHeight)
-                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, -90));
+            .translation(halfField, -quadField, mmTargetHeight)
+            .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, -90));
 
         //
         // Create and initialize all image targets.
         //
         FtcVuforia.TargetInfo[] imageTargetsInfo =
         {
-                new FtcVuforia.TargetInfo(0, skystoneTargetName, false, stoneTargetLocation),
-                new FtcVuforia.TargetInfo(1, blueBridgeBackTargetName, false, blueRearBridgeLocation),
-                new FtcVuforia.TargetInfo(2, redBridgeBackTargetName, false, redRearBridgeLocation),
-                new FtcVuforia.TargetInfo(3, redBridgeFrontTargetName, false, redFrontBridgeLocation),
-                new FtcVuforia.TargetInfo(4, blueBridgeFrontTargetName, false, blueFrontBridgeLocation),
-                new FtcVuforia.TargetInfo(5, red1TargetName, false, redPerimeter1Location),
-                new FtcVuforia.TargetInfo(6, red2TargetName, false, redPerimeter2Location),
-                new FtcVuforia.TargetInfo(7, front1TargetName, false, frontPerimeter1Location),
-                new FtcVuforia.TargetInfo(8, front2TargetName, false, frontPerimeter2Location),
-                new FtcVuforia.TargetInfo(9, blue1TargetName, false, bluePerimeter1Location),
-                new FtcVuforia.TargetInfo(10, blue2TargetName, false, bluePerimeter2Location),
-                new FtcVuforia.TargetInfo(11, back1TargetName, false, rearPerimeter1Location),
-                new FtcVuforia.TargetInfo(12, back2TargetName, false, rearPerimeter2Location)
+            new FtcVuforia.TargetInfo(0, skystoneTargetName, false, stoneTargetLocation),
+            new FtcVuforia.TargetInfo(1, blueBridgeBackTargetName, false, blueRearBridgeLocation),
+            new FtcVuforia.TargetInfo(2, redBridgeBackTargetName, false, redRearBridgeLocation),
+            new FtcVuforia.TargetInfo(3, redBridgeFrontTargetName, false, redFrontBridgeLocation),
+            new FtcVuforia.TargetInfo(4, blueBridgeFrontTargetName, false, blueFrontBridgeLocation),
+            new FtcVuforia.TargetInfo(5, red1TargetName, false, redPerimeter1Location),
+            new FtcVuforia.TargetInfo(6, red2TargetName, false, redPerimeter2Location),
+            new FtcVuforia.TargetInfo(7, front1TargetName, false, frontPerimeter1Location),
+            new FtcVuforia.TargetInfo(8, front2TargetName, false, frontPerimeter2Location),
+            new FtcVuforia.TargetInfo(9, blue1TargetName, false, bluePerimeter1Location),
+            new FtcVuforia.TargetInfo(10, blue2TargetName, false, bluePerimeter2Location),
+            new FtcVuforia.TargetInfo(11, back1TargetName, false, rearPerimeter1Location),
+            new FtcVuforia.TargetInfo(12, back2TargetName, false, rearPerimeter2Location)
         };
 
         vuforia.addTargetList(RobotInfo.TRACKABLE_IMAGES_FILE, imageTargetsInfo, phoneLocation);
@@ -374,9 +374,8 @@ public class VuforiaVision
         // is zero degree and increases in the clockwise direction.
         //
         return (translation == null || orientation == null)? null:
-                new TrcPose2D(translation.get(0)/TrcUtil.MM_PER_INCH,
-                        translation.get(1)/TrcUtil.MM_PER_INCH,
-                        -orientation.thirdAngle + 90.0);
+            new TrcPose2D(translation.get(0)/TrcUtil.MM_PER_INCH, translation.get(1)/TrcUtil.MM_PER_INCH,
+                          -orientation.thirdAngle + 90.0);
     }   //getRobotPose
 
 }   //class VuforiaVision

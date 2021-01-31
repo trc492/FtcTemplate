@@ -66,7 +66,7 @@ public class FtcAuto extends FtcOpMode
         public String toString()
         {
             return String.format(
-                    Locale.US, "date=\"%s\" type=\"%s\" number=%d", matchDate, matchType, matchNumber);
+                Locale.US, "date=\"%s\" type=\"%s\" number=%d", matchDate, matchType, matchNumber);
         }   //toString
     }   //class MatchInfo
 
@@ -101,25 +101,26 @@ public class FtcAuto extends FtcOpMode
         @Override
         public String toString()
         {
-            return String.format(Locale.US,
-                    "alliance=\"%s\" " +
-                    "startDelay=%.0f " +
-                    "strategy=\"%s\" " +
-                    "xTarget=%.1f " +
-                    "yTarget=%.1f " +
-                    "turnTarget=%.0f " +
-                    "driveTime=%.0f " +
-                    "drivePower=%.1f",
-                    alliance, startDelay, strategy,
-                    xTarget, yTarget, turnTarget, driveTime, drivePower);
+            return String.format(
+                Locale.US,
+                "alliance=\"%s\" " +
+                "startDelay=%.0f " +
+                "strategy=\"%s\" " +
+                "xTarget=%.1f " +
+                "yTarget=%.1f " +
+                "turnTarget=%.0f " +
+                "driveTime=%.0f " +
+                "drivePower=%.1f",
+                alliance, startDelay, strategy,
+                xTarget, yTarget, turnTarget, driveTime, drivePower);
         }   //toString
     }   //class AutoChoices
 
+    private static final String moduleName = "FtcAuto";
     private static final boolean logEvents = true;
     private static final boolean debugXPid = true;
     private static final boolean debugYPid = true;
     private static final boolean debugTurnPid = true;
-    private static final String moduleName = "FtcAuto";
 
     private Robot robot;
     private MatchInfo matchInfo;
@@ -183,8 +184,8 @@ public class FtcAuto extends FtcOpMode
                 if (!Robot.Preferences.visionOnly)
                 {
                     autoCommand = new CmdTimedDrive(
-                            robot.driveBase, autoChoices.startDelay, autoChoices.driveTime,
-                            0.0, autoChoices.drivePower, 0.0);
+                        robot.driveBase, autoChoices.startDelay, autoChoices.driveTime,
+                        0.0, autoChoices.drivePower, 0.0);
                 }
                 break;
 
@@ -232,7 +233,7 @@ public class FtcAuto extends FtcOpMode
         if (autoChoices.strategy == AutoStrategy.PURE_PURSUIT_DRIVE)
         {
             ((CmdPurePursuitDrive)autoCommand).start(
-                    robot.driveBase.getFieldPosition(), true, RobotInfo.PURE_PURSUIT_PATH);
+                robot.driveBase.getFieldPosition(), true, RobotInfo.PURE_PURSUIT_PATH);
         }
 
         robot.dashboard.clearDisplay();
@@ -290,13 +291,13 @@ public class FtcAuto extends FtcOpMode
                 if (robot.battery != null)
                 {
                     robot.globalTracer.traceInfo("Battery", "Voltage=%5.2fV (%5.2fV)",
-                            robot.battery.getVoltage(), robot.battery.getLowestVoltage());
+                                                 robot.battery.getVoltage(), robot.battery.getLowestVoltage());
                 }
 
                 if (logEvents)
                 {
                     robot.globalTracer.logEvent(moduleName, "RobotPose", "pose=\"%s\"",
-                            robot.driveBase.getFieldPosition().toString());
+                                                robot.driveBase.getFieldPosition().toString());
                 }
 
                 if (debugXPid && robot.encoderXPidCtrl != null)
@@ -329,8 +330,7 @@ public class FtcAuto extends FtcOpMode
             //
             FtcChoiceMenu<MatchType> matchTypeMenu = new FtcChoiceMenu<>("Match type:", null);
             FtcValueMenu matchNumberMenu = new FtcValueMenu(
-                    "Match number:", matchTypeMenu, 1.0, 50.0, 1.0, 1.0,
-                    "%.0f");
+                "Match number:", matchTypeMenu, 1.0, 50.0, 1.0, 1.0, "%.0f");
             //
             // Populate choice menus.
             //
@@ -361,24 +361,18 @@ public class FtcAuto extends FtcOpMode
         //
         FtcChoiceMenu<Alliance> allianceMenu = new FtcChoiceMenu<>("Alliance:", null);
         FtcValueMenu startDelayMenu = new FtcValueMenu(
-                "Start delay time:", allianceMenu, 0.0, 30.0, 1.0, 0.0,
-                " %.0f sec");
+            "Start delay time:", allianceMenu, 0.0, 30.0, 1.0, 0.0, " %.0f sec");
         FtcChoiceMenu<AutoStrategy> strategyMenu = new FtcChoiceMenu<>("Auto Strategies:", startDelayMenu);
         FtcValueMenu xTargetMenu = new FtcValueMenu(
-                "xTarget:", strategyMenu, -12.0, 12.0, 0.5, 4.0,
-                " %.1f ft");
+            "xTarget:", strategyMenu, -12.0, 12.0, 0.5, 4.0, " %.1f ft");
         FtcValueMenu yTargetMenu = new FtcValueMenu(
-                "yTarget:", xTargetMenu, -12.0, 12.0, 0.5, 4.0,
-                " %.1f ft");
+            "yTarget:", xTargetMenu, -12.0, 12.0, 0.5, 4.0, " %.1f ft");
         FtcValueMenu turnTargetMenu = new FtcValueMenu(
-                "turnTarget:", yTargetMenu, -180.0, 180.0, 5.0, 90.0,
-                " %.0f ft");
+            "turnTarget:", yTargetMenu, -180.0, 180.0, 5.0, 90.0, " %.0f ft");
         FtcValueMenu driveTimeMenu = new FtcValueMenu(
-                "Drive time:", strategyMenu, 0.0, 30.0, 1.0, 5.0,
-                " %.0f sec");
+            "Drive time:", strategyMenu, 0.0, 30.0, 1.0, 5.0, " %.0f sec");
         FtcValueMenu drivePowerMenu = new FtcValueMenu(
-                "Drive power:", strategyMenu, -1.0, 1.0, 0.1, 0.5,
-                " %.1f");
+            "Drive power:", strategyMenu, -1.0, 1.0, 0.1, 0.5, " %.1f");
 
         startDelayMenu.setChildMenu(strategyMenu);
         xTargetMenu.setChildMenu(yTargetMenu);

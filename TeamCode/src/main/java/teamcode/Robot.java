@@ -90,7 +90,7 @@ public class Robot
     {
         static VuforiaLocalizer.CameraDirection cameraDir = RobotInfo.CAMERA_DIR;
         static VuforiaLocalizer.Parameters.CameraMonitorFeedback cameraMonitorFeedback =
-                RobotInfo.CAMERA_MONITOR_FEEDBACK;
+            RobotInfo.CAMERA_MONITOR_FEEDBACK;
         static boolean phoneIsPortrait = RobotInfo.PHONE_IS_PORTRAIT;
         static double phoneFrontOffset = RobotInfo.PHONE_FRONT_OFFSET;
         static double phoneLeftOffset = RobotInfo.PHONE_LEFT_OFFSET;
@@ -169,8 +169,8 @@ public class Robot
         opMode.hardwareMap.logDevices();
         dashboard = FtcDashboard.getInstance();
         dashboard.setTextView(
-                ((FtcRobotControllerActivity)opMode.hardwareMap.appContext).findViewById(
-                        com.qualcomm.ftcrobotcontroller.R.id.textOpMode));
+            ((FtcRobotControllerActivity)opMode.hardwareMap.appContext)
+                .findViewById(com.qualcomm.ftcrobotcontroller.R.id.textOpMode));
         globalTracer = TrcDbgTrace.getGlobalTracer();
         androidTone = new FtcAndroidTone("AndroidTone");
         if (Preferences.useSpeech)
@@ -184,12 +184,12 @@ public class Robot
         if (Preferences.useVuforia || Preferences.useTensorFlow)
         {
             final String VUFORIA_LICENSE_KEY = "Your_Own_Vuforia_Key";
-            int cameraViewId = !Preferences.showVuforiaView ? -1 :
-                    opMode.hardwareMap.appContext.getResources().getIdentifier(
-                            "cameraMonitorViewId", "id", opMode.hardwareMap.appContext.getPackageName());
+            int cameraViewId = !Preferences.showVuforiaView? -1:
+                opMode.hardwareMap.appContext.getResources().getIdentifier(
+                    "cameraMonitorViewId", "id", opMode.hardwareMap.appContext.getPackageName());
 
             vuforia = new FtcVuforia(
-                    VUFORIA_LICENSE_KEY, cameraViewId, PhoneParameters.cameraDir, PhoneParameters.cameraMonitorFeedback);
+                VUFORIA_LICENSE_KEY, cameraViewId, PhoneParameters.cameraDir, PhoneParameters.cameraMonitorFeedback);
 
             if (runMode == TrcRobot.RunMode.AUTO_MODE || runMode == TrcRobot.RunMode.TEST_MODE)
             {
@@ -201,16 +201,16 @@ public class Robot
                 if (Preferences.useTensorFlow)
                 {
                     TrcHomographyMapper.Rectangle cameraRect = new TrcHomographyMapper.Rectangle(
-                            RobotInfo.HOMOGRAPHY_CAMERA_TOPLEFT_X, RobotInfo.HOMOGRAPHY_CAMERA_TOPLEFT_Y,
-                            RobotInfo.HOMOGRAPHY_CAMERA_TOPRIGHT_X, RobotInfo.HOMOGRAPHY_CAMERA_TOPRIGHT_Y,
-                            RobotInfo.HOMOGRAPHY_CAMERA_BOTTOMLEFT_X, RobotInfo.HOMOGRAPHY_CAMERA_BOTTOMLEFT_Y,
-                            RobotInfo.HOMOGRAPHY_CAMERA_BOTTOMRIGHT_X, RobotInfo.HOMOGRAPHY_CAMERA_BOTTOMRIGHT_Y);
+                        RobotInfo.HOMOGRAPHY_CAMERA_TOPLEFT_X, RobotInfo.HOMOGRAPHY_CAMERA_TOPLEFT_Y,
+                        RobotInfo.HOMOGRAPHY_CAMERA_TOPRIGHT_X, RobotInfo.HOMOGRAPHY_CAMERA_TOPRIGHT_Y,
+                        RobotInfo.HOMOGRAPHY_CAMERA_BOTTOMLEFT_X, RobotInfo.HOMOGRAPHY_CAMERA_BOTTOMLEFT_Y,
+                        RobotInfo.HOMOGRAPHY_CAMERA_BOTTOMRIGHT_X, RobotInfo.HOMOGRAPHY_CAMERA_BOTTOMRIGHT_Y);
 
                     TrcHomographyMapper.Rectangle worldRect = new TrcHomographyMapper.Rectangle(
-                            RobotInfo.HOMOGRAPHY_WORLD_TOPLEFT_X, RobotInfo.HOMOGRAPHY_WORLD_TOPLEFT_Y,
-                            RobotInfo.HOMOGRAPHY_WORLD_TOPRIGHT_X, RobotInfo.HOMOGRAPHY_WORLD_TOPRIGHT_Y,
-                            RobotInfo.HOMOGRAPHY_WORLD_BOTTOMLEFT_X, RobotInfo.HOMOGRAPHY_WORLD_BOTTOMLEFT_Y,
-                            RobotInfo.HOMOGRAPHY_WORLD_BOTTOMRIGHT_X, RobotInfo.HOMOGRAPHY_WORLD_BOTTOMRIGHT_Y);
+                        RobotInfo.HOMOGRAPHY_WORLD_TOPLEFT_X, RobotInfo.HOMOGRAPHY_WORLD_TOPLEFT_Y,
+                        RobotInfo.HOMOGRAPHY_WORLD_TOPRIGHT_X, RobotInfo.HOMOGRAPHY_WORLD_TOPRIGHT_Y,
+                        RobotInfo.HOMOGRAPHY_WORLD_BOTTOMLEFT_X, RobotInfo.HOMOGRAPHY_WORLD_BOTTOMLEFT_Y,
+                        RobotInfo.HOMOGRAPHY_WORLD_BOTTOMRIGHT_X, RobotInfo.HOMOGRAPHY_WORLD_BOTTOMRIGHT_Y);
 
                     initTensorFlow(Preferences.showTensorFlowView, cameraRect, worldRect);
                 }
@@ -248,17 +248,17 @@ public class Robot
                 if (Preferences.hasElevator)
                 {
                     final FtcMotorActuator.Parameters elevatorParams = new FtcMotorActuator.Parameters()
-                            .setPosRange(RobotInfo.ELEVATOR_MIN_HEIGHT, RobotInfo.ELEVATOR_MAX_HEIGHT)
-                            .setScaleOffset(RobotInfo.ELEVATOR_SCALE, RobotInfo.ELEVATOR_OFFSET)
-                            .setPidParams(
-                                    RobotInfo.ELEVATOR_KP, RobotInfo.ELEVATOR_KI, RobotInfo.ELEVATOR_KD,
-                                    RobotInfo.ELEVATOR_TOLERANCE)
-                            .setMotorParams(
-                                    RobotInfo.ELEVATOR_INVERTED, RobotInfo.ELEVATOR_HAS_LOWER_LIMIT_SWITCH,
-                                    RobotInfo.ELEVATOR_HAS_UPPER_LIMIT_SWITCH, RobotInfo.ELEVATOR_CAL_POWER)
-                            .setStallProtectionParams(
-                                    RobotInfo.ELEVATOR_STALL_MIN_POWER, RobotInfo.ELEVATOR_STALL_TIMEOUT,
-                                    RobotInfo.ELEVATOR_RESET_TIMEOUT);
+                        .setPosRange(RobotInfo.ELEVATOR_MIN_HEIGHT, RobotInfo.ELEVATOR_MAX_HEIGHT)
+                        .setScaleOffset(RobotInfo.ELEVATOR_SCALE, RobotInfo.ELEVATOR_OFFSET)
+                        .setPidParams(
+                            RobotInfo.ELEVATOR_KP, RobotInfo.ELEVATOR_KI, RobotInfo.ELEVATOR_KD,
+                            RobotInfo.ELEVATOR_TOLERANCE)
+                        .setMotorParams(
+                            RobotInfo.ELEVATOR_INVERTED, RobotInfo.ELEVATOR_HAS_LOWER_LIMIT_SWITCH,
+                            RobotInfo.ELEVATOR_HAS_UPPER_LIMIT_SWITCH, RobotInfo.ELEVATOR_CAL_POWER)
+                        .setStallProtectionParams(
+                            RobotInfo.ELEVATOR_STALL_MIN_POWER, RobotInfo.ELEVATOR_STALL_TIMEOUT,
+                            RobotInfo.ELEVATOR_RESET_TIMEOUT);
                     elevator = new FtcMotorActuator("elevator", elevatorParams);
                     elevator.setBeep(androidTone);
                     elevator.zeroCalibrate();
@@ -412,7 +412,7 @@ public class Robot
         if (blinkin != null && Preferences.useBlinkinFlashLight)
         {
             blinkin.setPattern(
-                    blinkinFlashOn? TrcRevBlinkin.LEDPattern.SolidWhite: TrcRevBlinkin.LEDPattern.SolidBlack);
+                blinkinFlashOn? TrcRevBlinkin.LEDPattern.SolidWhite: TrcRevBlinkin.LEDPattern.SolidBlack);
         }
     }   //setFlashLightOn
 
@@ -449,11 +449,11 @@ public class Robot
          * 200 mm above ground level.
          */
         final int CAMERA_FORWARD_DISPLACEMENT =
-                (int)((RobotInfo.ROBOT_LENGTH/2.0 - PhoneParameters.phoneFrontOffset)* TrcUtil.MM_PER_INCH);
+            (int)((RobotInfo.ROBOT_LENGTH/2.0 - PhoneParameters.phoneFrontOffset)* TrcUtil.MM_PER_INCH);
         final int CAMERA_VERTICAL_DISPLACEMENT =
-                (int)(PhoneParameters.phoneHeightOffset*TrcUtil.MM_PER_INCH);
+            (int)(PhoneParameters.phoneHeightOffset*TrcUtil.MM_PER_INCH);
         final int CAMERA_LEFT_DISPLACEMENT =
-                (int)((RobotInfo.ROBOT_WIDTH/2.0 - PhoneParameters.phoneLeftOffset)*TrcUtil.MM_PER_INCH);
+            (int)((RobotInfo.ROBOT_WIDTH/2.0 - PhoneParameters.phoneLeftOffset)*TrcUtil.MM_PER_INCH);
         //
         // Create a transformation matrix describing where the phone is on the robot.
         //
@@ -478,9 +478,9 @@ public class Robot
         // In this example, it is centered (left to right), but forward of the middle of the robot, and above ground level.
 
         OpenGLMatrix robotFromCamera = OpenGLMatrix
-                .translation(CAMERA_FORWARD_DISPLACEMENT, CAMERA_LEFT_DISPLACEMENT, CAMERA_VERTICAL_DISPLACEMENT)
-                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, YZX, DEGREES,
-                        phoneYRotate, phoneZRotate, phoneXRotate));
+            .translation(CAMERA_FORWARD_DISPLACEMENT, CAMERA_LEFT_DISPLACEMENT, CAMERA_VERTICAL_DISPLACEMENT)
+            .multiplied(Orientation.getRotationMatrix(
+                EXTRINSIC, YZX, DEGREES, phoneYRotate, phoneZRotate, phoneXRotate));
 
         vuforiaVision = new VuforiaVision(this, vuforia, robotFromCamera);
     }   //initVuforia
@@ -493,18 +493,16 @@ public class Robot
      * @param worldRect specifies the world rectangle for Homography Mapper.
      */
     private void initTensorFlow(
-            boolean showTensorFlowView, TrcHomographyMapper.Rectangle cameraRect,
-            TrcHomographyMapper.Rectangle worldRect)
+        boolean showTensorFlowView, TrcHomographyMapper.Rectangle cameraRect, TrcHomographyMapper.Rectangle worldRect)
     {
         final String funcName = "initTensorFlow";
 
         System.loadLibrary(OPENCV_NATIVE_LIBRARY_NAME);
 
-        int tfodMonitorViewId = !showTensorFlowView ? -1 :
-                opMode.hardwareMap.appContext.getResources().getIdentifier(
-                        "tfodMonitorViewId", "id", opMode.hardwareMap.appContext.getPackageName());
-        tensorFlowVision = new TensorFlowVision(
-                vuforia, tfodMonitorViewId, cameraRect, worldRect, globalTracer);
+        int tfodMonitorViewId = !showTensorFlowView ?-1 :
+            opMode.hardwareMap.appContext.getResources().getIdentifier(
+                "tfodMonitorViewId", "id", opMode.hardwareMap.appContext.getPackageName());
+        tensorFlowVision = new TensorFlowVision(vuforia, tfodMonitorViewId, cameraRect, worldRect, globalTracer);
         tensorFlowVision.setEnabled(true, Preferences.usePhoneFlashLight);
         globalTracer.traceInfo(funcName, "Enabling TensorFlow.");
     } //initTensorFlow
@@ -551,11 +549,11 @@ public class Robot
             // odometry.
             //
             TrcDriveBaseOdometry driveBaseOdometry = new TrcDriveBaseOdometry(
-                    new TrcDriveBaseOdometry.AxisSensor(leftFrontWheel, RobotInfo.X_ODOMETRY_OFFSET),
-                    new TrcDriveBaseOdometry.AxisSensor[] {
-                            new TrcDriveBaseOdometry.AxisSensor(leftBackWheel),
-                            new TrcDriveBaseOdometry.AxisSensor(rightBackWheel)},
-                    gyro);
+                new TrcDriveBaseOdometry.AxisSensor(leftFrontWheel, RobotInfo.X_ODOMETRY_OFFSET),
+                new TrcDriveBaseOdometry.AxisSensor[] {
+                    new TrcDriveBaseOdometry.AxisSensor(leftBackWheel),
+                    new TrcDriveBaseOdometry.AxisSensor(rightBackWheel)},
+                gyro);
             //
             // Set the drive base to use the external odometry device overriding the built-in one.
             //
@@ -576,16 +574,15 @@ public class Robot
             RobotInfo.ROBOT_VEL_KP, RobotInfo.ROBOT_VEL_KI, RobotInfo.ROBOT_VEL_KD, RobotInfo.ROBOT_VEL_KF);
 
         encoderXPidCtrl = new TrcPidController(
-                "encoderXPidCtrl", xPosPidCoeff, RobotInfo.ENCODER_X_TOLERANCE, driveBase::getXPosition);
+            "encoderXPidCtrl", xPosPidCoeff, RobotInfo.ENCODER_X_TOLERANCE, driveBase::getXPosition);
         encoderYPidCtrl = new TrcPidController(
-                "encoderYPidCtrl", yPosPidCoeff, RobotInfo.ENCODER_Y_TOLERANCE, driveBase::getYPosition);
+            "encoderYPidCtrl", yPosPidCoeff, RobotInfo.ENCODER_Y_TOLERANCE, driveBase::getYPosition);
         gyroPidCtrl = new TrcPidController(
-                "gyroPidCtrl", turnPidCoeff, RobotInfo.GYRO_TOLERANCE, driveBase::getHeading);
+            "gyroPidCtrl", turnPidCoeff, RobotInfo.GYRO_TOLERANCE, driveBase::getHeading);
         gyroPidCtrl.setAbsoluteSetPoint(true);
         gyroPidCtrl.setOutputLimit(RobotInfo.TURN_POWER_LIMIT);
 
-        pidDrive = new TrcPidDrive(
-                "pidDrive", driveBase, encoderXPidCtrl, encoderYPidCtrl, gyroPidCtrl);
+        pidDrive = new TrcPidDrive("pidDrive", driveBase, encoderXPidCtrl, encoderYPidCtrl, gyroPidCtrl);
         pidDrive.setAbsoluteTargetModeEnabled(true);
         pidDrive.setStallTimeout(RobotInfo.PIDDRIVE_STALL_TIMEOUT);
         pidDrive.setBeep(androidTone);

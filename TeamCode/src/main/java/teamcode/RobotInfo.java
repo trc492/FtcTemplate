@@ -86,7 +86,7 @@ public class RobotInfo
     // Assuming the robot is placed at the center of the field for which we will set as field origin (i.e. x=0, y=0,
     // heading=0), this path will drive an infinity pattern.
     //
-    static final TrcPose2D[] PURE_PURSUIT_PATH                  = new TrcPose2D[]{
+    static final TrcPose2D[] PURE_PURSUIT_PATH = new TrcPose2D[]{
         new TrcPose2D(-24.0, 0, 45.0),
         new TrcPose2D(-24.0, 48.0, 135.0),
         new TrcPose2D(24.0, 48.0, 225.0),
@@ -100,7 +100,7 @@ public class RobotInfo
     //
     static final VuforiaLocalizer.CameraDirection CAMERA_DIR    = BACK;
     static final VuforiaLocalizer.Parameters.CameraMonitorFeedback CAMERA_MONITOR_FEEDBACK =
-            VuforiaLocalizer.Parameters.CameraMonitorFeedback.AXES;
+        VuforiaLocalizer.Parameters.CameraMonitorFeedback.AXES;
     static final String TRACKABLE_IMAGES_FILE                   = "Skystone";
     static final boolean PHONE_IS_PORTRAIT                      = false;
     static final double ROBOT_LENGTH                            = 18.0; //Robot length in inches
