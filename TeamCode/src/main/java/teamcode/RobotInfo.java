@@ -83,8 +83,8 @@ public class RobotInfo
     // KF should be set to the reciprocal of max tangential velocity (time to travel unit distance), units: sec./in.
     static final double ROBOT_VEL_KF                            = 1.0 / ROBOT_MAX_VELOCITY;
     //
-    // Assuming the robot was at (x=0, y=0, heading=0) on the field initially. This path will drive an infinity
-    // pattern.
+    // Assuming the robot is placed at the center of the field for which we will set as field origin (i.e. x=0, y=0,
+    // heading=0), this path will drive an infinity pattern.
     //
     static final TrcPose2D[] PURE_PURSUIT_PATH                  = new TrcPose2D[]{
         new TrcPose2D(-24.0, 0, 45.0),
