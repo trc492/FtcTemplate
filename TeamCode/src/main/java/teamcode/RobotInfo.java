@@ -68,35 +68,33 @@ public class RobotInfo
     //
     // Pure Pursuit parameters.
     //
-    static final double PURE_PURSUIT_POS_KP                     = (.1 + .05) / 2.0;
-    static final double PURE_PURSUIT_POS_KI                     = 0.0;
-    static final double PURE_PURSUIT_POS_KD                     = 0.0;
-
-    static final double PURE_PURSUIT_TURN_KP                    = 0.0125;
-    static final double PURE_PURSUIT_TURN_KI                    = 0.0;
-    static final double PURE_PURSUIT_TURN_KD                    = 0.00125;
-
-    static final double PURE_PURSUIT_VEL_KP                     = 0.0;
-    static final double PURE_PURSUIT_VEL_KI                     = 0.0;
-    static final double PURE_PURSUIT_VEL_KD                     = 0.9;
     // Neverest 40 motor, max shaft speed = 160 RPM
     // motor-to-wheel tooth ratio = 24:16 = 3:2
     // wheel max angular speed = (3 / 2) * 160 RPM
     // max tangential speed of wheel (in/s) = wheel max angular speed * 2 * pi * radius / 60.0
     // = (3 / 2) * (160 RPM) * 2 * 3.1415926 * (2 in.) / 60.0
     // = 50.2654816 in./sec.
-    // KF should be set to the reciprocal of max tangential velocity (time to travel unit distance), units: sec./in.
-    static final double PURE_PURSUIT_VEL_KF                     = 1.0 / 50.2654816;
-    //
-    // Assuming the robot was at (x=0, y=0, heading=0) on the field initially.
-    // At the end, the robot will be at (x=36, y=36, heading=90).
-    //
-    static final TrcPose2D[] PURE_PURSUIT_TEST_PATH             = new TrcPose2D[] {
-            new TrcPose2D(0.0, 36.0, 0.0),          // forward 36 inches
-            new TrcPose2D(24.0, 0.0, 90.0),         // strafe right 24 inches and turn clockwise 90 degrees
-            new TrcPose2D(0.0, 12.0, 0.0)           // forward another 12 inches
-    };
+    static final double ROBOT_MAX_VELOCITY                      = 50.2654816;
+    static final double ROBOT_MAX_ACCELERATION                  = 24.0;
 
+    static final double ROBOT_VEL_KP                            = 0.0;
+    static final double ROBOT_VEL_KI                            = 0.0;
+    static final double ROBOT_VEL_KD                            = 0.0;
+    // KF should be set to the reciprocal of max tangential velocity (time to travel unit distance), units: sec./in.
+    static final double ROBOT_VEL_KF                            = 1.0 / ROBOT_MAX_VELOCITY;
+    //
+    // Assuming the robot was at (x=0, y=0, heading=0) on the field initially. This path will drive an infinity
+    // pattern.
+    //
+    static final TrcPose2D[] PURE_PURSUIT_PATH                  = new TrcPose2D[]{
+        new TrcPose2D(-24.0, 0, 45.0),
+        new TrcPose2D(-24.0, 48.0, 135.0),
+        new TrcPose2D(24.0, 48.0, 225.0),
+        new TrcPose2D(0.0, 46.0, 270.0),
+        new TrcPose2D(0.0, 0.0, 0.0),
+        new TrcPose2D(-23.0, 47.0, 225.0),
+        new TrcPose2D(0.0, 0.0, 0.0)
+    };
     //
     // Vision subsystem.
     //

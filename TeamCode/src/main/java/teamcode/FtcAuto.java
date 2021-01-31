@@ -33,6 +33,7 @@ import TrcCommonLib.command.CmdTimedDrive;
 import java.util.Date;
 import java.util.Locale;
 
+import TrcCommonLib.trclib.TrcPose2D;
 import TrcCommonLib.trclib.TrcRobot;
 import TrcFtcLib.ftclib.FtcChoiceMenu;
 import TrcFtcLib.ftclib.FtcMenu;
@@ -164,7 +165,8 @@ public class FtcAuto extends FtcOpMode
                 if (!Robot.Preferences.visionOnly)
                 {
                     autoCommand = new CmdPurePursuitDrive(
-                            robot.driveBase, robot.posPidCoeff, robot.turnPidCoeff, robot.velPidCoeff);
+                        robot.driveBase, robot.xPosPidCoeff, robot.yPosPidCoeff, robot.turnPidCoeff, robot.velPidCoeff,
+                        RobotInfo.ROBOT_MAX_VELOCITY, RobotInfo.ROBOT_MAX_ACCELERATION);
                 }
                 break;
 
@@ -172,9 +174,8 @@ public class FtcAuto extends FtcOpMode
                 if (!Robot.Preferences.visionOnly)
                 {
                     autoCommand = new CmdPidDrive(
-                            robot.driveBase, robot.pidDrive, autoChoices.startDelay,
-                            autoChoices.xTarget*12.0, autoChoices.yTarget*12.0, autoChoices.turnTarget,
-                            autoChoices.drivePower, false, null);
+                        robot.driveBase, robot.pidDrive, autoChoices.startDelay, autoChoices.drivePower, null,
+                        new TrcPose2D(autoChoices.xTarget*12.0, autoChoices.yTarget*12.0, autoChoices.turnTarget));
                 }
                 break;
 
@@ -231,7 +232,7 @@ public class FtcAuto extends FtcOpMode
         if (autoChoices.strategy == AutoStrategy.PURE_PURSUIT_DRIVE)
         {
             ((CmdPurePursuitDrive)autoCommand).start(
-                    robot.driveBase.getFieldPosition(), true, RobotInfo.PURE_PURSUIT_TEST_PATH);
+                    robot.driveBase.getFieldPosition(), true, RobotInfo.PURE_PURSUIT_PATH);
         }
 
         robot.dashboard.clearDisplay();

@@ -141,7 +141,8 @@ public class Robot
     public TrcPidDrive pidDrive = null;
 
     // Pure Pursuit PID controllers.
-    public TrcPidController.PidCoefficients posPidCoeff = null;
+    public TrcPidController.PidCoefficients xPosPidCoeff = null;
+    public TrcPidController.PidCoefficients yPosPidCoeff = null;
     public TrcPidController.PidCoefficients turnPidCoeff = null;
     public TrcPidController.PidCoefficients velPidCoeff = null;
 
@@ -565,21 +566,21 @@ public class Robot
         //
         // Initialize PID drive.
         //
+        xPosPidCoeff = new TrcPidController.PidCoefficients(
+            RobotInfo.ENCODER_X_KP, RobotInfo.ENCODER_X_KI, RobotInfo.ENCODER_X_KD);
+        yPosPidCoeff = new TrcPidController.PidCoefficients(
+            RobotInfo.ENCODER_Y_KP, RobotInfo.ENCODER_Y_KI, RobotInfo.ENCODER_Y_KD);
+        turnPidCoeff = new TrcPidController.PidCoefficients(
+            RobotInfo.GYRO_KP, RobotInfo.GYRO_KI, RobotInfo.GYRO_KD);
+        velPidCoeff = new TrcPidController.PidCoefficients(
+            RobotInfo.ROBOT_VEL_KP, RobotInfo.ROBOT_VEL_KI, RobotInfo.ROBOT_VEL_KD, RobotInfo.ROBOT_VEL_KF);
+
         encoderXPidCtrl = new TrcPidController(
-                "encoderXPidCtrl",
-                new TrcPidController.PidCoefficients(
-                        RobotInfo.ENCODER_X_KP, RobotInfo.ENCODER_X_KI, RobotInfo.ENCODER_X_KD),
-                RobotInfo.ENCODER_X_TOLERANCE, driveBase::getXPosition);
+                "encoderXPidCtrl", xPosPidCoeff, RobotInfo.ENCODER_X_TOLERANCE, driveBase::getXPosition);
         encoderYPidCtrl = new TrcPidController(
-                "encoderYPidCtrl",
-                new TrcPidController.PidCoefficients(
-                        RobotInfo.ENCODER_Y_KP, RobotInfo.ENCODER_Y_KI, RobotInfo.ENCODER_Y_KD),
-                RobotInfo.ENCODER_Y_TOLERANCE, driveBase::getYPosition);
+                "encoderYPidCtrl", yPosPidCoeff, RobotInfo.ENCODER_Y_TOLERANCE, driveBase::getYPosition);
         gyroPidCtrl = new TrcPidController(
-                "gyroPidCtrl",
-                new TrcPidController.PidCoefficients(
-                        RobotInfo.GYRO_KP, RobotInfo.GYRO_KI, RobotInfo.GYRO_KD),
-                RobotInfo.GYRO_TOLERANCE, driveBase::getHeading);
+                "gyroPidCtrl", turnPidCoeff, RobotInfo.GYRO_TOLERANCE, driveBase::getHeading);
         gyroPidCtrl.setAbsoluteSetPoint(true);
         gyroPidCtrl.setOutputLimit(RobotInfo.TURN_POWER_LIMIT);
 
@@ -589,14 +590,6 @@ public class Robot
         pidDrive.setStallTimeout(RobotInfo.PIDDRIVE_STALL_TIMEOUT);
         pidDrive.setBeep(androidTone);
         pidDrive.setMsgTracer(globalTracer);
-
-        posPidCoeff = new TrcPidController.PidCoefficients(
-                RobotInfo.PURE_PURSUIT_POS_KP, RobotInfo.PURE_PURSUIT_POS_KI, RobotInfo.PURE_PURSUIT_POS_KD);
-        turnPidCoeff = new TrcPidController.PidCoefficients(
-                RobotInfo.PURE_PURSUIT_TURN_KP, RobotInfo.PURE_PURSUIT_TURN_KI, RobotInfo.PURE_PURSUIT_TURN_KD);
-         velPidCoeff = new TrcPidController.PidCoefficients(
-                 RobotInfo.PURE_PURSUIT_VEL_KP, RobotInfo.PURE_PURSUIT_VEL_KI, RobotInfo.PURE_PURSUIT_VEL_KD,
-                 RobotInfo.PURE_PURSUIT_VEL_KF);
     }   //initDriveBase
 
 }   //class Robot

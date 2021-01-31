@@ -30,13 +30,9 @@ import TrcCommonLib.command.CmdPurePursuitDrive;
 import TrcCommonLib.command.CmdTimedDrive;
 
 import TrcCommonLib.trclib.TrcElapsedTimer;
-import TrcCommonLib.trclib.TrcEvent;
 import TrcCommonLib.trclib.TrcGameController;
-import TrcCommonLib.trclib.TrcPathBuilder;
 import TrcCommonLib.trclib.TrcPose2D;
 import TrcCommonLib.trclib.TrcRobot;
-import TrcCommonLib.trclib.TrcStateMachine;
-import TrcCommonLib.trclib.TrcTimer;
 import TrcFtcLib.ftclib.FtcChoiceMenu;
 import TrcFtcLib.ftclib.FtcDcMotor;
 import TrcFtcLib.ftclib.FtcGamepad;
@@ -49,10 +45,10 @@ import TrcFtcLib.ftclib.FtcValueMenu;
 @TeleOp(name="FtcTest", group="FtcTest")
 public class FtcTest extends FtcTeleOp
 {
+    private static final String moduleName = "FtcTest";
     private static final boolean debugXPid = true;
     private static final boolean debugYPid = true;
     private static final boolean debugTurnPid = true;
-    private static final String moduleName = "FtcTest";
 
     private enum Test
     {
@@ -68,20 +64,7 @@ public class FtcTest extends FtcTeleOp
         PURE_PURSUIT_DRIVE
     }   //enum Test
 
-    private enum State
-    {
-        START,
-        STOP,
-        DONE
-    }   //enum State
-
     private TrcElapsedTimer elapsedTimer = null;
-    //
-    // State machine.
-    //
-    private TrcEvent event;
-    private TrcTimer timer;
-    private TrcStateMachine<State> sm;
     //
     // Made the following menus static so their values will persist across different runs of PID tuning.
     //
@@ -121,12 +104,6 @@ public class FtcTest extends FtcTeleOp
             elapsedTimer = new TrcElapsedTimer("TestLoopMonitor", 2.0);
         }
         //
-        // Initialize additional objects.
-        //
-        event = new TrcEvent(moduleName);
-        timer = new TrcTimer(moduleName);
-        sm = new TrcStateMachine<>(moduleName);
-        //
         // Test menus.
         //
         doTestMenus();
@@ -137,9 +114,9 @@ public class FtcTest extends FtcTeleOp
                 if (!Robot.Preferences.visionOnly)
                 {
                     testCommand = new CmdDriveMotorsTest(
-                            new FtcDcMotor[] {robot.leftFrontWheel, robot.rightFrontWheel,
-                                              robot.leftBackWheel, robot.rightBackWheel},
-                            5.0, 0.5);
+                        new FtcDcMotor[] {robot.leftFrontWheel, robot.rightFrontWheel,
+                                          robot.leftBackWheel, robot.rightBackWheel},
+                        5.0, 0.5);
                 }
                 break;
 
@@ -147,7 +124,7 @@ public class FtcTest extends FtcTeleOp
                 if (!Robot.Preferences.visionOnly)
                 {
                     testCommand = new CmdTimedDrive(
-                            robot.driveBase, 0.0, driveTime, drivePower, 0.0, 0.0);
+                        robot.driveBase, 0.0, driveTime, drivePower, 0.0, 0.0);
                 }
                 break;
 
@@ -155,7 +132,7 @@ public class FtcTest extends FtcTeleOp
                 if (!Robot.Preferences.visionOnly)
                 {
                     testCommand = new CmdTimedDrive(
-                            robot.driveBase, 0.0, driveTime, 0.0, drivePower, 0.0);
+                        robot.driveBase, 0.0, driveTime, 0.0, drivePower, 0.0);
                 }
                 break;
 
@@ -163,8 +140,8 @@ public class FtcTest extends FtcTeleOp
                 if (!Robot.Preferences.visionOnly)
                 {
                     testCommand = new CmdPidDrive(
-                            robot.driveBase, robot.pidDrive, 0.0, xTarget*12.0, yTarget*12.0, turnTarget,
-                            drivePower, false, null);
+                        robot.driveBase, robot.pidDrive, 0.0, drivePower, null,
+                        new TrcPose2D(xTarget*12.0, yTarget*12.0, turnTarget));
                 }
                 break;
 
@@ -172,8 +149,8 @@ public class FtcTest extends FtcTeleOp
                 if (!Robot.Preferences.visionOnly)
                 {
                     testCommand = new CmdPidDrive(
-                            robot.driveBase, robot.pidDrive, 0.0, xTarget*12.0, 0.0, 0.0, drivePower,
-                            false, robot.tunePidCoeff);
+                        robot.driveBase, robot.pidDrive, 0.0, drivePower, robot.tunePidCoeff,
+                        new TrcPose2D(xTarget*12.0, 0.0, 0.0));
                 }
                 break;
 
@@ -181,8 +158,8 @@ public class FtcTest extends FtcTeleOp
                 if (!Robot.Preferences.visionOnly)
                 {
                     testCommand = new CmdPidDrive(
-                            robot.driveBase, robot.pidDrive, 0.0, 0.0, yTarget*12.0, 0.0, drivePower,
-                            false, robot.tunePidCoeff);
+                        robot.driveBase, robot.pidDrive, 0.0, drivePower, robot.tunePidCoeff,
+                        new TrcPose2D(0.0, yTarget*12.0, 0.0));
                 }
                 break;
 
@@ -190,8 +167,8 @@ public class FtcTest extends FtcTeleOp
                 if (!Robot.Preferences.visionOnly)
                 {
                     testCommand = new CmdPidDrive(
-                            robot.driveBase, robot.pidDrive, 0.0, 0.0, 0.0, turnTarget, drivePower,
-                            false, robot.tunePidCoeff);
+                        robot.driveBase, robot.pidDrive, 0.0, drivePower, robot.tunePidCoeff,
+                        new TrcPose2D(0.0, 0.0, turnTarget));
                 }
                 break;
 
@@ -199,7 +176,8 @@ public class FtcTest extends FtcTeleOp
                 if (!Robot.Preferences.visionOnly)
                 {
                     testCommand = new CmdPurePursuitDrive(
-                            robot.driveBase, robot.posPidCoeff, robot.turnPidCoeff, robot.velPidCoeff);
+                        robot.driveBase, robot.xPosPidCoeff, robot.yPosPidCoeff, robot.turnPidCoeff, robot.velPidCoeff,
+                        RobotInfo.ROBOT_MAX_VELOCITY, RobotInfo.ROBOT_MAX_ACCELERATION);
                 }
                 break;
         }
@@ -212,8 +190,6 @@ public class FtcTest extends FtcTeleOp
             robot.tensorFlowVision.shutdown();
             robot.tensorFlowVision = null;
         }
-
-        sm.start(State.START);
     }   //initRobot
 
     //
@@ -231,22 +207,19 @@ public class FtcTest extends FtcTeleOp
         else if (test == Test.PURE_PURSUIT_DRIVE)
         {
             //
-            // Doing a figure 8.
+            // Doing an infinity.
             //
             // Set the current position as the absolute field origin so the path can be an absolute path.
             robot.driveBase.setFieldPosition(new TrcPose2D(0.0, 0.0, 0.0));
-            TrcPathBuilder pathBuilder = new TrcPathBuilder(robot.driveBase.getFieldPosition(), false)
-                .append(new TrcPose2D(-24.0, 0, 45.0))
-                .append(new TrcPose2D(-24.0, 48.0, 135.0))
-                .append(new TrcPose2D(24.0, 48.0, 225.0))
-                .append(new TrcPose2D(24.0, 0.0, 270.0))
-                .append(new TrcPose2D(-24.0, 0.0, 135.0))
-                .append(new TrcPose2D(-24.0, -48.0, 45.0))
-                .append(new TrcPose2D(24.0, -48.0, -45.0))
-                .append(new TrcPose2D(24.0, 0.0, -90.0))
-                .append(new TrcPose2D(0.0, 0.0, 0.0));
-            robot.globalTracer.traceInfo(moduleName, "PurePursuitPath=%s", pathBuilder.toRelativeStartPath());
-            ((CmdPurePursuitDrive)testCommand).start(pathBuilder.toRelativeStartPath());
+            ((CmdPurePursuitDrive)testCommand).start(
+                robot.driveBase.getFieldPosition(), false,
+                new TrcPose2D(-24.0, 0, 45.0),
+                new TrcPose2D(-24.0, 48.0, 135.0),
+                new TrcPose2D(24.0, 48.0, 225.0),
+                new TrcPose2D(0.0, 46.0, 270.0),
+                new TrcPose2D(0.0, 0.0, 0.0),
+                new TrcPose2D(-23.0, 47.0, 225.0),
+                new TrcPose2D(0.0, 0.0, 0.0));
         }
     }   //startMode
 
@@ -290,10 +263,6 @@ public class FtcTest extends FtcTeleOp
     @Override
     public void runContinuous(double elapsedTime)
     {
-        State state = sm.getState();
-        robot.dashboard.displayPrintf(
-                8, "%s: %s", test.toString(), state != null? state.toString(): "STOPPED!");
-
         if (testCommand != null)
         {
             testCommand.cmdPeriodic(elapsedTime);
