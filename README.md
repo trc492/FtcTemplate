@@ -35,7 +35,7 @@ Once the drive base is fully functional, the next step is to create subsystems f
    ```
    public class Slide
    {
-       public final TrcMotor slideMotor;
+       private final TrcMotor slideMotor;
 
        /**
         * Constructor: Creates an instance of the object.
