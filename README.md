@@ -31,17 +31,160 @@ The next step is to determine the odometry scales (X and Y). This is applicable 
 
 ### Creating Subsystems
 Once the drive base is fully functional, the next step is to create subsystems for the robot such as Elevator, Arm, Intake, Grabber etc. It is a good practice to create a subsystem as a separate Java class that encapsulates all hardware related to that subsystem. To create a subsystem, follow the steps below:
-1. Create a Java class in the subsystems folder (e.g. Intake.java).
-2. In Robot.java, add a public class variable in the Subsystem section:
+1. Create a Java class in the subsystems folder (e.g. Slide.java).
    ```
-   public Intake intake;
-   ```
-4. In the constructor of Robot.java, under the Subsystem section, add code to create and initialize the subsystem:
-   ```
-   if (RobotParams.Preferences.useIntake)
+   public class Slide
    {
-       intake = new Intake(RobotParams.HWNAME_INTAKE, this);
+       public final TrcMotor slideMotor;
+
+       /**
+        * Constructor: Creates an instance of the object.
+        */
+       public Slide()
+       {
+           FtcMotorActuator.Params slideParams = new FtcMotorActuator.Params()
+               .setMotorInverted(RobotParams.SLIDE_MOTOR_INVERTED)
+               .setLowerLimitSwitch(
+                   RobotParams.SLIDE_HAS_LOWER_LIMIT_SWITCH,
+                   RobotParams.SLIDE_LOWER_LIMIT_INVERTED)
+               .setUpperLimitSwitch(
+                   RobotParams.SLIDE_HAS_UPPER_LIMIT_SWITCH,
+                   RobotParams.SLIDE_UPPER_LIMIT_INVERTED)
+               .setVoltageCompensationEnabled(RobotParams.SLIDE_VOLTAGE_COMP_ENABLED)
+               .setPositionScaleAndOffset(RobotParams.SLIDE_INCHES_PER_COUNT, RobotParams.SLIDE_OFFSET)
+               .setPositionPresets(RobotParams.SLIDE_PRESET_TOLERANCE, RobotParams.SLIDE_PRESETS);
+           slideMotor = new FtcMotorActuator(RobotParams.HWNAME_SLIDE, slideParams).getActuator();
+           slideMotor.setSoftwarePidEnabled(true);
+           slideMotor.setPositionPidCoefficients(
+               RobotParams.SLIDE_KP, RobotParams.SLIDE_KI, RobotParams.SLIDE_KD, RobotParams.SLIDE_KF,
+               RobotParams.SLIDE_IZONE);
+           slideMotor.setPositionPidTolerance(RobotParams.SLIDE_TOLERANCE);
+           slideMotor.setStallDetectionEnabled(
+               RobotParams.SLIDE_STALL_DETECTION_DELAY, RobotParams.SLIDE_STALL_DETECTION_TIMEOUT,
+               RobotParams.SLIDE_STALL_ERR_RATE_THRESHOLD);
+       }
+
+       public TrcMotor getSlideMotor()
+       {
+           return slideMotor;
+       }
+
    }
+   ```
+2. In Robot.java, add a public class variable in the Subsystem section.
+   ```
+   public TrcMotor slide;
+   ```
+3. In the constructor of Robot.java, under the Subsystem section, add code to create and initialize the subsystem.
+   ```
+   if (RobotParams.Preferences.useSlide)
+   {
+       slide = new Slide().getSlideMotor();
+   }
+   ```
+4. In RobotParams.java, add a Preferences that can turn the subsystem ON or OFF. This is very useful when developing code for an unfinished robot where some subsystem may or may not exist yet.
+   ```
+   public static boolean useSlide = true;
+   ```
+5. In RobotParams.java, add a HWNAME for the subsystem. This will become either the name or name prefix for the hardware in the robot configuration (e.g. slide.motor, slide.lowerLimit).
+   ```
+   public static final String HWNAME_SLIDE = "slide";
+   ```
+6. At the end of RobotParams.java, under the Subsystem section, add constants that characterize the subsystem.
+   ```
+   public static final boolean SLIDE_MOTOR_INVERTED = false;
+   public static final boolean SLIDE_HAS_LOWER_LIMIT_SWITCH = true;
+   public static final boolean SLIDE_LOWER_LIMIT_INVERTED = false;
+   public static final boolean SLIDE_HAS_UPPER_LIMIT_SWITCH = false;
+   public static final boolean SLIDE_UPPER_LIMIT_INVERTED = false;
+   public static final boolean SLIDE_VOLTAGE_COMP_ENABLED = true;
+   public static final double SLIDE_ENCODER_PPR = GOBILDA_5203_312_ENCODER_PPR;
+   public static final double SLIDE_PULLEY_DIAMETER = 1.405;
+   public static final double SLIDE_PULLEY_CIRCUMFERENCE = Math.PI*SLIDE_PULLEY_DIAMETER;
+   public static final double SLIDE_INCHES_PER_COUNT = SLIDE_PULLEY_CIRCUMFERENCE/SLIDE_ENCODER_PPR;
+   public static final double SLIDE_POWER_LIMIT = 1.0;
+   public static final double SLIDE_OFFSET = 0.0;
+   public static final double SLIDE_MIN_POS = SLIDE_OFFSET;
+   public static final double SLIDE_MAX_POS = 24.0;
+   public static final double SLIDE_POS_1 = 6.0;
+   public static final double SLIDE_POS_2 = 12.0;
+   public static final double SLIDE_POS_3 = 18.0;
+   // Power settings.
+   public static final double SLIDE_CAL_POWER = -0.25;
+   // Preset positions.
+   public static final double SLIDE_PRESET_TOLERANCE = 0.5;
+   public static final double[] SLIDE_PRESETS = new double[] {
+       SLIDE_MIN_POS, SLIDE_POS_1, SLIDE_POS_2, SLIDE_POS_3, SLIDE_MAX_POS
+   };
+   // PID Actuator parameters.
+   public static final double SLIDE_KP = 0.6;
+   public static final double SLIDE_KI = 0.0;
+   public static final double SLIDE_KD = 0.025;
+   public static final double SLIDE_KF = 0.0;
+   public static final double SLIDE_TOLERANCE = 0.5;
+   public static final double SLIDE_IZONE = 10.0;
+   public static final double SLIDE_STALL_DETECTION_DELAY = 0.5;
+   public static final double SLIDE_STALL_DETECTION_TIMEOUT = 0.2;
+   public static final double SLIDE_STALL_ERR_RATE_THRESHOLD = 5.0;
+   ```
+7. In Robot.java, add code to the method updateStatus to display the status of the subsystem on the Driver Station. This is very useful for debugging. For example, if the subsystem is not working, you can look at the subsystem status to figure out if the problem is in the code, wiring or hardware.
+   ```
+   if (slide != null)
+   {
+       dashboard.displayPrintf(
+           lineNum++,
+           "Slide: power=" + slide.getPower() +
+           ", pos=" + slide.getPosition() + "/" + slide.getPidTarget() +
+           ", lowerLimit=" + slide.isLowerLimitSwitchActive());
+   }
+   ```
+8. In FtcTeleOp.java, add code to the method periodic to read analog controls on the gamepad for controlling the subsystem.
+   ```
+   if (robot.slide != null)
+   {
+       double slidePower = operatorGamepad.getLeftStickY(true) * RobotParams.SLIDE_POWER_LIMIT;
+       if (slidePower != slidePrevPower)
+       {
+           if (manualOverride)
+           {
+               // Not using PID control.
+               robot.slide.setPower(slidePower);
+           }
+           else
+           {
+               // Using PID control.
+               robot.slide.setPidPower(
+                   slidePower, RobotParams.SLIDE_MIN_POS, RobotParams.SLIDE_MAX_POS, true);
+           }
+           slidePrevPower = slidePower;
+       }
+   }
+   ```
+9. In FtcTeleOp.java, add code to the method operatorButtonEvent to read button controls on the gamepad for controlling the subsystem.
+   ```
+   case FtcGamepad.GAMEPAD_DPAD_UP:
+       if (pressed && robot.slide != null)
+       {
+           robot.globalTracer.traceInfo(moduleName, ">>>>> Extending slide to next position.");
+           robot.slide.presetPositionUp(null, RobotParams.SLIDE_POWER_LIMIT);
+       }
+       break;
+
+   case FtcGamepad.GAMEPAD_DPAD_DOWN:
+       if (pressed && robot.slide != null)
+       {
+           robot.globalTracer.traceInfo(moduleName, ">>>>> Retracting slide to the next position.");
+           robot.slide.presetPositionDown(null, RobotParams.SLIDE_POWER_LIMIT);
+       }
+       break;
+
+   case FtcGamepad.GAMEPAD_BACK:
+       if (pressed && robot.slide != null)
+       {
+           robot.globalTracer.traceInfo(moduleName, ">>>>> ZeroCalibrate.");
+           robot.slide.zeroCalibrate(RobotParams.SLIDE_CAL_POWER);
+       }
+       break;
    ```
 
 ## Library Features
