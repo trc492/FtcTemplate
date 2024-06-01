@@ -227,7 +227,7 @@ The Javadoc reference documentation for the TRC Robotics Framework Library can b
 For technical questions regarding our Framework Library, please post questions on the FTC Forums [here](https://ftcforum.firstinspires.org/forum/ftc-technology/android-studio).
 
 ### Sample OpModes
-In addition, we provide a large selection of sample OpModes (sample robot code) that show you how to use various features of our library. You can find them in a separate GitHub repository [here](https://github.com/trc492/TrcFtcSamples].
+In addition, we provide a large selection of sample OpModes (sample robot code) that show you how to use various features of our library. You can find them in a separate GitHub repository [here](https://github.com/trc492/TrcFtcSamples).
 
 # FTC SDK Release Information
 
