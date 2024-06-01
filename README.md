@@ -31,13 +31,13 @@ The next step is to determine the odometry scales (X and Y). This is applicable 
 
 ### Creating Subsystems
 Once the drive base is fully functional, the next step is to create subsystems for the robot such as Elevator, Arm, Intake, Grabber etc. It is a good practice to create a subsystem as a separate Java class that encapsulates all hardware related to that subsystem. To create a subsystem, follow the steps below:
-* Create a Java class in the subsystems folder (e.g. Intake.java).
-* In Robot.java, add a public class variable in the Subsystem section:
- 'public Intake intake;'
-* In the constructor of Robot.java, under the Subsystem section, add code to create and initialize the subsystem:
- 'if (RobotParams.Preferences.useIntake) {
+1. Create a Java class in the subsystems folder (e.g. Intake.java).
+2. In Robot.java, add a public class variable in the Subsystem section:
+ ```public Intake intake;```
+3. In the constructor of Robot.java, under the Subsystem section, add code to create and initialize the subsystem:
+ ```if (RobotParams.Preferences.useIntake) {
       intake = new Intake(RobotParams.HWNAME_INTAKE, this);
-  }'
+  }```
 
 ## Library Features
 The Framework Library provides numerous features. We will list some of them here:
