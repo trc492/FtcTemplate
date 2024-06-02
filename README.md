@@ -85,7 +85,7 @@ Once the drive base is fully functional, the next step is to create subsystems f
    ```
    public static boolean useSlide = true;
    ```
-5. In RobotParams.java, add a HWNAME for the subsystem. This will become either the name or name prefix for the hardware in the robot configuration (e.g. slide.motor, slide.lowerLimit).
+5. In RobotParams.java, add a HWNAME for the subsystem. This will become either the name or name prefix for the hardware in the robot configuration (e.g. slide.motor, slide.lowerLimitSw etc).
    ```
    public static final String HWNAME_SLIDE = "slide";
    ```
@@ -137,8 +137,10 @@ Once the drive base is fully functional, the next step is to create subsystems f
            ", lowerLimit=" + slide.isLowerLimitSwitchActive());
    }
    ```
-8. In FtcTeleOp.java, add code to the method periodic to read analog controls on the gamepad for controlling the subsystem.
+8. In FtcTeleOp.java, add a private class variable slidePrevPower and add code to the method periodic to read analog controls on the gamepad for controlling the subsystem.
    ```
+   private double slidePrevPower = 0.0;
+   ...
    if (robot.slide != null)
    {
        double slidePower = operatorGamepad.getLeftStickY(true) * RobotParams.SLIDE_POWER_LIMIT;
@@ -159,7 +161,7 @@ Once the drive base is fully functional, the next step is to create subsystems f
        }
    }
    ```
-9. In FtcTeleOp.java, add code to the method operatorButtonEvent to read button controls on the gamepad for controlling the subsystem.
+9. In FtcTeleOp.java, add code to the method operatorButtonEvent to read button controls on the gamepad for controlling the subsystem. The following example shows how you would control the slide to extend or retract to the next preset position by using the DPad on the operator gamepad as well as using the BACK button to zero calibrate the slide.
    ```
    case FtcGamepad.GAMEPAD_DPAD_UP:
        if (pressed && robot.slide != null)
@@ -185,6 +187,7 @@ Once the drive base is fully functional, the next step is to create subsystems f
        }
        break;
    ```
+Once the subsystem is created and tied in to TeleOp, you should be able to operate the subsystem in TeleOp mode and check out the subsystem status on the Driver Station.
 
 ## TRC Framework Library Features
 Our Framework Library provides numerous features. We will list some of them here:
