@@ -81,7 +81,7 @@ Once the drive base is fully functional, the next step is to create subsystems f
        slide = new Slide().getSlideMotor();
    }
    ```
-4. In RobotParams.java, add a Preferences that can turn the subsystem ON or OFF. This is very useful when developing code for an unfinished robot where some subsystem may or may not exist yet.
+4. In RobotParams.java, add a Preferences that can turn the subsystem ON or OFF. This is very useful when developing code for an unfinished robot where some subsystems may or may not exist yet.
    ```
    public static boolean useSlide = true;
    ```
