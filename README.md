@@ -18,19 +18,179 @@ Congratulations! You just clone our template repository. Now you can fire up And
 Since this template already contains basic code for a mecanum robot base, it takes very few modifications to make it work with your mecanum robot.
 * In RobotParams.java, update the string constants HWNAME_xxDRIVE_MOTOR corresponding to the hardware names of the four driving wheel motors in your robot config.
 * Compile the code and deploy it to the robot.
-* Place your robot on a stand so that the wheels can be free running without the robot running away from you. When looking down on the robot, the mecanum wheel rollers should form an X. If not, switch the mecanum wheels around until they form an X. On the Driver Station, activate your robot configuration. Select a TeleOp Opmode on the Driver Station called FtcTest. Press the init button to initialize the opmode. Press the D-pad down button on your operator gamepad until the "Test" shown on the Driver Station is on "Drive motors test". Press the D-pad right button to select the test. Then press the "Play" button on the Driver Station to start the opmode. This test will run each of the four driving wheels one after the other for 5 seconds each in the sequence of Left Front, Right Front, Left Back and Right Back. Note the rotation direction of each wheel and make sure they would have run the robot in the forward direction if the robot were placed on the ground. If any of the wheels are rotating in the wrong direction, correct them in RobotParams.java. Change xxDRIVE_INVERTED from true to false or vice versa to reverse the corresponding driving wheels until the test shows all four wheels rotating in the correct direction.
+* Place your robot on a stand so that the wheels can be free running without the robot running away from you. When looking down on the robot, the mecanum wheel rollers should form an X. If not, switch the mecanum wheels around until they form an X. On the Driver Station, activate your robot configuration. Select a TeleOp Opmode on the Driver Station called FtcTest. Press the init button to initialize the opmode. Press the D-pad down button on your driver gamepad until the "Test" shown on the Driver Station is on "Drive motors test". Press the D-pad right button to select the test. Then press the "Play" button on the Driver Station to start the opmode. This test will run each of the four driving wheels one after the other for 5 seconds each in the sequence of Left Front, Right Front, Left Back and Right Back. Note the rotation direction of each wheel and make sure they would have run the robot in the forward direction if the robot were placed on the ground. If any of the wheels are rotating in the wrong direction, correct them in RobotParams.java. Change xxDRIVE_INVERTED from true to false or vice versa to reverse the corresponding driving wheels until the test shows all four wheels rotating in the correct direction.
 
 That's it. Your robot is now ready to be driven in TeleOp mode. The default drive mode is "Arcade Mode". It means the left stick on the driver gamepad controls the X and Y direction of the robot. The X-axis of the right stick controls the rotation. If you prefer, you can change the drive mode to "Holonomic Mode". In this mode, the Y-axis of the left stick controls the Y direction of the robot. The X-axis of the right stick controls the X direction, the left trigger controls turning left and the right trigger controls turning right. To change to this mode, change ROBOT_DRIVE_MODE in RobotParams.java to DriveMode.HOLONOMIC_MODE.
 
 In addition, there are a few more buttons on the driver gamepad that modify how the robot is driven. Click the right bumper on the driver gamepad will toggle between Robot and Field Oriented driving modes. Our library also supports Inverted driving mode allowing the robot to switch the front and back end. This is useful for a robot that has an end effector such as an intake at the back so that the drivers can drive the robot around as if the intake is in front. Press and hold the left bumper allows you to drive the robot at slow speed. This is useful for delicate movement of the robot.
 
 ### Making Drive Base Odometry Work
-Our library supports both drive wheel motor odometry (using drive wheel motor encoders) and passive wheel odometry (aka dead-wheel odometry or odo pods). To select which odometry to use, change RobotParams.Preferences.useExternalOdometry to true to use passive wheel odometry or false to use drive wheel motor odometry. When using odo pods, you need to provide the odo pod placement info relative to the robot's centroid (*_ODWHEEL_*_OFFSET in RobotParams). To determine the robot's centroid, draw a rectangular box with each wheel being the corners of the rectangle. The centroid is the center point of this rectangle. It is very important to provide accurate distance offsets of each odo pod wheel to the robot centroid because this affects the accuracy of the odometry calculation. We recommend measuring the offset distances from the CAD model if possible. Measuring the offset distances by hand introduces a lot of error and therefore not recommended. Our library uses ENU (East-North-Up) coordinate system for the robot which means robot centroid on the ground is the origin with X-axis pointing to robot right, Y-axis pointing to robot forward and Z-axis pointing up. Therefore the left odo pod will have a negative x-offset from robot centroid and the right odo pod will have a positive x-offset from robot centroid and so on. Even though our library supports 2 to 4 odo pods, the template code assumes you are using 3 odo pods, 2 pointing forward, typically one on the left and one on the right (Y-axis) and one pointing sideway (X-axis). Our library uses gyro (IMU) to keep track of the robot heading. In theory, it could use the odo pods to calculate the robot's heading but gyro is much more accurate than using odo pods.
+Our library supports both drive wheel motor odometry (using drive wheel motor encoders) and passive wheel odometry (aka dead-wheel odometry or odo pods). To select which odometry to use, change RobotParams.Preferences.useExternalOdometry to true to use passive wheel odometry or false to use drive wheel motor odometry. When using odo pods, you need to provide the odo pod placement info relative to the robot's centroid (*_ODWHEEL_*_OFFSET in RobotParams). To determine the robot's centroid, draw a rectangle with each drive wheel being the corners of the rectangle. The centroid is the center point of this rectangle. It is very important to provide accurate distance offsets of each odo pod wheel to the robot centroid because this affects the accuracy of the odometry calculation. We recommend measuring the offset distances from the CAD model if possible. Measuring the offset distances by hand introduces a lot of error and therefore not recommended. Our library uses ENU (East-North-Up) coordinate system for the robot which means robot centroid on the ground is the origin with X-axis pointing to robot right, Y-axis pointing to robot forward and Z-axis pointing up. Therefore the left odo pod will have a negative x-offset from robot centroid and the right odo pod will have a positive x-offset from robot centroid and so on. Even though our library supports 2 to 4 odo pods, the template code assumes you are using 3 odo pods, 2 pointing forward, typically one on the left and one on the right (Y-axis) and one pointing sideway (X-axis). Our library uses gyro (IMU) to keep track of the robot heading. In theory, it could use the odo pods to calculate the robot's heading but gyro is much more accurate than using odo pods.
 
-The next step is to determine the odometry scales (X and Y). This is applicable for both drive wheel motor odometry and odo pods. Generally, encoders give you values in terms of counts (or ticks). To be more useful, we would like the odometry values to be in real world units such as inches or meters. Our library will scale the odometry to the unit of your choice. There are two ways to determine the odometry scales, one is to calculate it by providing info such as odo wheel diameter, encoder CPR (Count-Per-Revolution) etc. See RobotParams.ODO_WHEEL_* and RobotParams.*POS_INCHES_PER_COUNT. Another way is to calibrate the scales empiracally. This can be done by first setting the X and Y scales to 1 so that the reported units are unscaled and therefore in terms of encoder counts. Then, reset all the encoders and manually drive the robot in either the X or Y direction for a distance when calibrating X or Y scales. Measure the distance traveled. Then scale = distanceTraveled / unscaledCount. To minimize calibration error, drive a longer distance (at least 6 to 8 feet). Then update the *_INCHES_PER_COUNT variables with the calculated scale. Repeat the calibration again to check if the reading is within some tolerance of the actual measurement. If not, calculate the new scale by newScale = oldScale * actualValue / reportedValue. Repeat this process until the reported value is within some tolerance of the actual measurement. Once you have the odometry scales calibrated, you should be able to drive the robot around and odometry will keep track of the robot location on the field relative to its start location.
+The next step is to determine the odometry scales (X and Y). This is applicable for both drive wheel motor odometry and odo pods. Generally, encoders give you values in the unit of counts (or ticks). To be more useful, we would like the odometry values to be in real world units such as inches or meters. Our library will scale the odometry to the unit of your choice. There are two ways to determine the odometry scales, one is to calculate it by providing info such as odo wheel diameter, encoder CPR (Count-Per-Revolution) etc. See RobotParams.ODO_WHEEL_* and RobotParams.*POS_INCHES_PER_COUNT. Another way is to calibrate the scales empiracally. This can be done by first setting the X and Y scales to 1 so that the reported units are unscaled and therefore in the unit of encoder counts. Then, reset all the encoders and manually drive the robot in either the X or Y direction for a distance when calibrating X or Y scales. Measure the distance traveled. Then scale = distanceTraveled / unscaledCount. To minimize calibration error, drive a longer distance (at least 6 to 8 feet). Then update the *_INCHES_PER_COUNT variables with the calculated scale. Repeat the calibration again to check if the reading is within some tolerance of the actual measurement. If not, calculate the new scale by newScale = oldScale * actualValue / reportedValue. Repeat this process until the reported value is within some tolerance of the actual measurement. Once you have the odometry scales calibrated, you should be able to drive the robot around and odometry will keep track of the robot location on the field relative to its start location.
 
-## Library Features
-The Framework Library provides numerous features. We will list some of them here:
+### Creating Subsystems
+Once the drive base is fully functional, the next step is to create subsystems for the robot such as Elevator, Arm, Intake, Grabber etc. It is a good practice to create subsystems as separate Java classes that encapsulate all hardware related to those subsystems. To create a subsystem, follow the steps below:
+1. Create a Java class in the subsystems folder (e.g. Slide.java).
+   ```
+   public class Slide
+   {
+       private final TrcMotor slideMotor;
+
+       /**
+        * Constructor: Creates an instance of the object.
+        */
+       public Slide()
+       {
+           FtcMotorActuator.Params slideParams = new FtcMotorActuator.Params()
+               .setMotorInverted(RobotParams.SLIDE_MOTOR_INVERTED)
+               .setLowerLimitSwitch(
+                   RobotParams.SLIDE_HAS_LOWER_LIMIT_SWITCH,
+                   RobotParams.SLIDE_LOWER_LIMIT_INVERTED)
+               .setUpperLimitSwitch(
+                   RobotParams.SLIDE_HAS_UPPER_LIMIT_SWITCH,
+                   RobotParams.SLIDE_UPPER_LIMIT_INVERTED)
+               .setVoltageCompensationEnabled(RobotParams.SLIDE_VOLTAGE_COMP_ENABLED)
+               .setPositionScaleAndOffset(RobotParams.SLIDE_INCHES_PER_COUNT, RobotParams.SLIDE_OFFSET)
+               .setPositionPresets(RobotParams.SLIDE_PRESET_TOLERANCE, RobotParams.SLIDE_PRESETS);
+           slideMotor = new FtcMotorActuator(RobotParams.HWNAME_SLIDE, slideParams).getActuator();
+           slideMotor.setSoftwarePidEnabled(true);
+           slideMotor.setPositionPidCoefficients(
+               RobotParams.SLIDE_KP, RobotParams.SLIDE_KI, RobotParams.SLIDE_KD, RobotParams.SLIDE_KF,
+               RobotParams.SLIDE_IZONE);
+           slideMotor.setPositionPidTolerance(RobotParams.SLIDE_TOLERANCE);
+           slideMotor.setStallDetectionEnabled(
+               RobotParams.SLIDE_STALL_DETECTION_DELAY, RobotParams.SLIDE_STALL_DETECTION_TIMEOUT,
+               RobotParams.SLIDE_STALL_ERR_RATE_THRESHOLD);
+       }
+
+       public TrcMotor getSlideMotor()
+       {
+           return slideMotor;
+       }
+   }
+   ```
+2. In Robot.java, add a public class variable in the Subsystem section.
+   ```
+   public TrcMotor slide;
+   ```
+3. In the constructor of Robot.java, under the Subsystem section, add code to create and initialize the subsystem.
+   ```
+   if (RobotParams.Preferences.useSlide)
+   {
+       slide = new Slide().getSlideMotor();
+   }
+   ```
+4. In RobotParams.java, add a Preferences that can turn the subsystem ON or OFF. This is very useful when developing code for an unfinished robot where some subsystems may or may not exist yet.
+   ```
+   public static boolean useSlide = true;
+   ```
+5. In RobotParams.java, add a HWNAME for the subsystem. This will become either the name or name prefix for the hardware in the robot configuration (e.g. slide.motor, slide.lowerLimitSw etc).
+   ```
+   public static final String HWNAME_SLIDE = "slide";
+   ```
+6. At the end of RobotParams.java, under the Subsystem section, add constants that characterize the subsystem.
+   ```
+   public static final boolean SLIDE_MOTOR_INVERTED = false;
+   public static final boolean SLIDE_HAS_LOWER_LIMIT_SWITCH = true;
+   public static final boolean SLIDE_LOWER_LIMIT_INVERTED = false;
+   public static final boolean SLIDE_HAS_UPPER_LIMIT_SWITCH = false;
+   public static final boolean SLIDE_UPPER_LIMIT_INVERTED = false;
+   public static final boolean SLIDE_VOLTAGE_COMP_ENABLED = true;
+   public static final double SLIDE_ENCODER_PPR = GOBILDA_5203_312_ENCODER_PPR;
+   public static final double SLIDE_PULLEY_DIAMETER = 1.405;
+   public static final double SLIDE_PULLEY_CIRCUMFERENCE = Math.PI*SLIDE_PULLEY_DIAMETER;
+   public static final double SLIDE_INCHES_PER_COUNT = SLIDE_PULLEY_CIRCUMFERENCE/SLIDE_ENCODER_PPR;
+   public static final double SLIDE_POWER_LIMIT = 1.0;
+   public static final double SLIDE_OFFSET = 0.0;
+   public static final double SLIDE_MIN_POS = SLIDE_OFFSET;
+   public static final double SLIDE_MAX_POS = 24.0;
+   public static final double SLIDE_POS_1 = 6.0;
+   public static final double SLIDE_POS_2 = 12.0;
+   public static final double SLIDE_POS_3 = 18.0;
+   // Power settings.
+   public static final double SLIDE_CAL_POWER = -0.25;
+   // Preset positions.
+   public static final double SLIDE_PRESET_TOLERANCE = 0.5;
+   public static final double[] SLIDE_PRESETS = new double[] {
+       SLIDE_MIN_POS, SLIDE_POS_1, SLIDE_POS_2, SLIDE_POS_3, SLIDE_MAX_POS
+   };
+   // PID Actuator parameters.
+   public static final double SLIDE_KP = 0.6;
+   public static final double SLIDE_KI = 0.0;
+   public static final double SLIDE_KD = 0.025;
+   public static final double SLIDE_KF = 0.0;
+   public static final double SLIDE_TOLERANCE = 0.5;
+   public static final double SLIDE_IZONE = 10.0;
+   public static final double SLIDE_STALL_DETECTION_DELAY = 0.5;
+   public static final double SLIDE_STALL_DETECTION_TIMEOUT = 0.2;
+   public static final double SLIDE_STALL_ERR_RATE_THRESHOLD = 5.0;
+   ```
+7. In Robot.java, add code to the method updateStatus to display the status of the subsystem on the Driver Station. This is very useful for debugging. For example, if the subsystem is not working, you can look at the subsystem status to figure out if the problem is in the code, wiring or hardware.
+   ```
+   if (slide != null)
+   {
+       dashboard.displayPrintf(
+           lineNum++,
+           "Slide: power=" + slide.getPower() +
+           ", pos=" + slide.getPosition() + "/" + slide.getPidTarget() +
+           ", lowerLimit=" + slide.isLowerLimitSwitchActive());
+   }
+   ```
+8. In FtcTeleOp.java, add a private class variable slidePrevPower and add code to the method periodic to read analog controls on the gamepad for controlling the subsystem.
+   ```
+   private double slidePrevPower = 0.0;
+   ...
+   if (robot.slide != null)
+   {
+       double slidePower = operatorGamepad.getLeftStickY(true) * RobotParams.SLIDE_POWER_LIMIT;
+       if (slidePower != slidePrevPower)
+       {
+           if (manualOverride)
+           {
+               // Not using PID control.
+               robot.slide.setPower(slidePower);
+           }
+           else
+           {
+               // Using PID control.
+               robot.slide.setPidPower(
+                   slidePower, RobotParams.SLIDE_MIN_POS, RobotParams.SLIDE_MAX_POS, true);
+           }
+           slidePrevPower = slidePower;
+       }
+   }
+   ```
+9. In FtcTeleOp.java, add code to the method operatorButtonEvent to read button controls on the gamepad for controlling the subsystem. The following example shows how you would control the slide to extend or retract to the next preset position by using the DPad on the operator gamepad as well as using the BACK button to zero calibrate the slide.
+   ```
+   case FtcGamepad.GAMEPAD_DPAD_UP:
+       if (pressed && robot.slide != null)
+       {
+           robot.globalTracer.traceInfo(moduleName, ">>>>> Extending slide to next position.");
+           robot.slide.presetPositionUp(null, RobotParams.SLIDE_POWER_LIMIT);
+       }
+       break;
+
+   case FtcGamepad.GAMEPAD_DPAD_DOWN:
+       if (pressed && robot.slide != null)
+       {
+           robot.globalTracer.traceInfo(moduleName, ">>>>> Retracting slide to the next position.");
+           robot.slide.presetPositionDown(null, RobotParams.SLIDE_POWER_LIMIT);
+       }
+       break;
+
+   case FtcGamepad.GAMEPAD_BACK:
+       if (pressed && robot.slide != null)
+       {
+           robot.globalTracer.traceInfo(moduleName, ">>>>> ZeroCalibrate.");
+           robot.slide.zeroCalibrate(RobotParams.SLIDE_CAL_POWER);
+       }
+       break;
+   ```
+Once the subsystem is created and tied in to TeleOp, you should be able to operate the subsystem in TeleOp mode and check out the subsystem status on the Driver Station.
+
+## TRC Framework Library Features
+Our Framework Library provides numerous features. We will list some of them here:
 - FtcOpMode: Our own opmode that extends LinearOpMode but providing interface similar to OpMode where you put your code in some sort of loop method. FtcOpMode is a cooperative multi-tasking scheduler. As an advanced feature, our Framework Library also supports multi-threaded true multi-tasking. But for rookie teams who don't want to tackle the gotchas of true multi-tasking, cooperative multi-tasking is the way to go. This allows your autonomous to operate multiple subsystems at the same time instead of doing things sequentially. This is especially important since FTC autonomous period lasts only 30 seconds. In order to perform the maximum number of tasks in the autonomous period, your code would want to perform multiple tasks that have no dependencies on each other and perform them simultaneously. The Framework Library enables that in a trivial manor.
 - State machine: The state machine infrastructure is the core of multi-tasking. Each task should use a state machine to keep track of their states. This allows FtcOpMode to switch between tasks and be able to maintain the state of each task when they are resumed from suspended state.
 - Task syncrhonization: Some tasks have dependencies on each other. For example, autonomous may want to finish driving the robot to the specified location before dumping the game element to the proper spot. This requires task synchronization. The Framework Library provides a number of task synchronization features such as Events (TrcEvent) and Callbacks (TrcEvent.Callback). Event allows an operation to signal it when the operation is completed so that the task waiting for it can resume. Callback allows a method to be called to perform additional work without the use of a state machine after the operation is completed, for example.
@@ -70,6 +230,7 @@ The Javadoc reference documentation for the TRC Robotics Framework Library can b
 For technical questions regarding our Framework Library, please post questions on the FTC Forums [here](https://ftcforum.firstinspires.org/forum/ftc-technology/android-studio).
 
 ### Sample OpModes
+In addition, we provide a large selection of sample OpModes (sample robot code) that show you how to use various features of our library. You can find them in a separate GitHub repository [here](https://github.com/trc492/TrcFtcSamples).
 
 # FTC SDK Release Information
 
@@ -126,11 +287,7 @@ For technical questions regarding the Control System or the FTC SDK, please visi
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[FIRST Tech Challenge Community](https://ftc-community.firstinspires.org/)
 
 ### Sample OpModes
-This project contains a large selection of Sample OpModes (robot code examples) which can be cut and pasted into your /teamcode folder to be used as-is, or modified to suit your team's needs.
-
-Samples Folder: &nbsp;&nbsp; [/FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples](FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples)
-
-The readme.md file located in the [/TeamCode/src/main/java/org/firstinspires/ftc/teamcode](TeamCode/src/main/java/org/firstinspires/ftc/teamcode) folder contains an explanation of the sample naming convention, and instructions on how to copy them to your own project space.
+In addition, we provide a large selection of Sample OpModes (robot code examples) that show you how to use various features of our library. You can find them in a separate GitHub repository [here](https://github.com/trc492/TrcFtcSamples)
 
 # Release Information
 
