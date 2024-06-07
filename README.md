@@ -54,9 +54,11 @@ Once the drive base is fully functional, the next step is to create subsystems f
                .setPositionScaleAndOffset(RobotParams.SLIDE_INCHES_PER_COUNT, RobotParams.SLIDE_OFFSET)
                .setPositionPresets(RobotParams.SLIDE_PRESET_TOLERANCE, RobotParams.SLIDE_PRESETS);
            slideMotor = new FtcMotorActuator(RobotParams.HWNAME_SLIDE, slideParams).getActuator();
-
+           slideMotor.setSoftPositionLimits(RobotParams.SLIDE_MIN_POS, RobotParams.SLIDE_MAX_POS, false);
+           //
            // Delete or comment out the following three statements if you want to use motor native PID control
            // (aka RUN_TO_POSITION) instead of software PID control.
+           //
            slideMotor.setSoftwarePidEnabled(true);
            slideMotor.setPositionPidParameters(
                RobotParams.SLIDE_KP, RobotParams.SLIDE_KI, RobotParams.SLIDE_KD, RobotParams.SLIDE_KF,
@@ -64,8 +66,21 @@ Once the drive base is fully functional, the next step is to create subsystems f
            slideMotor.setStallDetectionEnabled(
                RobotParams.SLIDE_STALL_DETECTION_DELAY, RobotParams.SLIDE_STALL_DETECTION_TIMEOUT,
                RobotParams.SLIDE_STALL_ERR_RATE_THRESHOLD);
-
-           slideMotor.setSoftPositionLimits(RobotParams.SLIDE_MIN_POS, RobotParams.SLIDE_MAX_POS, false);
+           //
+           // Stall protection will detect motor stall and cut power to protect it. This is also required if
+           // you want to enable zero calibration by motor stall.
+           // A motor is considered stalled if:
+           // - the power applied to the motor is above or equal to stallMinPower.
+           // - the motor has not moved or movement stayed within stallTolerance for at least stallTimeout.
+           // Note: By definition, holding target position doing software PID control is stalling. If you decide to enable
+           //       stall protection while holding target, please make sure to set a stallMinPower much greater than the
+           //       power necessary to hold position against gravity, for example. However, if you want to zero calibrate
+           //       on motor stall (e.g. don't have lower limit switch), you want to make sure calPower is at least
+           //       stallMinPower.
+           //
+           slideMotor.setStallProtection(
+               RobotParams.SLIDE_STALL_MIN_POWER, RobotParams.SLIDE_STALL_TOLERANCE,
+               RobotParams.SLIDE_STALL_TIMEOUT, RobotParams.SLIDE_STALL_RESET_TIMEOUT);
        }
 
        public TrcMotor getSlideMotor()
@@ -129,6 +144,10 @@ Once the drive base is fully functional, the next step is to create subsystems f
    public static final double SLIDE_STALL_DETECTION_DELAY = 0.5;
    public static final double SLIDE_STALL_DETECTION_TIMEOUT = 0.2;
    public static final double SLIDE_STALL_ERR_RATE_THRESHOLD = 5.0;
+   public static final double SLIDE_STALL_MIN_POWER = Math.abs(SLIDE_CAL_POWER);
+   public static final double SLIDE_STALL_TOLERANCE = 0.1;
+   public static final double SLIDE_STALL_TIMEOUT = 0.2;
+   public static final double SLIDE_STALL_RESET_TIMEOUT = 0.0;
    ```
 7. In Robot.java, add code to the method updateStatus to display the status of the subsystem on the Driver Station. This is very useful for debugging. For example, if the subsystem is not working, you can look at the subsystem status to figure out if the problem is in the code, wiring or hardware.
    ```
