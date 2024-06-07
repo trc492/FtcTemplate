@@ -55,17 +55,17 @@ Once the drive base is fully functional, the next step is to create subsystems f
                .setPositionPresets(RobotParams.SLIDE_PRESET_TOLERANCE, RobotParams.SLIDE_PRESETS);
            slideMotor = new FtcMotorActuator(RobotParams.HWNAME_SLIDE, slideParams).getActuator();
 
-           // Delete or comment out the following two statements if you want to use motor native PID control
+           // Delete or comment out the following three statements if you want to use motor native PID control
            // (aka RUN_TO_POSITION) instead of software PID control.
            slideMotor.setSoftwarePidEnabled(true);
            slideMotor.setPositionPidParameters(
                RobotParams.SLIDE_KP, RobotParams.SLIDE_KI, RobotParams.SLIDE_KD, RobotParams.SLIDE_KF,
                RobotParams.SLIDE_IZONE, RobotParams.SLIDE_TOLERANCE);
-
-           slideMotor.setSoftPositionLimits(RobotParams.SLIDE_MIN_POS, RobotParams.SLIDE_MAX_POS, false);
            slideMotor.setStallDetectionEnabled(
                RobotParams.SLIDE_STALL_DETECTION_DELAY, RobotParams.SLIDE_STALL_DETECTION_TIMEOUT,
                RobotParams.SLIDE_STALL_ERR_RATE_THRESHOLD);
+
+           slideMotor.setSoftPositionLimits(RobotParams.SLIDE_MIN_POS, RobotParams.SLIDE_MAX_POS, false);
        }
 
        public TrcMotor getSlideMotor()
