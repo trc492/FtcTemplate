@@ -62,7 +62,7 @@ Once the drive base is fully functional, the next step is to create subsystems f
                RobotParams.SLIDE_KP, RobotParams.SLIDE_KI, RobotParams.SLIDE_KD, RobotParams.SLIDE_KF,
                RobotParams.SLIDE_IZONE, RobotParams.SLIDE_TOLERANCE);
 
-	   slideMotor.setSoftPositionLimits(RobotParams.SLIDE_MIN_POS, RobotParams.SLIDE_MAX_POS, false);
+           slideMotor.setSoftPositionLimits(RobotParams.SLIDE_MIN_POS, RobotParams.SLIDE_MAX_POS, false);
            slideMotor.setStallDetectionEnabled(
                RobotParams.SLIDE_STALL_DETECTION_DELAY, RobotParams.SLIDE_STALL_DETECTION_TIMEOUT,
                RobotParams.SLIDE_STALL_ERR_RATE_THRESHOLD);
