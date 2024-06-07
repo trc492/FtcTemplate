@@ -68,15 +68,14 @@ Once the drive base is fully functional, the next step is to create subsystems f
                RobotParams.SLIDE_STALL_ERR_RATE_THRESHOLD);
            //
            // Stall protection will detect motor stall and cut power to protect it. This is also required if
-           // you want to enable zero calibration by motor stall.
+           // you want to enable zero calibration by motor stall (e.g. don't have lower limit switch).
            // A motor is considered stalled if:
            // - the power applied to the motor is above or equal to stallMinPower.
            // - the motor has not moved or movement stayed within stallTolerance for at least stallTimeout.
            // Note: By definition, holding target position doing software PID control is stalling. If you decide to enable
            //       stall protection while holding target, please make sure to set a stallMinPower much greater than the
            //       power necessary to hold position against gravity, for example. However, if you want to zero calibrate
-           //       on motor stall (e.g. don't have lower limit switch), you want to make sure calPower is at least
-           //       stallMinPower.
+           //       on motor stall, you want to make sure calPower is at least stallMinPower.
            //
            slideMotor.setStallProtection(
                RobotParams.SLIDE_STALL_MIN_POWER, RobotParams.SLIDE_STALL_TOLERANCE,
