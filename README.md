@@ -66,6 +66,10 @@ Once the drive base is fully functional, the next step is to create subsystems f
                RobotParams.SLIDE_STALL_DETECTION_DELAY, RobotParams.SLIDE_STALL_DETECTION_TIMEOUT,
                RobotParams.SLIDE_STALL_ERR_RATE_THRESHOLD);
            //
+           // If you are using motor native PID control, you need to set PID tolerance.
+           //
+           slideMotor.setPositionPidTolerance(RobotParams.SLIDE_TOLERANCE);
+           //
            // Stall protection will detect motor stall and cut power to protect it. This is also required if
            // you want to enable zero calibration by motor stall (e.g. don't have lower limit switch).
            // A motor is considered stalled if:
