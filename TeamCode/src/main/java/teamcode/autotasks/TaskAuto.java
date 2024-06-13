@@ -22,12 +22,12 @@
 
 package teamcode.autotasks;
 
-import TrcCommonLib.trclib.TrcAutoTask;
-import TrcCommonLib.trclib.TrcEvent;
-import TrcCommonLib.trclib.TrcOwnershipMgr;
-import TrcCommonLib.trclib.TrcRobot;
-import TrcCommonLib.trclib.TrcTaskMgr;
 import teamcode.Robot;
+import trclib.archive.TrcAutoTask;
+import trclib.archive.TrcEvent;
+import trclib.archive.TrcOwnershipMgr;
+import trclib.archive.TrcRobot;
+import trclib.archive.TrcTaskMgr;
 
 /**
  * This class implements auto-assist task.
