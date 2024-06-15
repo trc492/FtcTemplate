@@ -29,22 +29,22 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import java.util.Arrays;
 import java.util.Locale;
 
-import ftclib.inputoutput.FtcChoiceMenu;
-import ftclib.inputoutput.FtcGamepad;
-import ftclib.inputoutput.FtcMenu;
-import ftclib.inputoutput.FtcValueMenu;
+import ftclib.input.FtcChoiceMenu;
+import ftclib.input.FtcGamepad;
+import ftclib.input.FtcMenu;
+import ftclib.input.FtcValueMenu;
 import ftclib.robotcore.FtcPidCoeffCache;
 import teamcode.drivebases.RobotDrive;
 import teamcode.drivebases.SwerveDrive;
 import trclib.command.CmdDriveMotorsTest;
 import trclib.command.CmdPidDrive;
 import trclib.command.CmdTimedDrive;
-import trclib.inputoutput.TrcGameController;
+import trclib.dataprocessor.TrcUtil;
+import trclib.input.TrcGameController;
 import trclib.pathdrive.TrcPose2D;
 import trclib.robotcore.TrcDbgTrace;
 import trclib.robotcore.TrcPidController;
 import trclib.robotcore.TrcRobot;
-import trclib.robotcore.TrcUtil;
 import trclib.timer.TrcElapsedTimer;
 import trclib.timer.TrcTimer;
 

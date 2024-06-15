@@ -28,11 +28,11 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 
 import org.openftc.easyopencv.OpenCvCameraRotation;
 
-import ftclib.inputoutput.FtcGamepad;
+import ftclib.input.FtcGamepad;
+import trclib.dataprocessor.TrcUtil;
 import trclib.drivebase.TrcDriveBase.DriveOrientation;
 import trclib.pathdrive.TrcPose2D;
 import trclib.robotcore.TrcPidController;
-import trclib.robotcore.TrcUtil;
 import trclib.vision.TrcHomographyMapper;
 
 /**
