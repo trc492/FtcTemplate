@@ -35,22 +35,22 @@ import org.openftc.easyopencv.OpenCvCameraFactory;
 
 import java.util.ArrayList;
 
-import ftclib.archive.FtcEocvColorBlobProcessor;
-import ftclib.archive.FtcOpMode;
-import ftclib.archive.FtcRawEocvColorBlobPipeline;
-import ftclib.archive.FtcRawEocvVision;
-import ftclib.archive.FtcVision;
-import ftclib.archive.FtcVisionAprilTag;
-import ftclib.archive.FtcVisionEocvColorBlob;
-import ftclib.archive.FtcVisionTensorFlow;
+import ftclib.robotcore.FtcOpMode;
+import ftclib.vision.FtcEocvColorBlobProcessor;
+import ftclib.vision.FtcRawEocvColorBlobPipeline;
+import ftclib.vision.FtcRawEocvVision;
+import ftclib.vision.FtcVision;
+import ftclib.vision.FtcVisionAprilTag;
+import ftclib.vision.FtcVisionEocvColorBlob;
+import ftclib.vision.FtcVisionTensorFlow;
 import teamcode.Robot;
 import teamcode.RobotParams;
 import teamcode.subsystems.BlinkinLEDs;
-import trclib.archive.TrcDbgTrace;
-import trclib.archive.TrcOpenCvColorBlobPipeline;
-import trclib.archive.TrcOpenCvDetector;
-import trclib.archive.TrcPose2D;
-import trclib.archive.TrcVisionTargetInfo;
+import trclib.path.TrcPose2D;
+import trclib.robotcore.TrcDbgTrace;
+import trclib.vision.TrcOpenCvColorBlobPipeline;
+import trclib.vision.TrcOpenCvDetector;
+import trclib.vision.TrcVisionTargetInfo;
 
 /**
  * This class implements AprilTag/TensorFlow/Eocv Vision for the game season. It creates and initializes all the

@@ -28,12 +28,12 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 
 import org.openftc.easyopencv.OpenCvCameraRotation;
 
-import ftclib.archive.FtcGamepad;
-import trclib.archive.TrcDriveBase.DriveOrientation;
-import trclib.archive.TrcHomographyMapper;
-import trclib.archive.TrcPidController;
-import trclib.archive.TrcPose2D;
-import trclib.archive.TrcUtil;
+import ftclib.inputoutput.FtcGamepad;
+import trclib.drivebase.TrcDriveBase.DriveOrientation;
+import trclib.path.TrcPose2D;
+import trclib.robotcore.TrcPidController;
+import trclib.robotcore.TrcUtil;
+import trclib.vision.TrcHomographyMapper;
 
 /**
  * This class contains robot and subsystem constants and parameters.

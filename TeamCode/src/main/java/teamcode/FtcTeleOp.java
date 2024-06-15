@@ -26,15 +26,15 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import java.util.Locale;
 
-import ftclib.archive.FtcGamepad;
-import ftclib.archive.FtcOpMode;
+import ftclib.inputoutput.FtcGamepad;
+import ftclib.robotcore.FtcOpMode;
 import teamcode.drivebases.SwerveDrive;
-import trclib.archive.TrcDbgTrace;
-import trclib.archive.TrcDriveBase;
-import trclib.archive.TrcGameController;
-import trclib.archive.TrcPose2D;
-import trclib.archive.TrcRobot;
-import trclib.archive.TrcTimer;
+import trclib.drivebase.TrcDriveBase;
+import trclib.inputoutput.TrcGameController;
+import trclib.path.TrcPose2D;
+import trclib.robotcore.TrcDbgTrace;
+import trclib.robotcore.TrcRobot;
+import trclib.timer.TrcTimer;
 
 /**
  * This class contains the TeleOp Mode program.

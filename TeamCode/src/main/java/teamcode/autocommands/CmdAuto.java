@@ -24,10 +24,10 @@ package teamcode.autocommands;
 
 import teamcode.FtcAuto;
 import teamcode.Robot;
-import trclib.archive.TrcEvent;
-import trclib.archive.TrcRobot;
-import trclib.archive.TrcStateMachine;
-import trclib.archive.TrcTimer;
+import trclib.robotcore.TrcEvent;
+import trclib.robotcore.TrcRobot;
+import trclib.robotcore.TrcStateMachine;
+import trclib.timer.TrcTimer;
 
 /**
  * This class implements an autonomous strategy.
