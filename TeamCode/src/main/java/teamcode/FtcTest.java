@@ -40,7 +40,7 @@ import trclib.command.CmdDriveMotorsTest;
 import trclib.command.CmdPidDrive;
 import trclib.command.CmdTimedDrive;
 import trclib.inputoutput.TrcGameController;
-import trclib.path.TrcPose2D;
+import trclib.pathdrive.TrcPose2D;
 import trclib.robotcore.TrcDbgTrace;
 import trclib.robotcore.TrcPidController;
 import trclib.robotcore.TrcRobot;

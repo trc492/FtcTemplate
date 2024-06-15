@@ -33,7 +33,7 @@ import ftclib.inputoutput.FtcValueMenu;
 import ftclib.robotcore.FtcOpMode;
 import trclib.command.CmdPidDrive;
 import trclib.command.CmdTimedDrive;
-import trclib.path.TrcPose2D;
+import trclib.pathdrive.TrcPose2D;
 import trclib.robotcore.TrcDbgTrace;
 import trclib.robotcore.TrcRobot;
 import trclib.timer.TrcTimer;

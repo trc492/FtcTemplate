@@ -24,8 +24,8 @@ package teamcode.drivebases;
 
 import teamcode.RobotParams;
 import trclib.drivebase.TrcMecanumDriveBase;
-import trclib.path.TrcPidDrive;
-import trclib.path.TrcPurePursuitDrive;
+import trclib.pathdrive.TrcPidDrive;
+import trclib.pathdrive.TrcPurePursuitDrive;
 import trclib.robotcore.TrcDbgTrace;
 import trclib.sensor.TrcOdometryWheels;
 
