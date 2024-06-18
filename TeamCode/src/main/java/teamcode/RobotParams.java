@@ -40,7 +40,7 @@ import trclib.vision.TrcHomographyMapper;
  */
 public class RobotParams
 {
-    public static enum RobotType
+    public enum RobotType
     {
         MecanumRobot,
         SwerveRobot,
