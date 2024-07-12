@@ -22,8 +22,8 @@
 
 package teamcode;
 
-import ftclib.input.FtcMatchInfo;
-import ftclib.output.FtcDashboard;
+import ftclib.driverio.FtcDashboard;
+import ftclib.driverio.FtcMatchInfo;
 import ftclib.robotcore.FtcOpMode;
 import ftclib.sensor.FtcRobotBattery;
 import teamcode.drivebases.MecanumDrive;

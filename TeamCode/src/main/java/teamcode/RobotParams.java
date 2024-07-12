@@ -28,7 +28,7 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 
 import org.openftc.easyopencv.OpenCvCameraRotation;
 
-import ftclib.input.FtcGamepad;
+import ftclib.driverio.FtcGamepad;
 import trclib.dataprocessor.TrcUtil;
 import trclib.drivebase.TrcDriveBase.DriveOrientation;
 import trclib.pathdrive.TrcPose2D;

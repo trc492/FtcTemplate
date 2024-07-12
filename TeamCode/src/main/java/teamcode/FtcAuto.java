@@ -26,10 +26,10 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import java.util.Locale;
 
-import ftclib.input.FtcChoiceMenu;
-import ftclib.input.FtcMatchInfo;
-import ftclib.input.FtcMenu;
-import ftclib.input.FtcValueMenu;
+import ftclib.driverio.FtcChoiceMenu;
+import ftclib.driverio.FtcMatchInfo;
+import ftclib.driverio.FtcMenu;
+import ftclib.driverio.FtcValueMenu;
 import ftclib.robotcore.FtcOpMode;
 import trclib.command.CmdPidDrive;
 import trclib.command.CmdTimedDrive;
