@@ -103,17 +103,18 @@ public class CmdAuto implements TrcRobot.RobotCommand
 
         if (state == null)
         {
-            robot.dashboard.displayPrintf(8, "State: disabled or waiting (nextState=%s)...", sm.getNextState());
+            robot.dashboard.displayPrintf(8, "State: disabled or waiting (nextState=" + sm.getNextState() + ")...");
         }
         else
         {
-            robot.dashboard.displayPrintf(8, "State: %s", state);
-
+            robot.dashboard.displayPrintf(8, "State: " + state);
+            robot.globalTracer.tracePreStateInfo(sm.toString(), state);
             switch (state)
             {
                 case START:
                     if (autoChoices.delay > 0.0)
                     {
+                        robot.globalTracer.traceInfo(moduleName, "***** Do delay " + autoChoices.delay + "s.");
                         timer.set(autoChoices.delay, event);
                         sm.waitForSingleEvent(event, State.DONE);
                     }
