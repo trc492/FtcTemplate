@@ -22,22 +22,22 @@
 
 package teamcode;
 
-import ftclib.archive.FtcDashboard;
-import ftclib.archive.FtcMatchInfo;
-import ftclib.archive.FtcOpMode;
-import ftclib.archive.FtcRobotBattery;
+import ftclib.driverio.FtcDashboard;
+import ftclib.driverio.FtcMatchInfo;
+import ftclib.robotcore.FtcOpMode;
+import ftclib.sensor.FtcRobotBattery;
 import teamcode.drivebases.MecanumDrive;
 import teamcode.drivebases.RobotDrive;
 import teamcode.drivebases.SwerveDrive;
 import teamcode.subsystems.BlinkinLEDs;
 import teamcode.vision.Vision;
-import trclib.archive.TrcDbgTrace;
-import trclib.archive.TrcDigitalInput;
-import trclib.archive.TrcMotor;
-import trclib.archive.TrcPose2D;
-import trclib.archive.TrcRobot;
-import trclib.archive.TrcServo;
-import trclib.archive.TrcTimer;
+import trclib.motor.TrcMotor;
+import trclib.motor.TrcServo;
+import trclib.pathdrive.TrcPose2D;
+import trclib.robotcore.TrcDbgTrace;
+import trclib.robotcore.TrcRobot;
+import trclib.sensor.TrcDigitalInput;
+import trclib.timer.TrcTimer;
 
 /**
  * This class creates the robot object that consists of sensors, indicators, drive base and all the subsystems.

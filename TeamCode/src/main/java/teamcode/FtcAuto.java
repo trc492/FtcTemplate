@@ -26,17 +26,17 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import java.util.Locale;
 
-import ftclib.archive.FtcChoiceMenu;
-import ftclib.archive.FtcMatchInfo;
-import ftclib.archive.FtcMenu;
-import ftclib.archive.FtcOpMode;
-import ftclib.archive.FtcValueMenu;
-import trclib.archive.TrcDbgTrace;
-import trclib.archive.TrcPose2D;
-import trclib.archive.TrcRobot;
-import trclib.archive.TrcTimer;
+import ftclib.driverio.FtcChoiceMenu;
+import ftclib.driverio.FtcMatchInfo;
+import ftclib.driverio.FtcMenu;
+import ftclib.driverio.FtcValueMenu;
+import ftclib.robotcore.FtcOpMode;
 import trclib.command.CmdPidDrive;
 import trclib.command.CmdTimedDrive;
+import trclib.pathdrive.TrcPose2D;
+import trclib.robotcore.TrcDbgTrace;
+import trclib.robotcore.TrcRobot;
+import trclib.timer.TrcTimer;
 
 /**
  * This class contains the Autonomous Mode program.

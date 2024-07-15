@@ -29,24 +29,24 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import java.util.Arrays;
 import java.util.Locale;
 
-import ftclib.archive.FtcChoiceMenu;
-import ftclib.archive.FtcGamepad;
-import ftclib.archive.FtcMenu;
-import ftclib.archive.FtcPidCoeffCache;
-import ftclib.archive.FtcValueMenu;
+import ftclib.driverio.FtcChoiceMenu;
+import ftclib.driverio.FtcGamepad;
+import ftclib.driverio.FtcMenu;
+import ftclib.driverio.FtcValueMenu;
+import ftclib.robotcore.FtcPidCoeffCache;
 import teamcode.drivebases.RobotDrive;
 import teamcode.drivebases.SwerveDrive;
-import trclib.archive.TrcDbgTrace;
-import trclib.archive.TrcElapsedTimer;
-import trclib.archive.TrcGameController;
-import trclib.archive.TrcPidController;
-import trclib.archive.TrcPose2D;
-import trclib.archive.TrcRobot;
-import trclib.archive.TrcTimer;
-import trclib.archive.TrcUtil;
 import trclib.command.CmdDriveMotorsTest;
 import trclib.command.CmdPidDrive;
 import trclib.command.CmdTimedDrive;
+import trclib.dataprocessor.TrcUtil;
+import trclib.driverio.TrcGameController;
+import trclib.pathdrive.TrcPose2D;
+import trclib.robotcore.TrcDbgTrace;
+import trclib.robotcore.TrcPidController;
+import trclib.robotcore.TrcRobot;
+import trclib.timer.TrcElapsedTimer;
+import trclib.timer.TrcTimer;
 
 /**
  * This class contains the Test Mode program. It extends FtcTeleOp so that we can teleop control the robot for

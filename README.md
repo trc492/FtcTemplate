@@ -257,7 +257,7 @@ The Javadoc reference documentation for the TRC Robotics Framework Library can b
 ### Online User Forum
 For technical questions regarding our Framework Library, please post questions on the FTC Forums [here](https://ftcforum.firstinspires.org/forum/ftc-technology/android-studio).
 
-### Sample OpModes
+### TRC Sample OpModes
 In addition, we provide a large selection of sample OpModes (sample robot code) that show you how to use various features of our library. You can find them in a separate GitHub repository [here](https://github.com/trc492/TrcFtcSamples).
 
 # FTC SDK Release Information
@@ -315,9 +315,37 @@ For technical questions regarding the Control System or the FTC SDK, please visi
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[FIRST Tech Challenge Community](https://ftc-community.firstinspires.org/)
 
 ### Sample OpModes
-In addition, we provide a large selection of Sample OpModes (robot code examples) that show you how to use various features of our library. You can find them in a separate GitHub repository [here](https://github.com/trc492/TrcFtcSamples)
+This project contains a large selection of Sample OpModes (robot code examples) which can be cut and pasted into your /teamcode folder to be used as-is, or modified to suit your team's needs.
+
+Samples Folder: &nbsp;&nbsp; [/FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples](FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples)
+
+The readme.md file located in the [/TeamCode/src/main/java/org/firstinspires/ftc/teamcode](TeamCode/src/main/java/org/firstinspires/ftc/teamcode) folder contains an explanation of the sample naming convention, and instructions on how to copy them to your own project space.
 
 # Release Information
+
+## Version 9.2 (20240701-085519)
+
+### Important Notes
+* Java classes and Blocks for TensorFlow Object Detection have been deprecated and will be removed in Version 10.0.
+* The samples that use TensorFlow Object Detection have been removed.
+
+### Enhancements
+* Adds explanatory text to failed items on the inspection activities.  To view the explanatory text tap the red warning icon for a failed item.
+* In the Blocks editor: added a new kind of variable set block that sets the variable and also returns the new value.
+* Changes the way that camera controls behave for a SwitchableCamera. Now, each method (such as getExposure, getMinExposure, getMaxExposure, setExposure for ExposureControl) acts on the currently active camera.
+* Adds support for the REV USB PS4 Compatible Gamepad (REV-31-2983)
+* Adds ConceptAprilTagMultiPortal OpMode
+* Adds support for OctoQuad Quadrature Encoder & Pulse Width Interface Module
+* Adds the ExportAprilTagLibraryToBlocks annotation that indicates that a static method that returns an AprilTagLibrary is exported to the Blocks programming environment. The corresponding block will appear in the Blocks toolbox along with the built-in tag libraries.
+* Adds Blocks OpMode ConceptAprilTagOptimizeExposure.
+* Adds support for the SparkFun Optical Tracking Odometry sensor.
+
+### Bug Fixes
+* Fixes https://github.com/FIRST-Tech-Challenge/FtcRobotController/issues/942 where visionPortal.close() can cause an IndexOutOfBoundsError.
+* Fixes a bug in the blocks editor where collapsed function blocks show a warning "Collapsed blocks contain warnings." when the Blocks OpMode is reopened.
+* Fixes a bug where the blocks editor wouldn't warn you that you have unsaved changes when you try to leave. This bug was introduced due to a behavior change in Chrome 119.
+* [Issue #764](https://github.com/FIRST-Tech-Challenge/FtcRobotController/issues/764) - Get gain control returns a null pointer for a switchable camera
+* Fixes a bug where the correct deadzone for certain gamepads was not applied when Advanced Gamepad Features was enabled
 
 ## Version 9.1 (20240215-115542)
 

@@ -23,11 +23,11 @@
 package teamcode.autotasks;
 
 import teamcode.Robot;
-import trclib.archive.TrcAutoTask;
-import trclib.archive.TrcEvent;
-import trclib.archive.TrcOwnershipMgr;
-import trclib.archive.TrcRobot;
-import trclib.archive.TrcTaskMgr;
+import trclib.robotcore.TrcAutoTask;
+import trclib.robotcore.TrcEvent;
+import trclib.robotcore.TrcOwnershipMgr;
+import trclib.robotcore.TrcRobot;
+import trclib.robotcore.TrcTaskMgr;
 
 /**
  * This class implements auto-assist task.
@@ -74,7 +74,7 @@ public class TaskAuto extends TrcAutoTask<TaskAuto.State>
      */
     public void autoAssist(TrcEvent completionEvent)
     {
-        tracer.traceInfo(moduleName, "event=%s", completionEvent);
+        tracer.traceInfo(moduleName, "event=" + completionEvent);
         startAutoTask(State.START, new TaskParams(), completionEvent);
     }   //autoAssist
 
@@ -113,8 +113,9 @@ public class TaskAuto extends TrcAutoTask<TaskAuto.State>
         {
             TrcOwnershipMgr ownershipMgr = TrcOwnershipMgr.getInstance();
             tracer.traceWarn(
-                moduleName, "Failed to acquire subsystem ownership (currOwner=%s, robotDrive=%s).",
-                currOwner, ownershipMgr.getOwner(robot.robotDrive.driveBase));
+                moduleName,
+                "Failed to acquire subsystem ownership (currOwner=" + currOwner +
+                ", robotDrive=" + ownershipMgr.getOwner(robot.robotDrive.driveBase) + ").");
             releaseSubsystemsOwnership();
         }
 
@@ -132,8 +133,9 @@ public class TaskAuto extends TrcAutoTask<TaskAuto.State>
         {
             TrcOwnershipMgr ownershipMgr = TrcOwnershipMgr.getInstance();
             tracer.traceInfo(
-                moduleName, "Releasing subsystem ownership (currOwner=%s, robotDrive=%s).",
-                currOwner, ownershipMgr.getOwner(robot.robotDrive.driveBase));
+                moduleName,
+                "Releasing subsystem ownership (currOwner=" + currOwner +
+                ", robotDrive=" + ownershipMgr.getOwner(robot.robotDrive.driveBase) + ").");
             robot.robotDrive.driveBase.releaseExclusiveAccess(currOwner);
             currOwner = null;
         }
@@ -163,7 +165,7 @@ public class TaskAuto extends TrcAutoTask<TaskAuto.State>
     protected void runTaskState(
         Object params, State state, TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode, boolean slowPeriodicLoop)
     {
-         TaskParams taskParams = (TaskParams) params;
+        TaskParams taskParams = (TaskParams) params;
 
         switch (state)
         {
