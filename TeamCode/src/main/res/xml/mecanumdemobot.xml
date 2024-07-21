@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8' standalone='yes' ?>
 <!--
-Copyright (c) 2016 Titan Robotics Club (http://www.titanrobotics.com)
+Copyright (c) 2018 Titan Robotics Club (http://www.titanrobotics.com)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -15,24 +15,24 @@ copies or substantial portions of the Software.
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-UTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 -->
 <Robot type="FirstInspires-FTC" name="MecanumDemoRobot">
-    <LynxUsbDevice name="Expansion Hub Portal 1" serialNumber="DQ2EJQK7" parentModuleAddress="2">
+    <LynxUsbDevice name="Expansion Hub Portal 1" serialNumber="DQ2EJQK7" parentModuleAddress="1">
         <LynxModule name="Expansion Hub 2" port="2">
-            <NeveRest40Gearmotor name="rfWheel" port="0" />
-            <NeveRest40Gearmotor name="rbWheel" port="1" />
-            <NeveRest40Gearmotor name="lfWheel" port="2" />
-            <NeveRest40Gearmotor name="lbWheel" port="3" />
-            <DigitalDevice name="elevatorLowerLimit" port="0" />
-            <DigitalDevice name="elevatorUpperLimit" port="2" />
+            <NeveRest40Gearmotor name="rfDriveWheel" port="0" />
+            <NeveRest40Gearmotor name="rbDriveWheel" port="1" />
+            <NeveRest40Gearmotor name="lfDriveWheel" port="2" />
+            <NeveRest40Gearmotor name="lbDriveWheel" port="3" />
+            <DigitalDevice name="elevator.lowerLimit" port="0" />
+            <DigitalDevice name="elevator.upperLimit" port="2" />
             <LynxEmbeddedIMU name="imu" port="0" bus="0" />
         </LynxModule>
         <LynxModule name="Expansion Hub 3" port="3">
-            <RevRobotics40HDHexMotor name="elevatorMotor" port="0" />
+            <RevRobotics40HDHexMotor name="elevator.motor" port="0" />
         </LynxModule>
     </LynxUsbDevice>
 </Robot>
