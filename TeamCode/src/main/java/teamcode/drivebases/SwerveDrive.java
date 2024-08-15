@@ -35,6 +35,7 @@ import ftclib.sensor.FtcAnalogEncoder;
 import teamcode.RobotParams;
 import trclib.drivebase.TrcSwerveDriveBase;
 import trclib.drivebase.TrcSwerveModule;
+import trclib.motor.TrcMotor;
 import trclib.pathdrive.TrcPidDrive;
 import trclib.pathdrive.TrcPurePursuitDrive;
 import trclib.robotcore.TrcDbgTrace;
@@ -52,6 +53,9 @@ public class SwerveDrive extends RobotDrive
     private final String[] steerEncoderNames = {
         RobotParams.HWNAME_LFSTEER_ENCODER, RobotParams.HWNAME_RFSTEER_ENCODER,
         RobotParams.HWNAME_LBSTEER_ENCODER, RobotParams.HWNAME_RBSTEER_ENCODER};
+    private final boolean[] steerEncoderInverted = {
+        RobotParams.LFSTEER_ENC_INVERTED, RobotParams.RFSTEER_ENC_INVERTED,
+        RobotParams.LBSTEER_ENC_INVERTED, RobotParams.RBSTEER_ENC_INVERTED};
     public double[] zeroPositions = {
         RobotParams.LFSTEER_ZERO_POS, RobotParams.RFSTEER_ZERO_POS,
         RobotParams.LBSTEER_ZERO_POS, RobotParams.RBSTEER_ZERO_POS};
@@ -184,7 +188,8 @@ public class SwerveDrive extends RobotDrive
 
         for (int i = 0; i < servoNames.length; i++)
         {
-            servos[i] = new FtcCRServo(servoNames[i], encoders[i]);
+            servos[i] = new FtcCRServo(
+                servoNames[i], new TrcMotor.ExternalSensors().setEncoder(encoders[i], steerEncoderInverted[i]));
             if (RobotParams.Preferences.swerveDualServoSteering)
             {
                 FtcCRServo slaveServo = new FtcCRServo(servoNames[i] + ".slave", null);
