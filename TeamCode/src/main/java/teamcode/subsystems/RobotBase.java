@@ -22,6 +22,7 @@
 
 package teamcode.subsystems;
 
+import ftclib.drivebase.FtcDifferentialDrive;
 import ftclib.drivebase.FtcMecanumDrive;
 import ftclib.drivebase.FtcRobotDrive;
 import ftclib.drivebase.FtcSwerveDrive;
@@ -45,6 +46,12 @@ public class RobotBase
             case VisionOnly:
                 robotInfo = new RobotParams.VisionOnlyParams();
                 robotDrive = null;
+                break;
+
+            case DifferentialRobot:
+                robotInfo = new RobotParams.DifferentialParams();
+                robotDrive = RobotParams.Preferences.useDriveBase?
+                    new FtcDifferentialDrive(robotInfo, RobotParams.Preferences.useExternalOdometry): null;
                 break;
 
             case MecanumRobot:

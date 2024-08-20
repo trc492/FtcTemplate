@@ -181,6 +181,101 @@ public class RobotParams
     }   //class VisionOnlyParams
 
     /**
+     * This class contains the Differential Robot Parameters.
+     */
+    public static class DifferentialParams extends FtcRobotDrive.RobotInfo
+    {
+        // Optii Odometry Wheel
+        private static final double ODWHEEL_DIAMETER = 35.0 * TrcUtil.INCHES_PER_MM;
+        private static final double ODWHEEL_CPR = 4096.0;
+
+        public DifferentialParams()
+        {
+            robotName = "DifferentialRobot";
+            // IMU
+            imuName = "imu";
+            hubLogoDirection = LogoFacingDirection.UP;
+            hubUsbDirection = UsbFacingDirection.FORWARD;
+            // Robot Dimensions
+            robotLength = 17.0;
+            robotWidth = 17.0;
+            wheelBaseLength = (24.0 * 14)*TrcUtil.INCHES_PER_MM;
+            wheelBaseWidth = 16.0;
+            // Drive Motors
+            driveMotorType = MotorType.DcMotor;
+            driveMotorNames = new String[] {"lfDriveMotor", "rfDriveMotor", "lbDriveMotor", "rbDriveMotor"};
+            driveMotorInverted = new boolean[] {true, false, true, false};
+            // Odometry Wheels
+            odWheelScale = Math.PI * ODWHEEL_DIAMETER / ODWHEEL_CPR;    // 0.00105687652708656383937269814237 in/count
+            xOdWheelOffsetX = 0.0;
+            xOdWheelOffsetY = -168.0 * TrcUtil.INCHES_PER_MM;
+            yLeftOdWheelOffsetX = -144.0 * TrcUtil.INCHES_PER_MM;
+            yLeftOdWheelOffsetY = -12.0 * TrcUtil.INCHES_PER_MM;
+            yRightOdWheelOffsetX = 144.0 * TrcUtil.INCHES_PER_MM;
+            yRightOdWheelOffsetY = -12.0 * TrcUtil.INCHES_PER_MM;
+            // Drive Motor Odometry
+            xDrivePosScale = 0.01924724265461924299065420560748;        // in/count
+            yDrivePosScale = 0.02166184604662450653409090909091;        // in/count
+            // Robot Drive Characteristics
+            robotMaxVelocity = 23.0;        // inches/sec
+            robotMaxAcceleration  = 500.0;  // inches/sec2
+            robotMaxTurnRate = 100.0;       // degrees/sec
+            profiledMaxVelocity = robotMaxVelocity;
+            profiledMaxAcceleration = robotMaxAcceleration;
+            profiledMaxTurnRate = robotMaxTurnRate;
+            // DriveBase PID Parameters
+            drivePidTolerance = 1.0;
+            turnPidTolerance = 1.0;
+            xDrivePidCoeffs = new PidCoefficients(0.95, 0.0, 0.001, 0.0, 0.0);
+            xDrivePidPowerLimit = 1.0;
+            xDriveMaxPidRampRate = null;
+            yDrivePidCoeffs = new PidCoefficients(0.06, 0.0, 0.002, 0.0, 0.0);
+            yDrivePidPowerLimit = 1.0;
+            yDriveMaxPidRampRate = null;
+            turnPidCoeffs = new PidCoefficients(0.02, 0.0, 0.002, 0.0, 0.0);
+            turnPidPowerLimit = 0.5;
+            turnMaxPidRampRate = null;
+            // PID Stall Detection
+            pidStallDetectionEnabled = true;
+            // PurePursuit Parameters
+            ppdFollowingDistance = 6.0;
+            velPidCoeffs = new PidCoefficients(0.0, 0.0, 0.0, 1.0 / profiledMaxVelocity, 0.0);
+            // Robot Drive
+            driveMode = DriveMode.ARCADE_MODE;
+            driveOrientation = DriveOrientation.ROBOT;
+            driveSlowScale = 0.3;
+            driveNormalScale = 1.0;
+            turnSlowScale = 0.3;
+            turnNormalScale = 0.6;
+            // Vision
+            webCam1Name = "Webcam 1";
+            webCam2Name = "Webcam 2";
+            camImageWidth = 640;
+            camImageHeight = 480;
+            camOrientation = OpenCvCameraRotation.UPRIGHT;
+            // Camera location On Robot
+            camXOffset = 0.0;       //Camera right offset from robot centroid
+            camYOffset = 2.0;       //Camera forward offset from robot centroid
+            camZOffset = 9.75;      //Camera height offset from floor
+            camTiltDown = 15.00;    //Camera tilt down angle from horizontal in deg
+            camPose = new TrcPose2D(camXOffset, camYOffset, 0.0);
+            // Homography: cameraRect in pixels, worldRect in inches
+            cameraRect = new TrcHomographyMapper.Rectangle(
+                0.0, 120.0,                                     // Camera Top Left
+                camImageWidth -1, 120.0,                        // Camera Top Right
+                0.0, camImageHeight - 1,                        // Camera Bottom Left
+                camImageWidth - 1, camImageHeight - 1);         // Camera Bottom Right
+            worldRect = new TrcHomographyMapper.Rectangle(
+                -12.5626, 48.0 - robotLength/2.0 - camYOffset,  // World Top Left
+                11.4375, 44.75 - robotLength/2.0 - camYOffset,  // World Top Right
+                -2.5625, 21.0 - robotLength/2.0 - camYOffset,   // World Bottom Left
+                2.5626, 21.0 - robotLength/2.0 - camYOffset);   // World Bottom Right
+            blinkinName = "blinkin";
+        }   //DifferentialParams
+
+    }   //class DifferentialParams
+
+    /**
      * This class contains the Mecanum Robot Parameters.
      */
     public static class MecanumParams extends FtcRobotDrive.RobotInfo
