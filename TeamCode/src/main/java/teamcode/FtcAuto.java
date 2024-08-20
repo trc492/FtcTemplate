@@ -22,6 +22,8 @@
 
 package teamcode;
 
+import androidx.annotation.NonNull;
+
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import java.util.Locale;
@@ -80,6 +82,7 @@ public class FtcAuto extends FtcOpMode
         public double driveTime = 0.0;
         public double drivePower = 0.0;
 
+        @NonNull
         @Override
         public String toString()
         {
@@ -126,7 +129,7 @@ public class FtcAuto extends FtcOpMode
             Robot.matchInfo = FtcMatchInfo.getMatchInfo();
             String filePrefix = String.format(
                 Locale.US, "%s%02d_Auto", Robot.matchInfo.matchType, Robot.matchInfo.matchNumber);
-            TrcDbgTrace.openTraceLog(RobotParams.LOG_FOLDER_PATH, filePrefix);
+            TrcDbgTrace.openTraceLog(RobotParams.System.LOG_FOLDER_PATH, filePrefix);
         }
         //
         // Create and run choice menus.
@@ -138,17 +141,14 @@ public class FtcAuto extends FtcOpMode
         switch (autoChoices.strategy)
         {
             case PID_DRIVE:
-                if (RobotParams.Preferences.robotType != RobotParams.RobotType.NoRobot)
+                if (robot.robotDrive != null)
                 {
-                    autoCommand = new CmdPidDrive(
-                        robot.robotDrive.driveBase, robot.robotDrive.pidDrive, autoChoices.delay,
-                        autoChoices.drivePower, null,
-                        new TrcPose2D(autoChoices.xTarget*12.0, autoChoices.yTarget*12.0, autoChoices.turnTarget));
+                    autoCommand = new CmdPidDrive(robot.robotDrive.driveBase, robot.robotDrive.pidDrive);
                 }
                 break;
 
             case TIMED_DRIVE:
-                if (RobotParams.Preferences.robotType != RobotParams.RobotType.NoRobot)
+                if (robot.robotDrive != null)
                 {
                     autoCommand = new CmdTimedDrive(
                         robot.robotDrive.driveBase, autoChoices.delay, autoChoices.driveTime,
@@ -248,6 +248,13 @@ public class FtcAuto extends FtcOpMode
         if (robot.battery != null)
         {
             robot.battery.setEnabled(true);
+        }
+
+        if (autoChoices.strategy == AutoStrategy.PID_DRIVE && autoCommand != null)
+        {
+            ((CmdPidDrive) autoCommand).start(
+                autoChoices.delay, autoChoices.drivePower, null,
+                new TrcPose2D(autoChoices.xTarget*12.0, autoChoices.yTarget*12.0, autoChoices.turnTarget));
         }
     }   //startMode
 

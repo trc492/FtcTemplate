@@ -22,14 +22,15 @@
 
 package teamcode;
 
+import androidx.annotation.NonNull;
+
+import ftclib.drivebase.FtcRobotDrive;
 import ftclib.driverio.FtcDashboard;
 import ftclib.driverio.FtcMatchInfo;
 import ftclib.robotcore.FtcOpMode;
 import ftclib.sensor.FtcRobotBattery;
-import teamcode.drivebases.MecanumDrive;
-import teamcode.drivebases.RobotDrive;
-import teamcode.drivebases.SwerveDrive;
 import teamcode.subsystems.BlinkinLEDs;
+import teamcode.subsystems.RobotBase;
 import teamcode.vision.Vision;
 import trclib.motor.TrcMotor;
 import trclib.motor.TrcServo;
@@ -46,28 +47,22 @@ public class Robot
 {
     private static final String moduleName = Robot.class.getSimpleName();
     private static final double STATUS_UPDATE_INTERVAL = 0.1;   // 100 msec
-    //
     // Global objects.
-    //
     public final FtcOpMode opMode;
     public final TrcDbgTrace globalTracer;
     public final FtcDashboard dashboard;
     public static FtcMatchInfo matchInfo = null;
     private static TrcPose2D endOfAutoRobotPose = null;
     private static double nextStatusUpdateTime = 0.0;
-    //
+    // Robot Drive.
+    public FtcRobotDrive.RobotInfo robotInfo;
+    public FtcRobotDrive robotDrive;
     // Vision subsystems.
-    //
     public Vision vision;
-    //
     // Sensors and indicators.
-    //
     public BlinkinLEDs blinkin;
     public FtcRobotBattery battery;
-    //
     // Subsystems.
-    //
-    public RobotDrive robotDrive;
 
     /**
      * Constructor: Create an instance of the object.
@@ -77,49 +72,39 @@ public class Robot
      */
     public Robot(TrcRobot.RunMode runMode)
     {
-        //
         // Initialize global objects.
-        //
         opMode = FtcOpMode.getInstance();
         globalTracer = TrcDbgTrace.getGlobalTracer();
         dashboard = FtcDashboard.getInstance();
         nextStatusUpdateTime = TrcTimer.getCurrentTime();
-
         speak("Init starting");
-        //
-        // Initialize vision subsystems.
-        //
-        if (RobotParams.Preferences.tuneColorBlobVision ||
-            RobotParams.Preferences.useAprilTagVision ||
-            RobotParams.Preferences.useColorBlobVision ||
-            RobotParams.Preferences.useTensorFlowVision)
+        // Create and initialize Robot Base.
+        RobotBase robotBase = new RobotBase();
+        robotInfo = robotBase.getRobotInfo();
+        robotDrive = robotBase.getRobotDrive();
+        // Create and initialize vision subsystems.
+        if (RobotParams.Preferences.useVision &&
+            (RobotParams.Preferences.tuneColorBlobVision ||
+             RobotParams.Preferences.useAprilTagVision ||
+             RobotParams.Preferences.useColorBlobVision ||
+             RobotParams.Preferences.useTensorFlowVision))
         {
             vision = new Vision(this);
         }
-        //
-        // If robotType is NoRobot, the robot controller is disconnected from the robot for testing vision.
+        // If robotType is VisionOnly, the robot controller is disconnected from the robot for testing vision.
         // In this case, we should not instantiate any robot hardware.
-        //
-        if (RobotParams.Preferences.robotType != RobotParams.RobotType.NoRobot)
+        if (RobotParams.Preferences.robotType != RobotParams.RobotType.VisionOnly)
         {
-            //
             // Create and initialize sensors and indicators.
-            //
-            if (RobotParams.Preferences.useBlinkin)
+            if (robotInfo.blinkinName != null)
             {
-                blinkin = new BlinkinLEDs(RobotParams.HWNAME_BLINKIN);
+                blinkin = new BlinkinLEDs(robotInfo.blinkinName);
             }
 
             if (RobotParams.Preferences.useBatteryMonitor)
             {
                 battery = new FtcRobotBattery();
             }
-            //
-            // Create and initialize RobotDrive.
-            //
-            robotDrive =
-                RobotParams.Preferences.robotType == RobotParams.RobotType.SwerveRobot?
-                    new SwerveDrive(): new MecanumDrive();
             //
             // Create and initialize other subsystems.
             //
@@ -136,10 +121,11 @@ public class Robot
      *
      * @return instance name.
      */
+    @NonNull
     @Override
     public String toString()
     {
-        return RobotParams.ROBOT_NAME;
+        return robotInfo != null? robotInfo.robotName: RobotParams.System.DEF_ROBOT_NAME;
     }   //toString
 
     /**

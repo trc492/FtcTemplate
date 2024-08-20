@@ -26,9 +26,9 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import java.util.Locale;
 
+import ftclib.drivebase.FtcSwerveDrive;
 import ftclib.driverio.FtcGamepad;
 import ftclib.robotcore.FtcOpMode;
-import teamcode.drivebases.SwerveDrive;
 import trclib.drivebase.TrcDriveBase;
 import trclib.driverio.TrcGameController;
 import trclib.pathdrive.TrcPose2D;
@@ -47,9 +47,9 @@ public class FtcTeleOp extends FtcOpMode
     protected Robot robot;
     protected FtcGamepad driverGamepad;
     protected FtcGamepad operatorGamepad;
-    private double drivePowerScale = RobotParams.DRIVE_POWER_SCALE_NORMAL;
-    private double turnPowerScale = RobotParams.TURN_POWER_SCALE_NORMAL;
-    private boolean manualOverride = false;
+    private double drivePowerScale;
+    private double turnPowerScale;
+    private boolean operatorAltFunc = false;
     private boolean relocalizing = false;
     private TrcPose2D robotFieldPose = null;
 
@@ -68,6 +68,9 @@ public class FtcTeleOp extends FtcOpMode
         // Create and initialize robot object.
         //
         robot = new Robot(TrcRobot.getRunMode());
+        drivePowerScale = robot.robotInfo.driveNormalScale;
+        turnPowerScale = robot.robotInfo.turnNormalScale;
+
         //
         // Open trace log.
         //
@@ -76,7 +79,7 @@ public class FtcTeleOp extends FtcOpMode
             String filePrefix = Robot.matchInfo != null?
                 String.format(Locale.US, "%s%02d_TeleOp", Robot.matchInfo.matchType, Robot.matchInfo.matchNumber):
                 "Unknown_TeleOp";
-            TrcDbgTrace.openTraceLog(RobotParams.LOG_FOLDER_PATH, filePrefix);
+            TrcDbgTrace.openTraceLog(RobotParams.System.LOG_FOLDER_PATH, filePrefix);
         }
         //
         // Create and initialize Gamepads.
@@ -85,7 +88,7 @@ public class FtcTeleOp extends FtcOpMode
         operatorGamepad = new FtcGamepad("OperatorGamepad", gamepad2, this::operatorButtonEvent);
         driverGamepad.setYInverted(true);
         operatorGamepad.setYInverted(true);
-        setDriveOrientation(TrcDriveBase.DriveOrientation.ROBOT);
+        setDriveOrientation(robot.robotInfo.driveOrientation);
     }   //robotInit
 
     //
@@ -178,7 +181,7 @@ public class FtcTeleOp extends FtcOpMode
                 else
                 {
                     double[] inputs = driverGamepad.getDriveInputs(
-                        RobotParams.ROBOT_DRIVE_MODE, true, drivePowerScale, turnPowerScale);
+                        robot.robotInfo.driveMode, true, drivePowerScale, turnPowerScale);
 
                     if (robot.robotDrive.driveBase.supportsHolonomicDrive())
                     {
@@ -302,14 +305,14 @@ public class FtcTeleOp extends FtcOpMode
                 if (pressed)
                 {
                     robot.globalTracer.traceInfo(moduleName, ">>>>> DrivePower slow.");
-                    drivePowerScale = RobotParams.DRIVE_POWER_SCALE_SLOW;
-                    turnPowerScale = RobotParams.TURN_POWER_SCALE_SLOW;
+                    drivePowerScale = robot.robotInfo.driveSlowScale;
+                    turnPowerScale = robot.robotInfo.turnSlowScale;
                 }
                 else
                 {
                     robot.globalTracer.traceInfo(moduleName, ">>>>> DrivePower normal.");
-                    drivePowerScale = RobotParams.DRIVE_POWER_SCALE_NORMAL;
-                    turnPowerScale = RobotParams.TURN_POWER_SCALE_NORMAL;
+                    drivePowerScale = robot.robotInfo.driveNormalScale;
+                    turnPowerScale = robot.robotInfo.turnNormalScale;
                 }
                 break;
 
@@ -350,11 +353,11 @@ public class FtcTeleOp extends FtcOpMode
                 break;
 
             case FtcGamepad.GAMEPAD_BACK:
-                if (pressed && robot.robotDrive != null && robot.robotDrive instanceof SwerveDrive)
+                if (pressed && robot.robotDrive != null && robot.robotDrive instanceof FtcSwerveDrive)
                 {
                     // Drive base is a Swerve Drive, align all steering wheels forward.
                     robot.globalTracer.traceInfo(moduleName, ">>>>> Set SteerAngle to zero.");
-                    ((SwerveDrive) robot.robotDrive).setSteerAngle(0.0, false, false);
+                    ((FtcSwerveDrive) robot.robotDrive).setSteerAngle(0.0, false, false);
                 }
                 break;
         }
@@ -389,8 +392,8 @@ public class FtcTeleOp extends FtcOpMode
                 break;
 
             case FtcGamepad.GAMEPAD_RBUMPER:
-                robot.globalTracer.traceInfo(moduleName, ">>>>> ManulOverride=" + pressed);
-                manualOverride = pressed;
+                robot.globalTracer.traceInfo(moduleName, ">>>>> OperatorAltFunc=" + pressed);
+                operatorAltFunc = pressed;
                 break;
 
             case FtcGamepad.GAMEPAD_DPAD_UP:
