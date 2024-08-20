@@ -415,68 +415,6 @@ public class FtcTest extends FtcTeleOp
                         lineNum++, "Drive Accel: (%.1f/%.1f)", acceleration, maxDriveAcceleration);
                 }
                 break;
-
-            case X_TIMED_DRIVE:
-            case Y_TIMED_DRIVE:
-                if (robot.robotDrive != null)
-                {
-                    robot.dashboard.displayPrintf(lineNum++, "Timed Drive: %.0f sec", testChoices.driveTime);
-                    robot.dashboard.displayPrintf(
-                        lineNum++, "RobotPose=%s", robot.robotDrive.driveBase.getFieldPosition());
-                    robot.dashboard.displayPrintf(
-                        lineNum++, "rawEnc=lf:%.0f,rf:%.0f,lb:%.0f,rb:%.0f",
-                        robot.robotDrive.driveMotors[FtcRobotDrive.INDEX_LEFT_FRONT].getPosition(),
-                        robot.robotDrive.driveMotors[FtcRobotDrive.INDEX_RIGHT_FRONT].getPosition(),
-                        robot.robotDrive.driveMotors[FtcRobotDrive.INDEX_LEFT_BACK].getPosition(),
-                        robot.robotDrive.driveMotors[FtcRobotDrive.INDEX_RIGHT_BACK].getPosition());
-                }
-                break;
-
-            case TUNE_X_PID:
-            case TUNE_Y_PID:
-            case TUNE_TURN_PID:
-                if (robot.robotDrive != null && testChoices.tunePidCoeffs != null)
-                {
-                    robot.dashboard.displayPrintf(7, "TunePid=%s", testChoices.tunePidCoeffs);
-                }
-                //
-                // Intentionally falling through.
-                //
-            case PURE_PURSUIT_DRIVE:
-            case PID_DRIVE:
-                if (robot.robotDrive != null)
-                {
-                    TrcPidController xPidCtrl, yPidCtrl, turnPidCtrl;
-                    if (testChoices.test == Test.PURE_PURSUIT_DRIVE)
-                    {
-                        xPidCtrl = robot.robotDrive.purePursuitDrive.getXPosPidCtrl();
-                        yPidCtrl = robot.robotDrive.purePursuitDrive.getYPosPidCtrl();
-                        turnPidCtrl = robot.robotDrive.purePursuitDrive.getTurnPidCtrl();
-                    }
-                    else
-                    {
-                        xPidCtrl = robot.robotDrive.pidDrive.getXPidCtrl();
-                        yPidCtrl = robot.robotDrive.pidDrive.getYPidCtrl();
-                        turnPidCtrl = robot.robotDrive.pidDrive.getTurnPidCtrl();
-                    }
-
-                    robot.dashboard.displayPrintf(
-                        lineNum++, "RobotPose=%s,rawEnc=lf:%.0f,rf:%.0f,lb:%.0f,rb:%.0f",
-                        robot.robotDrive.driveBase.getFieldPosition(),
-                        robot.robotDrive.driveMotors[FtcRobotDrive.INDEX_LEFT_FRONT].getPosition(),
-                        robot.robotDrive.driveMotors[FtcRobotDrive.INDEX_RIGHT_FRONT].getPosition(),
-                        robot.robotDrive.driveMotors[FtcRobotDrive.INDEX_LEFT_BACK].getPosition(),
-                        robot.robotDrive.driveMotors[FtcRobotDrive.INDEX_RIGHT_BACK].getPosition());
-                    if (xPidCtrl != null)
-                    {
-                        xPidCtrl.displayPidInfo(lineNum);
-                        lineNum += 2;
-                    }
-                    yPidCtrl.displayPidInfo(lineNum);
-                    lineNum += 2;
-                    turnPidCtrl.displayPidInfo(lineNum);
-                }
-                break;
         }
 
         if (elapsedTimer != null)
@@ -510,36 +448,74 @@ public class FtcTest extends FtcTeleOp
                     doVisionTest();
                     break;
 
+                case X_TIMED_DRIVE:
+                case Y_TIMED_DRIVE:
+                    if (robot.robotDrive != null)
+                    {
+                        robot.dashboard.displayPrintf(lineNum++, "Timed Drive: %.0f sec", testChoices.driveTime);
+                        robot.dashboard.displayPrintf(
+                            lineNum++, "RobotPose=%s", robot.robotDrive.driveBase.getFieldPosition());
+                        robot.dashboard.displayPrintf(
+                            lineNum++, "rawEnc=lf:%.0f,rf:%.0f,lb:%.0f,rb:%.0f",
+                            robot.robotDrive.driveMotors[FtcRobotDrive.INDEX_LEFT_FRONT].getPosition(),
+                            robot.robotDrive.driveMotors[FtcRobotDrive.INDEX_RIGHT_FRONT].getPosition(),
+                            robot.robotDrive.driveMotors[FtcRobotDrive.INDEX_LEFT_BACK].getPosition(),
+                            robot.robotDrive.driveMotors[FtcRobotDrive.INDEX_RIGHT_BACK].getPosition());
+                    }
+                    break;
+
+                case TUNE_X_PID:
+                case TUNE_Y_PID:
+                case TUNE_TURN_PID:
+                    if (robot.robotDrive != null && testChoices.tunePidCoeffs != null)
+                    {
+                        robot.dashboard.displayPrintf(7, "TunePid=%s", testChoices.tunePidCoeffs);
+                    }
+                    //
+                    // Intentionally falling through.
+                    //
+                case PURE_PURSUIT_DRIVE:
+                case PID_DRIVE:
+                    if (robot.robotDrive != null)
+                    {
+                        TrcPidController xPidCtrl, yPidCtrl, turnPidCtrl;
+                        if (testChoices.test == Test.PURE_PURSUIT_DRIVE)
+                        {
+                            xPidCtrl = robot.robotDrive.purePursuitDrive.getXPosPidCtrl();
+                            yPidCtrl = robot.robotDrive.purePursuitDrive.getYPosPidCtrl();
+                            turnPidCtrl = robot.robotDrive.purePursuitDrive.getTurnPidCtrl();
+                        }
+                        else
+                        {
+                            xPidCtrl = robot.robotDrive.pidDrive.getXPidCtrl();
+                            yPidCtrl = robot.robotDrive.pidDrive.getYPidCtrl();
+                            turnPidCtrl = robot.robotDrive.pidDrive.getTurnPidCtrl();
+                        }
+
+                        robot.dashboard.displayPrintf(
+                            lineNum++, "RobotPose=%s,rawEnc=lf:%.0f,rf:%.0f,lb:%.0f,rb:%.0f",
+                            robot.robotDrive.driveBase.getFieldPosition(),
+                            robot.robotDrive.driveMotors[FtcRobotDrive.INDEX_LEFT_FRONT].getPosition(),
+                            robot.robotDrive.driveMotors[FtcRobotDrive.INDEX_RIGHT_FRONT].getPosition(),
+                            robot.robotDrive.driveMotors[FtcRobotDrive.INDEX_LEFT_BACK].getPosition(),
+                            robot.robotDrive.driveMotors[FtcRobotDrive.INDEX_RIGHT_BACK].getPosition());
+                        if (xPidCtrl != null)
+                        {
+                            xPidCtrl.displayPidInfo(lineNum);
+                            lineNum += 2;
+                        }
+                        yPidCtrl.displayPidInfo(lineNum);
+                        lineNum += 2;
+                        turnPidCtrl.displayPidInfo(lineNum);
+                    }
+                    break;
+
                 case CALIBRATE_SWERVE_STEERING:
                     if (robot.robotDrive != null && (robot.robotDrive instanceof FtcSwerveDrive) && steerCalibrating)
                     {
                         FtcSwerveDrive swerveDrive = (FtcSwerveDrive) robot.robotDrive;
                         swerveDrive.runSteeringCalibration();
-                        if (swerveDrive.steerZeroCalibrationCount > 0)
-                        {
-                            robot.dashboard.displayPrintf(
-                                lineNum++, "Count = %d", swerveDrive.steerZeroCalibrationCount);
-                            robot.dashboard.displayPrintf(
-                                lineNum++, "Encoder: lf=%.3f/%f",
-                                swerveDrive.steerEncoders[FtcSwerveDrive.INDEX_LEFT_FRONT].getRawPosition(),
-                                swerveDrive.steerZeros[FtcSwerveDrive.INDEX_LEFT_FRONT]
-                                    / swerveDrive.steerZeroCalibrationCount);
-                            robot.dashboard.displayPrintf(
-                                lineNum++, "Encoder: rf=%.3f/%f",
-                                swerveDrive.steerEncoders[FtcSwerveDrive.INDEX_RIGHT_FRONT].getRawPosition(),
-                                swerveDrive.steerZeros[FtcSwerveDrive.INDEX_RIGHT_FRONT]
-                                    / swerveDrive.steerZeroCalibrationCount);
-                            robot.dashboard.displayPrintf(
-                                lineNum++, "Encoder: lb=%.3f/%f",
-                                swerveDrive.steerEncoders[FtcSwerveDrive.INDEX_LEFT_BACK].getRawPosition(),
-                                swerveDrive.steerZeros[FtcSwerveDrive.INDEX_LEFT_BACK]
-                                    / swerveDrive.steerZeroCalibrationCount);
-                            robot.dashboard.displayPrintf(
-                                lineNum++, "Encoder: rb=%.3f/%f",
-                                swerveDrive.steerEncoders[FtcSwerveDrive.INDEX_RIGHT_BACK].getRawPosition(),
-                                swerveDrive.steerZeros[FtcSwerveDrive.INDEX_RIGHT_BACK]
-                                    / swerveDrive.steerZeroCalibrationCount);
-                        }
+                        swerveDrive.displaySteerZeroCalibration(lineNum);
                     }
                     break;
             }
