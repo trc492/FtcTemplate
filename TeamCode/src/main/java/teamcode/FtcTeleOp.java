@@ -53,6 +53,13 @@ public class FtcTeleOp extends FtcOpMode
     private boolean relocalizing = false;
     private TrcPose2D robotFieldPose = null;
 
+    private double prevSimpleMotorPower = 0.0;
+    private double prevSimpleServoPower = 0.0;
+    private double prevElevatorPower = 0.0;
+    private double prevArmPower = 0.0;
+    private boolean shooterOn = false;
+    private double prevShooterVelocity = 0.0;
+
     //
     // Implements FtcOpMode abstract method.
     //
@@ -204,6 +211,83 @@ public class FtcTeleOp extends FtcOpMode
             //
             if (RobotParams.Preferences.useSubsystems)
             {
+                if (robot.simpleMotor != null)
+                {
+                    double motorPower = driverGamepad.getLeftStickY(true);
+                    if (motorPower != prevSimpleMotorPower)
+                    {
+                        robot.simpleMotor.setPower(motorPower);
+                        prevSimpleMotorPower = motorPower;
+                    }
+                }
+
+                if (robot.simpleServo != null)
+                {
+                    double servoPower = driverGamepad.getRightStickY(true);
+                    if (servoPower != prevSimpleServoPower)
+                    {
+                        robot.simpleServo.setPower(servoPower);
+                        prevSimpleServoPower = servoPower;
+                    }
+                }
+
+                if (robot.elevator != null)
+                {
+                    double elevatorPower = driverGamepad.getLeftStickY(true);
+                    if (elevatorPower != prevElevatorPower)
+                    {
+                        if (driverAltFunc)
+                        {
+                            // Manual override.
+                            robot.elevator.setPower(elevatorPower);
+                        }
+                        else
+                        {
+                            robot.elevator.setPidPower(
+                                elevatorPower, RobotParams.Elevator.MIN_POS, RobotParams.Elevator.MAX_POS, true);
+                        }
+                        prevElevatorPower = elevatorPower;
+                    }
+                }
+
+                if (robot.arm != null)
+                {
+                    double armPower = driverGamepad.getLeftStickY(true);
+                    if (armPower != prevArmPower)
+                    {
+                        if (driverAltFunc)
+                        {
+                            // Manual override.
+                            robot.arm.setPower(armPower);
+                        }
+                        else
+                        {
+                            robot.arm.setPidPower(armPower, RobotParams.Arm.MIN_POS, RobotParams.Arm.MAX_POS, true);
+                        }
+                        prevArmPower = armPower;
+                    }
+                }
+
+                if (robot.shooter != null)
+                {
+                    if (shooterOn)
+                    {
+                        double shooterVel = robot.shooterVelocity.getValue();
+                        if (shooterVel != prevShooterVelocity)
+                        {
+                            robot.shooter.setShooterMotorRPM(shooterVel, shooterVel);
+                            prevShooterVelocity = shooterVel;
+                        }
+                    }
+                    else
+                    {
+                        if (prevShooterVelocity != 0.0)
+                        {
+                            robot.shooter.stopShooter();
+                            prevShooterVelocity = 0.0;
+                        }
+                    }
+                }
             }
             // Display subsystem status.
             if (RobotParams.Preferences.doStatusUpdate)
@@ -249,6 +333,67 @@ public class FtcTeleOp extends FtcOpMode
         switch (button)
         {
             case A:
+                if (robot.simpleServo != null)
+                {
+                    if (pressed)
+                    {
+                        robot.simpleServo.setPosition(90.0);
+                    }
+                    else
+                    {
+                        robot.simpleServo.setPosition(0.0);
+                    }
+                }
+                else if (robot.shooter != null)
+                {
+                    if (pressed)
+                    {
+                        shooterOn = !shooterOn;
+                    }
+                }
+                else if (robot.intake != null)
+                {
+                    if (pressed)
+                    {
+                        robot.intake.autoIntakeForward(
+                            RobotParams.Intake.INTAKE_FORWARD_POWER, RobotParams.Intake.RETAIN_POWER,
+                            RobotParams.Intake.FINISH_DELAY);
+                    }
+                    else
+                    {
+                        robot.intake.cancel();
+                    }
+                }
+                else if (robot.grabber != null)
+                {
+                    if (driverAltFunc)
+                    {
+                        if (pressed)
+                        {
+                            if (robot.grabber.isClosed())
+                            {
+                                robot.grabber.open();
+                            }
+                            else
+                            {
+                                robot.grabber.close();
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (pressed)
+                        {
+                            robot.grabber.enableAutoAssist(null, 0.0, null, 0.0);
+                        }
+                        else
+                        {
+                            robot.grabber.cancelAutoAssist();
+                        }
+                    }
+                }
+                break;
+
             case B:
                 break;
 
@@ -324,9 +469,71 @@ public class FtcTeleOp extends FtcOpMode
                 break;
 
             case DpadUp:
+                if (robot.elevator != null)
+                {
+                    if (pressed)
+                    {
+                        robot.elevator.presetPositionUp(null, RobotParams.Elevator.POWER_LIMIT);
+                    }
+                }
+                else if (robot.arm != null)
+                {
+                    if (pressed)
+                    {
+                        robot.arm.presetPositionUp(null, RobotParams.Arm.POWER_LIMIT);
+                    }
+                }
+                else if (robot.shooter != null)
+                {
+                    if (pressed)
+                    {
+                        robot.shooterVelocity.upValue();
+                    }
+                }
+                break;
+
             case DpadDown:
+                if (robot.elevator != null)
+                {
+                    if (pressed)
+                    {
+                        robot.elevator.presetPositionDown(null, RobotParams.Elevator.POWER_LIMIT);
+                    }
+                }
+                else if (robot.arm != null)
+                {
+                    if (pressed)
+                    {
+                        robot.arm.presetPositionDown(null, RobotParams.Arm.POWER_LIMIT);
+                    }
+                }
+                else if (robot.shooter != null)
+                {
+                    if (pressed)
+                    {
+                        robot.shooterVelocity.downValue();
+                    }
+                }
+                break;
+
             case DpadLeft:
+                if (robot.shooter != null)
+                {
+                    if (pressed)
+                    {
+                        robot.shooterVelocity.downIncrement();
+                    }
+                }
+                break;
+
             case DpadRight:
+                if (robot.shooter != null)
+                {
+                    if (pressed)
+                    {
+                        robot.shooterVelocity.upIncrement();
+                    }
+                }
                 break;
 
             case Back:

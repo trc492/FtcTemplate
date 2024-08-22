@@ -35,6 +35,7 @@ import trclib.dataprocessor.TrcUtil;
 import trclib.drivebase.TrcDriveBase.DriveOrientation;
 import trclib.driverio.TrcGameController;
 import trclib.pathdrive.TrcPose2D;
+import trclib.robotcore.TrcPidController;
 import trclib.robotcore.TrcPidController.PidCoefficients;
 import trclib.vision.TrcHomographyMapper;
 
@@ -143,6 +144,13 @@ public class RobotParams
         public static final boolean useExternalOdometry         = false;
         // Subsystems
         public static final boolean useSubsystems               = false;
+        public static final boolean useSimpleMotor              = false;
+        public static final boolean useSimpleServo              = false;
+        public static final boolean useElevator                 = false;
+        public static final boolean useArm                      = false;
+        public static final boolean useShooter                  = false;
+        public static final boolean useIntake                   = false;
+        public static final boolean useGrabber                  = false;
     }   //class Preferences
 
     //
@@ -479,5 +487,142 @@ public class RobotParams
     //
     // Subsystems.
     //
+
+    public static final class Elevator
+    {
+        public static final String SUBSYSTEM_NAME               = "Elevator";
+
+        public static final String MOTOR_NAME                   = SUBSYSTEM_NAME + ".motor";
+        public static final MotorType MOTOR_TYPE                = MotorType.DcMotor;
+
+        public static final boolean MOTOR_INVERTED              = true;
+        public static final boolean VOLTAGE_COMP_ENABLED        = true;
+        public static final double INCHES_PER_COUNT             = 18.25/4941.0;
+        public static final double POS_OFFSET                   = 10.875;
+        public static final double POWER_LIMIT                  = 1.0;
+        public static final double ZERO_CAL_POWER               = -0.25;
+
+        public static final double MIN_POS                      = POS_OFFSET;
+        public static final double MAX_POS                      = 30.25;
+        public static final double[] posPresets                 = {MIN_POS, 15.0, 20.0, 25.0, 30.0};
+        public static final double POS_PRESET_TOLERANCE         = 1.0;
+
+        public static final boolean SOFTWARE_PID_ENABLED        = true;
+        public static final TrcPidController.PidCoefficients posPidCoeffs =
+            new TrcPidController.PidCoefficients(1.0, 0.0, 0.0, 0.0, 0.0);
+        public static final double POS_PID_TOLERANCE            = 0.1;
+        public static final double GRAVITY_COMP_POWER           = 0.0;
+        public static final double STALL_MIN_POWER              = Math.abs(ZERO_CAL_POWER);
+        public static final double STALL_TOLERANCE              = 0.1;
+        public static final double STALL_TIMEOUT                = 0.1;
+        public static final double STALL_RESET_TIMEOUT          = 0.0;
+    }   //class Elevator
+
+    public static final class Arm
+    {
+        public static final String SUBSYSTEM_NAME               = "Arm";
+
+        public static final String MOTOR_NAME                   = SUBSYSTEM_NAME + ".motor";
+        public static final MotorType MOTOR_TYPE                = MotorType.DcMotor;
+
+        public static final boolean MOTOR_INVERTED              = true;
+        public static final boolean VOLTAGE_COMP_ENABLED        = true;
+        public static final double GOBILDA312_CPR               = (((1.0 + (46.0/17.0))) * (1.0 + (46.0/11.0))) * 28.0;
+        public static final double DEG_PER_COUNT                = 360.0 / GOBILDA312_CPR;
+        public static final double POS_OFFSET                   = 39.0;
+        public static final double POWER_LIMIT                  = 0.5;
+        public static final double ZERO_CAL_POWER               = -0.25;
+
+        public static final double MIN_POS                      = POS_OFFSET;
+        public static final double MAX_POS                      = 270.0;
+        public static final double[] posPresets                 = {MIN_POS, 60.0, 90.0, 120.0, 150.0, 180.0, 210.0, 240.0, 270.0};
+        public static final double POS_PRESET_TOLERANCE         = 10.0;
+
+        public static final boolean SOFTWARE_PID_ENABLED        = true;
+        public static final TrcPidController.PidCoefficients posPidCoeffs =
+            new TrcPidController.PidCoefficients(0.018, 0.1, 0.001, 0.0, 2.0);
+        public static final double POS_PID_TOLERANCE            = 1.0;
+        public static final double GRAVITY_COMP_MAX_POWER       = 0.158;
+        public static final double STALL_MIN_POWER              = Math.abs(ZERO_CAL_POWER);
+        public static final double STALL_TOLERANCE              = 0.1;
+        public static final double STALL_TIMEOUT                = 0.1;
+        public static final double STALL_RESET_TIMEOUT          = 0.0;
+    }   //class Arm
+
+    public static final class Shooter
+    {
+        public static final String SUBSYSTEM_NAME               = "Shooter";
+
+        public static final String MOTOR1_NAME                  = SUBSYSTEM_NAME + ".motor1";
+        public static final MotorType MOTOR1_TYPE               = MotorType.DcMotor;
+        public static final boolean MOTOR1_INVERTED             = false;
+
+        public static final boolean HAS_TWO_SHOOTER_MOTORS      = true;
+        public static final String MOTOR2_NAME                  = SUBSYSTEM_NAME + ".motor2";
+        public static final MotorType MOTOR2_TYPE               = MotorType.DcMotor;
+        public static final boolean MOTOR2_INVERTED             = true;
+
+        public static final double GOBILDA1620_RPC              = 1.0 / ((1.0 + (46.0/17.0)) * 28.0);
+        public static final boolean SOFTWARE_PID_ENABLED        = true;
+        public static final TrcPidController.PidCoefficients shooter1PidCoeffs =
+            new TrcPidController.PidCoefficients(0.025, 0.0, 0.0, 0.039, 0.0);
+        public static final TrcPidController.PidCoefficients shooter2PidCoeffs =
+            new TrcPidController.PidCoefficients(0.025, 0.0, 0.0, 0.041, 0.0);
+        public static final double SHOOTER_PID_TOLERANCE        = 10.0;
+
+        public static final double SHOOTER_MIN_VEL              = 10.0;     // in RPM
+        public static final double SHOOTER_MAX_VEL              = 1620.0;   // in RPM
+        public static final double SHOOTER_MIN_VEL_INC          = 1.0;      // in RPM
+        public static final double SHOOTER_MAX_VEL_INC          = 100.0;    // in RPM
+        public static final double SHOOTER_DEF_VEL              = 1000.0;   // in RPM
+        public static final double SHOOTER_DEF_VEL_INC          = 10.0;     // in RPM
+    }   //class Shooter
+
+    public static final class Intake
+    {
+        public static final String SUBSYSTEM_NAME               = "Intake";
+        public static final boolean TWO_MOTOR_INTAKE            = true;
+
+        public static final String PRIMARY_MOTOR_NAME           = SUBSYSTEM_NAME + ".primary";
+        public static final MotorType PRIMARY_MOTOR_TYPE        = MotorType.DcMotor;
+        public static final boolean PRIMARY_MOTOR_INVERTED      = !TWO_MOTOR_INTAKE;
+
+        public static final String FOLLOWER_MOTOR_NAME          = SUBSYSTEM_NAME + ".follower";
+        public static final MotorType FOLLOWER_MOTOR_TYPE       = MotorType.DcMotor;
+        public static final boolean FOLLOWER_MOTOR_INVERTED     = PRIMARY_MOTOR_INVERTED;
+
+        public static final String SENSOR_NAME                  = SUBSYSTEM_NAME + ".sensor";
+        public static final boolean SENSOR_INVERTED             = false;
+
+        public static final double INTAKE_FORWARD_POWER         = 1.0;
+        public static final double RETAIN_POWER                 = 0.0;
+        public static final double FINISH_DELAY                 = 0.0;
+    }   //class Intake
+
+    public static final class Grabber
+    {
+        public static final String SUBSYSTEM_NAME               = "Grabber";
+
+        public static final String PRIMARY_SERVO_NAME           = SUBSYSTEM_NAME + ".primary";
+        public static final boolean PRIMARY_SERVO_INVERTED      = false;
+
+        public static final String FOLLOWER_SERVO_NAME          = SUBSYSTEM_NAME + ".follower";
+        public static final boolean FOLLOWER_SERVO_INVERTED     = !PRIMARY_SERVO_INVERTED;
+
+        public static final double OPEN_POS                     = 0.2;
+        public static final double OPEN_TIME                    = 0.5;
+        public static final double CLOSE_POS                    = 0.55;
+        public static final double CLOSE_TIME                   = 0.5;
+
+        public static final boolean USE_REV_2M_SENSOR           = true;
+        public static final String REV_2M_SENSOR_NAME           = SUBSYSTEM_NAME + ".sensor";
+        public static final double SENSOR_TRIGGER_THRESHOLD     = 2.0;
+        public static final double HAS_OBJECT_THRESHOLD         = 2.0;
+        public static final boolean ANALOG_TRIGGER_INVERTED     = true;
+
+        public static final boolean USE_DIGITAL_SENSOR          = false;
+        public static final int SENSOR_DIGITAL_CHANNEL          = 0;
+        public static final boolean DIGITAL_TRIGGER_INVERTED    = false;
+    }   //class Grabber
 
 }   //class RobotParams
