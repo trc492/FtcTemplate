@@ -48,6 +48,7 @@ public class FtcTeleOp extends FtcOpMode
     protected FtcGamepad operatorGamepad;
     private double drivePowerScale;
     private double turnPowerScale;
+    private boolean driverAltFunc = false;
     private boolean operatorAltFunc = false;
     private boolean relocalizing = false;
     private TrcPose2D robotFieldPose = null;
@@ -248,6 +249,10 @@ public class FtcTeleOp extends FtcOpMode
         switch (button)
         {
             case A:
+            case B:
+                break;
+
+            case X:
                 if (pressed)
                 {
                     robot.globalTracer.traceInfo(moduleName, ">>>>> CancelAll is pressed.");
@@ -259,43 +264,47 @@ public class FtcTeleOp extends FtcOpMode
                 }
                 break;
 
-            case B:
-            case X:
-                break;
-
             case Y:
-                if (pressed && robot.robotDrive != null)
+                // Toggle between field or robot oriented driving, only applicable for holonomic drive base.
+                if (driverAltFunc)
                 {
-                    if (robot.robotDrive.driveBase.isGyroAssistEnabled())
+                    if (pressed && robot.robotDrive != null)
                     {
-                        // Disable GyroAssist drive.
-                        robot.globalTracer.traceInfo(moduleName, ">>>>> Disabling GyroAssist.");
-                        robot.robotDrive.driveBase.setGyroAssistEnabled(null);
+                        if (robot.robotDrive.driveBase.isGyroAssistEnabled())
+                        {
+                            // Disable GyroAssist drive.
+                            robot.globalTracer.traceInfo(moduleName, ">>>>> Disabling GyroAssist.");
+                            robot.robotDrive.driveBase.setGyroAssistEnabled(null);
+                        }
+                        else
+                        {
+                            // Enable GyroAssist drive.
+                            robot.globalTracer.traceInfo(moduleName, ">>>>> Enabling GyroAssist.");
+                            robot.robotDrive.driveBase.setGyroAssistEnabled(robot.robotDrive.pidDrive.getTurnPidCtrl());
+                        }
                     }
-                    else
+                }
+                else
+                {
+                    if (pressed && robot.robotDrive != null && robot.robotDrive.driveBase.supportsHolonomicDrive())
                     {
-                        // Enable GyroAssist drive.
-                        robot.globalTracer.traceInfo(moduleName, ">>>>> Enabling GyroAssist.");
-                        robot.robotDrive.driveBase.setGyroAssistEnabled(robot.robotDrive.pidDrive.getTurnPidCtrl());
+                        if (robot.robotDrive.driveBase.getDriveOrientation() != TrcDriveBase.DriveOrientation.FIELD)
+                        {
+                            robot.globalTracer.traceInfo(moduleName, ">>>>> Enabling FIELD mode.");
+                            setDriveOrientation(TrcDriveBase.DriveOrientation.FIELD);
+                        }
+                        else
+                        {
+                            robot.globalTracer.traceInfo(moduleName, ">>>>> Enabling ROBOT mode.");
+                            setDriveOrientation(TrcDriveBase.DriveOrientation.ROBOT);
+                        }
                     }
                 }
                 break;
 
             case LeftBumper:
-                // Toggle between field or robot oriented driving, only applicable for holonomic drive base.
-                if (pressed && robot.robotDrive != null && robot.robotDrive.driveBase.supportsHolonomicDrive())
-                {
-                    if (robot.robotDrive.driveBase.getDriveOrientation() != TrcDriveBase.DriveOrientation.FIELD)
-                    {
-                        robot.globalTracer.traceInfo(moduleName, ">>>>> Enabling FIELD mode.");
-                        setDriveOrientation(TrcDriveBase.DriveOrientation.FIELD);
-                    }
-                    else
-                    {
-                        robot.globalTracer.traceInfo(moduleName, ">>>>> Enabling ROBOT mode.");
-                        setDriveOrientation(TrcDriveBase.DriveOrientation.ROBOT);
-                    }
-                }
+                robot.globalTracer.traceInfo(moduleName, ">>>>> DriverAltFunc=" + pressed);
+                driverAltFunc = pressed;
                 break;
 
             case RightBumper:
@@ -321,11 +330,16 @@ public class FtcTeleOp extends FtcOpMode
                 break;
 
             case Back:
-                if (pressed && robot.robotDrive != null && robot.robotDrive instanceof FtcSwerveDrive)
+                if (pressed)
                 {
-                    // Drive base is a Swerve Drive, align all steering wheels forward.
-                    robot.globalTracer.traceInfo(moduleName, ">>>>> Set SteerAngle to zero.");
-                    ((FtcSwerveDrive) robot.robotDrive).setSteerAngle(0.0, false, false);
+                    robot.globalTracer.traceInfo(moduleName, ">>>>> ZeroCalibrate pressed.");
+                    robot.zeroCalibrate();
+                    if (robot.robotDrive != null && robot.robotDrive instanceof FtcSwerveDrive)
+                    {
+                        // Drive base is a Swerve Drive, align all steering wheels forward.
+                        robot.globalTracer.traceInfo(moduleName, ">>>>> Set SteerAngle to zero.");
+                        ((FtcSwerveDrive) robot.robotDrive).setSteerAngle(0.0, false, false);
+                    }
                 }
                 break;
 
@@ -371,14 +385,14 @@ public class FtcTeleOp extends FtcOpMode
             case B:
             case X:
             case Y:
-            case LeftBumper:
                 break;
 
-            case RightBumper:
+            case LeftBumper:
                 robot.globalTracer.traceInfo(moduleName, ">>>>> OperatorAltFunc=" + pressed);
                 operatorAltFunc = pressed;
                 break;
 
+            case RightBumper:
             case DpadUp:
             case DpadDown:
             case DpadLeft:

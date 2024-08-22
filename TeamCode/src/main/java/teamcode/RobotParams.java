@@ -137,6 +137,7 @@ public class RobotParams
         public static final boolean useTensorFlowVision         = false;
         public static final boolean showVisionView              = !inCompetition;
         public static final boolean showVisionStat              = false;
+        public static final boolean showSubsystems              = true;
         // Drive Base
         public static final boolean useDriveBase                = false;
         public static final boolean useExternalOdometry         = false;
