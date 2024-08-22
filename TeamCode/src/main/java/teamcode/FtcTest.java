@@ -756,8 +756,6 @@ public class FtcTest extends FtcTeleOp
                 break;
 
             case Back:
-                break;
-
             case Start:
                 break;
         }

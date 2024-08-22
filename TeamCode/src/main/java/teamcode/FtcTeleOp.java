@@ -260,8 +260,6 @@ public class FtcTeleOp extends FtcOpMode
                 break;
 
             case B:
-                break;
-
             case X:
                 break;
 
@@ -322,6 +320,15 @@ public class FtcTeleOp extends FtcOpMode
             case DpadRight:
                 break;
 
+            case Back:
+                if (pressed && robot.robotDrive != null && robot.robotDrive instanceof FtcSwerveDrive)
+                {
+                    // Drive base is a Swerve Drive, align all steering wheels forward.
+                    robot.globalTracer.traceInfo(moduleName, ">>>>> Set SteerAngle to zero.");
+                    ((FtcSwerveDrive) robot.robotDrive).setSteerAngle(0.0, false, false);
+                }
+                break;
+
             case Start:
                 if (robot.vision != null && robot.vision.aprilTagVision != null && robot.robotDrive != null)
                 {
@@ -343,15 +350,6 @@ public class FtcTeleOp extends FtcOpMode
                     {
                         robot.globalTracer.traceInfo(moduleName, ">>>>> Start re-localizing ...");
                     }
-                }
-                break;
-
-            case Back:
-                if (pressed && robot.robotDrive != null && robot.robotDrive instanceof FtcSwerveDrive)
-                {
-                    // Drive base is a Swerve Drive, align all steering wheels forward.
-                    robot.globalTracer.traceInfo(moduleName, ">>>>> Set SteerAngle to zero.");
-                    ((FtcSwerveDrive) robot.robotDrive).setSteerAngle(0.0, false, false);
                 }
                 break;
         }
