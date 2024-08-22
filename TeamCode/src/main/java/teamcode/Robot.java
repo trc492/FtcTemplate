@@ -27,17 +27,29 @@ import androidx.annotation.NonNull;
 import ftclib.drivebase.FtcRobotDrive;
 import ftclib.driverio.FtcDashboard;
 import ftclib.driverio.FtcMatchInfo;
+import ftclib.motor.FtcDcMotor;
+import ftclib.motor.FtcServo;
 import ftclib.robotcore.FtcOpMode;
 import ftclib.sensor.FtcRobotBattery;
+import teamcode.subsystems.Arm;
 import teamcode.subsystems.BlinkinLEDs;
+import teamcode.subsystems.Elevator;
+import teamcode.subsystems.Grabber;
+import teamcode.subsystems.Intake;
 import teamcode.subsystems.RobotBase;
+import teamcode.subsystems.Shooter;
 import teamcode.vision.Vision;
+import trclib.dataprocessor.TrcDiscreteValue;
+import trclib.dataprocessor.TrcUtil;
 import trclib.motor.TrcMotor;
 import trclib.motor.TrcServo;
 import trclib.pathdrive.TrcPose2D;
 import trclib.robotcore.TrcDbgTrace;
 import trclib.robotcore.TrcRobot;
 import trclib.sensor.TrcDigitalInput;
+import trclib.subsystem.TrcIntake;
+import trclib.subsystem.TrcServoGrabber;
+import trclib.subsystem.TrcShooter;
 import trclib.timer.TrcTimer;
 
 /**
@@ -63,6 +75,14 @@ public class Robot
     public BlinkinLEDs blinkin;
     public FtcRobotBattery battery;
     // Subsystems.
+    public FtcDcMotor simpleMotor;
+    public FtcServo simpleServo;
+    public TrcMotor elevator;
+    public TrcMotor arm;
+    public TrcShooter shooter;
+    public TrcDiscreteValue shooterVelocity;
+    public TrcIntake intake;
+    public TrcServoGrabber grabber;
 
     /**
      * Constructor: Create an instance of the object.
@@ -110,6 +130,55 @@ public class Robot
             //
             if (RobotParams.Preferences.useSubsystems)
             {
+                if (RobotParams.Preferences.useSimpleMotor)
+                {
+                    final double goBilda1620CPR = ((1.0 + (46.0/17.0)) * 28.0);
+                    simpleMotor = new FtcDcMotor("SimpleMotor");
+                    simpleMotor.resetFactoryDefault();
+                    simpleMotor.setVoltageCompensationEnabled(TrcUtil.BATTERY_NOMINAL_VOLTAGE);
+                    simpleMotor.setBrakeModeEnabled(true);
+                    simpleMotor.setMotorInverted(true);
+                    simpleMotor.setPositionSensorScaleAndOffset(1.0 / goBilda1620CPR, 0.0);
+                }
+
+                if (RobotParams.Preferences.useSimpleServo)
+                {
+                    simpleServo = new FtcServo("SimpleServo");
+                    simpleServo.setLogicalPosRange(0.2, 0.6);
+                    simpleServo.setPhysicalPosRange(0.0, 90.0);
+                    simpleServo.setMaxStepRate(250.0);
+                    simpleServo.setPosition(0.0);   // in degrees
+                }
+
+                if (RobotParams.Preferences.useElevator)
+                {
+                    elevator = new Elevator().getElevatorMotor();
+                }
+
+                if (RobotParams.Preferences.useArm)
+                {
+                    arm = new Arm().getArmMotor();
+                }
+
+                if (RobotParams.Preferences.useShooter)
+                {
+                    shooter = new Shooter().getShooter();
+                    shooterVelocity = new TrcDiscreteValue(
+                        RobotParams.Shooter.SUBSYSTEM_NAME + ".motorVel",
+                        RobotParams.Shooter.SHOOTER_MIN_VEL, RobotParams.Shooter.SHOOTER_MAX_VEL,
+                        RobotParams.Shooter.SHOOTER_MIN_VEL_INC, RobotParams.Shooter.SHOOTER_MAX_VEL_INC,
+                        RobotParams.Shooter.SHOOTER_DEF_VEL, RobotParams.Shooter.SHOOTER_DEF_VEL_INC);
+                }
+
+                if (RobotParams.Preferences.useIntake)
+                {
+                    intake = new Intake().getIntake();
+                }
+
+                if (RobotParams.Preferences.useGrabber)
+                {
+                    grabber = new Grabber().getGrabber();
+                }
             }
         }
 
@@ -267,6 +336,79 @@ public class Robot
             //
             // Display other subsystem status here.
             //
+            if (RobotParams.Preferences.showSubsystems)
+            {
+                if (simpleMotor != null)
+                {
+                    dashboard.displayPrintf(
+                        lineNum++, "SimpleMotor: power=%.3f, pos=%.3f rev, vel=%.3f rpm",
+                        simpleMotor.getPower(), simpleMotor.getPosition(), simpleMotor.getVelocity()*60.0);
+                }
+
+                if (simpleServo != null)
+                {
+                    dashboard.displayPrintf(
+                        lineNum++, "SimpleServo: power=%.3f, pos=%.3f",
+                        simpleServo.getPower(), simpleServo.getPosition());
+                }
+
+                if (elevator != null)
+                {
+                    dashboard.displayPrintf(
+                        lineNum++, "Elevator: power=%.3f, pos=%.3f/%.3f, limitSw=%s/%s",
+                        elevator.getPower(), elevator.getPosition(), elevator.getPidTarget(),
+                        elevator.isLowerLimitSwitchActive(), elevator.isUpperLimitSwitchActive());
+                }
+
+                if (arm != null)
+                {
+                    dashboard.displayPrintf(
+                        lineNum++, "Arm: power=%.3f, pos=%.3f/%.3f, limitSw=%s/%s",
+                        arm.getPower(), arm.getPosition(), arm.getPidTarget(),
+                        arm.isLowerLimitSwitchActive(), arm.isUpperLimitSwitchActive());
+                }
+
+                if (shooter != null)
+                {
+                    dashboard.displayPrintf(
+                        lineNum++, "Shooter1: power=%.3f, vel=%.3f, target=%.3f",
+                        shooter.getShooterMotor1Power(), shooter.getShooterMotor1RPM(),
+                        shooter.getShooterMotor1TargetRPM());
+                    TrcMotor motor2 = shooter.getShooterMotor2();
+                    if (motor2 != null)
+                    {
+                        dashboard.displayPrintf(
+                            lineNum++, "Shooter2: power=%.3f, vel=%.3f, target=%.3f",
+                            motor2.getPower(), shooter.getShooterMotor2RPM(),
+                            shooter.getShooterMotor2TargetRPM());
+                    }
+                }
+
+                if (intake != null)
+                {
+                    dashboard.displayPrintf(
+                        lineNum++, "Intake: power=%.3f, hasObject=%s, sensorState=%s",
+                        intake.getPower(), intake.hasObject(), intake.getSensorState(intake.entryTrigger));
+                }
+
+                if (grabber != null)
+                {
+                    if (RobotParams.Grabber.USE_REV_2M_SENSOR)
+                    {
+                        dashboard.displayPrintf(
+                            lineNum++, "Grabber: pos=%.3f, hasObject=%s, sensorValue=%.3f, autoActive=%s",
+                            grabber.getPosition(), grabber.hasObject(), grabber.getSensorValue(),
+                            grabber.isAutoAssistActive());
+                    }
+                    else if (RobotParams.Grabber.USE_DIGITAL_SENSOR)
+                    {
+                        dashboard.displayPrintf(
+                            lineNum++, "Grabber: pos=%.3f, hasObject=%s, sensorState=%s, autoActive=%s",
+                            grabber.getPosition(), grabber.hasObject(), grabber.getSensorState(),
+                            grabber.isAutoAssistActive());
+                    }
+                }
+            }
         }
     }   //updateStatus
 
