@@ -30,7 +30,6 @@ import ftclib.drivebase.FtcSwerveDrive;
 import ftclib.driverio.FtcGamepad;
 import ftclib.robotcore.FtcOpMode;
 import trclib.drivebase.TrcDriveBase;
-import trclib.driverio.TrcGameController;
 import trclib.pathdrive.TrcPose2D;
 import trclib.robotcore.TrcDbgTrace;
 import trclib.robotcore.TrcRobot;
@@ -84,10 +83,12 @@ public class FtcTeleOp extends FtcOpMode
         //
         // Create and initialize Gamepads.
         //
-        driverGamepad = new FtcGamepad("DriverGamepad", gamepad1, this::driverButtonEvent);
-        operatorGamepad = new FtcGamepad("OperatorGamepad", gamepad2, this::operatorButtonEvent);
-        driverGamepad.setYInverted(true);
-        operatorGamepad.setYInverted(true);
+        driverGamepad = new FtcGamepad("DriverGamepad", gamepad1);
+        driverGamepad.setButtonEventHandler(this::driverButtonEvent);
+        operatorGamepad = new FtcGamepad("OperatorGamepad", gamepad2);
+        operatorGamepad.setButtonEventHandler(this::operatorButtonEvent);
+        driverGamepad.setLeftStickInverted(false, true);
+        operatorGamepad.setRightStickInverted(false, true);
         setDriveOrientation(robot.robotInfo.driveOrientation);
     }   //robotInit
 
@@ -237,17 +238,16 @@ public class FtcTeleOp extends FtcOpMode
     /**
      * This method is called when driver gamepad button event is detected.
      *
-     * @param gamepad specifies the game controller object that generated the event.
-     * @param button specifies the button ID that generates the event.
+     * @param button specifies the button that generates the event.
      * @param pressed specifies true if the button is pressed, false otherwise.
      */
-    public void driverButtonEvent(TrcGameController gamepad, int button, boolean pressed)
+    public void driverButtonEvent(FtcGamepad.ButtonType button, boolean pressed)
     {
-        robot.dashboard.displayPrintf(8, "%s: %04x->%s", gamepad, button, pressed? "Pressed": "Released");
+        robot.dashboard.displayPrintf(8, "Driver: %s=%s", button, pressed? "Pressed": "Released");
 
         switch (button)
         {
-            case FtcGamepad.GAMEPAD_A:
+            case A:
                 if (pressed)
                 {
                     robot.globalTracer.traceInfo(moduleName, ">>>>> CancelAll is pressed.");
@@ -259,13 +259,13 @@ public class FtcTeleOp extends FtcOpMode
                 }
                 break;
 
-            case FtcGamepad.GAMEPAD_B:
+            case B:
                 break;
 
-            case FtcGamepad.GAMEPAD_X:
+            case X:
                 break;
 
-            case FtcGamepad.GAMEPAD_Y:
+            case Y:
                 if (pressed && robot.robotDrive != null)
                 {
                     if (robot.robotDrive.driveBase.isGyroAssistEnabled())
@@ -283,7 +283,7 @@ public class FtcTeleOp extends FtcOpMode
                 }
                 break;
 
-            case FtcGamepad.GAMEPAD_LBUMPER:
+            case LeftBumper:
                 // Toggle between field or robot oriented driving, only applicable for holonomic drive base.
                 if (pressed && robot.robotDrive != null && robot.robotDrive.driveBase.supportsHolonomicDrive())
                 {
@@ -300,7 +300,7 @@ public class FtcTeleOp extends FtcOpMode
                 }
                 break;
 
-            case FtcGamepad.GAMEPAD_RBUMPER:
+            case RightBumper:
                 // Press and hold for slow drive.
                 if (pressed)
                 {
@@ -316,19 +316,13 @@ public class FtcTeleOp extends FtcOpMode
                 }
                 break;
 
-            case FtcGamepad.GAMEPAD_DPAD_UP:
+            case DpadUp:
+            case DpadDown:
+            case DpadLeft:
+            case DpadRight:
                 break;
 
-            case FtcGamepad.GAMEPAD_DPAD_DOWN:
-                break;
-
-            case FtcGamepad.GAMEPAD_DPAD_LEFT:
-                break;
-
-            case FtcGamepad.GAMEPAD_DPAD_RIGHT:
-                break;
-
-            case FtcGamepad.GAMEPAD_START:
+            case Start:
                 if (robot.vision != null && robot.vision.aprilTagVision != null && robot.robotDrive != null)
                 {
                     // On press of the button, we will start looking for AprilTag for re-localization.
@@ -352,7 +346,7 @@ public class FtcTeleOp extends FtcOpMode
                 }
                 break;
 
-            case FtcGamepad.GAMEPAD_BACK:
+            case Back:
                 if (pressed && robot.robotDrive != null && robot.robotDrive instanceof FtcSwerveDrive)
                 {
                     // Drive base is a Swerve Drive, align all steering wheels forward.
@@ -366,55 +360,43 @@ public class FtcTeleOp extends FtcOpMode
     /**
      * This method is called when operator gamepad button event is detected.
      *
-     * @param gamepad specifies the game controller object that generated the event.
-     * @param button specifies the button ID that generates the event.
+     * @param button specifies the button that generates the event.
      * @param pressed specifies true if the button is pressed, false otherwise.
      */
-    public void operatorButtonEvent(TrcGameController gamepad, int button, boolean pressed)
+    public void operatorButtonEvent(FtcGamepad.ButtonType button, boolean pressed)
     {
-        robot.dashboard.displayPrintf(8, "%s: %04x->%s", gamepad, button, pressed? "Pressed": "Released");
+        robot.dashboard.displayPrintf(8, "Operator: %s=%s", button, pressed? "Pressed": "Released");
 
         switch (button)
         {
-            case FtcGamepad.GAMEPAD_A:
+            case A:
+            case B:
+            case X:
+            case Y:
+            case LeftBumper:
                 break;
 
-            case FtcGamepad.GAMEPAD_B:
-                break;
-
-            case FtcGamepad.GAMEPAD_X:
-                break;
-
-            case FtcGamepad.GAMEPAD_Y:
-                break;
-
-            case FtcGamepad.GAMEPAD_LBUMPER:
-                break;
-
-            case FtcGamepad.GAMEPAD_RBUMPER:
+            case RightBumper:
                 robot.globalTracer.traceInfo(moduleName, ">>>>> OperatorAltFunc=" + pressed);
                 operatorAltFunc = pressed;
                 break;
 
-            case FtcGamepad.GAMEPAD_DPAD_UP:
+            case DpadUp:
+            case DpadDown:
+            case DpadLeft:
+            case DpadRight:
                 break;
 
-            case FtcGamepad.GAMEPAD_DPAD_DOWN:
-                break;
-
-            case FtcGamepad.GAMEPAD_DPAD_LEFT:
-                break;
-
-            case FtcGamepad.GAMEPAD_DPAD_RIGHT:
-                break;
-
-            case FtcGamepad.GAMEPAD_BACK:
+            case Back:
                 if (pressed)
                 {
                     // Zero calibrate all subsystems (arm, elevator and turret).
                     robot.globalTracer.traceInfo(moduleName, ">>>>> ZeroCalibrate pressed.");
                     robot.zeroCalibrate(moduleName);
                 }
+                break;
+
+            case Start:
                 break;
         }
     }   //operatorButtonEvent

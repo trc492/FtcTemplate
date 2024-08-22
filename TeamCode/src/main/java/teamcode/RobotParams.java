@@ -30,10 +30,10 @@ import org.openftc.easyopencv.OpenCvCameraRotation;
 
 import ftclib.drivebase.FtcRobotDrive;
 import ftclib.drivebase.FtcSwerveDrive;
-import ftclib.driverio.FtcGamepad.DriveMode;
 import ftclib.motor.FtcMotorActuator.MotorType;
 import trclib.dataprocessor.TrcUtil;
 import trclib.drivebase.TrcDriveBase.DriveOrientation;
+import trclib.driverio.TrcGameController;
 import trclib.pathdrive.TrcPose2D;
 import trclib.robotcore.TrcPidController.PidCoefficients;
 import trclib.vision.TrcHomographyMapper;
@@ -241,7 +241,7 @@ public class RobotParams
             ppdFollowingDistance = 6.0;
             velPidCoeffs = new PidCoefficients(0.0, 0.0, 0.0, 1.0 / profiledMaxVelocity, 0.0);
             // Robot Drive
-            driveMode = DriveMode.ARCADE_MODE;
+            driveMode = TrcGameController.DriveMode.ArcadeMode;
             driveOrientation = DriveOrientation.ROBOT;
             driveSlowScale = 0.3;
             driveNormalScale = 1.0;
@@ -336,7 +336,7 @@ public class RobotParams
             ppdFollowingDistance = 6.0;
             velPidCoeffs = new PidCoefficients(0.0, 0.0, 0.0, 1.0 / profiledMaxVelocity, 0.0);
             // Robot Drive
-            driveMode = DriveMode.ARCADE_MODE;
+            driveMode = TrcGameController.DriveMode.ArcadeMode;
             driveOrientation = DriveOrientation.ROBOT;
             driveSlowScale = 0.3;
             driveNormalScale = 1.0;
@@ -428,7 +428,7 @@ public class RobotParams
             ppdFollowingDistance = 6.0;
             velPidCoeffs = new PidCoefficients(0.0, 0.0, 0.0, 1.0 / profiledMaxVelocity, 0.0);
             // Robot Drive
-            driveMode = DriveMode.ARCADE_MODE;
+            driveMode = TrcGameController.DriveMode.ArcadeMode;
             driveOrientation = DriveOrientation.ROBOT;
             driveSlowScale = 0.3;
             driveNormalScale = 1.0;

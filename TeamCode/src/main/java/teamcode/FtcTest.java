@@ -42,7 +42,6 @@ import trclib.command.CmdDriveMotorsTest;
 import trclib.command.CmdPidDrive;
 import trclib.command.CmdTimedDrive;
 import trclib.dataprocessor.TrcUtil;
-import trclib.driverio.TrcGameController;
 import trclib.pathdrive.TrcPose2D;
 import trclib.robotcore.TrcDbgTrace;
 import trclib.robotcore.TrcPidController;
@@ -527,24 +526,23 @@ public class FtcTest extends FtcTeleOp
     //
 
     /**
-     * This method is called when a driver gamepad button event occurs.
+     * This method is called when driver gamepad button event is detected.
      *
-     * @param gamepad specifies the game controller object that generated the event.
-     * @param button specifies the button ID that generates the event
+     * @param button specifies the button that generates the event.
      * @param pressed specifies true if the button is pressed, false otherwise.
      */
     @Override
-    public void driverButtonEvent(TrcGameController gamepad, int button, boolean pressed)
+    public void driverButtonEvent(FtcGamepad.ButtonType button, boolean pressed)
     {
         boolean passToTeleOp = true;
         //
         // In addition to or instead of the gamepad controls handled by FtcTeleOp, we can add to or override the
         // FtcTeleOp gamepad actions.
         //
-        robot.dashboard.displayPrintf(8, "%s: %04x->%s", gamepad, button, pressed ? "Pressed" : "Released");
+        robot.dashboard.displayPrintf(8, "Driver: %s=%s", button, pressed? "Pressed": "Released");
         switch (button)
         {
-            case FtcGamepad.GAMEPAD_A:
+            case A:
                 if (testChoices.test == Test.CALIBRATE_SWERVE_STEERING)
                 {
                     if (pressed && robot.robotDrive != null && robot.robotDrive instanceof FtcSwerveDrive)
@@ -578,7 +576,7 @@ public class FtcTest extends FtcTeleOp
                 }
                 break;
 
-            case FtcGamepad.GAMEPAD_B:
+            case B:
                 if (testChoices.test == Test.TUNE_COLORBLOB_VISION &&
                     robot.vision != null && robot.vision.rawColorBlobVision != null)
                 {
@@ -601,7 +599,7 @@ public class FtcTest extends FtcTeleOp
                 }
                 break;
 
-            case FtcGamepad.GAMEPAD_X:
+            case X:
                 if (testChoices.test == Test.TUNE_COLORBLOB_VISION &&
                     robot.vision != null && robot.vision.rawColorBlobVision != null)
                 {
@@ -618,7 +616,7 @@ public class FtcTest extends FtcTeleOp
                 }
                 break;
 
-            case FtcGamepad.GAMEPAD_Y:
+            case Y:
                 if (testChoices.test == Test.TUNE_COLORBLOB_VISION &&
                     robot.vision != null && robot.vision.rawColorBlobVision != null)
                 {
@@ -631,7 +629,7 @@ public class FtcTest extends FtcTeleOp
                 }
                 break;
 
-            case FtcGamepad.GAMEPAD_LBUMPER:
+            case LeftBumper:
                 if (testChoices.test == Test.VISION_TEST && robot.vision != null)
                 {
                     if (pressed)
@@ -643,7 +641,7 @@ public class FtcTest extends FtcTeleOp
                 }
                 break;
 
-            case FtcGamepad.GAMEPAD_RBUMPER:
+            case RightBumper:
                 if (testChoices.test == Test.VISION_TEST && robot.vision != null)
                 {
                     if (pressed)
@@ -655,7 +653,7 @@ public class FtcTest extends FtcTeleOp
                 }
                 break;
 
-            case FtcGamepad.GAMEPAD_DPAD_UP:
+            case DpadUp:
                 if (testChoices.test == Test.SUBSYSTEMS_TEST)
                 {
                     // If we are moving swerve steering, make sure TeleOp doesn't interfere.
@@ -682,7 +680,7 @@ public class FtcTest extends FtcTeleOp
                 }
                 break;
 
-            case FtcGamepad.GAMEPAD_DPAD_DOWN:
+            case DpadDown:
                 if (testChoices.test == Test.SUBSYSTEMS_TEST)
                 {
                     // If we are moving swerve steering, make sure TeleOp doesn't interfere.
@@ -709,7 +707,7 @@ public class FtcTest extends FtcTeleOp
                 }
                 break;
 
-            case FtcGamepad.GAMEPAD_DPAD_LEFT:
+            case DpadLeft:
                 if (testChoices.test == Test.SUBSYSTEMS_TEST)
                 {
                     // If we are moving swerve steering, make sure TeleOp doesn't interfere.
@@ -733,7 +731,7 @@ public class FtcTest extends FtcTeleOp
                 }
                 break;
 
-            case FtcGamepad.GAMEPAD_DPAD_RIGHT:
+            case DpadRight:
                 if (testChoices.test == Test.SUBSYSTEMS_TEST)
                 {
                     // If we are moving swerve steering, make sure TeleOp doesn't interfere.
@@ -756,42 +754,11 @@ public class FtcTest extends FtcTeleOp
                     passToTeleOp = false;
                 }
                 break;
-        }
-        //
-        // If the control was not processed by this method, pass it back to TeleOp.
-        //
-        if (passToTeleOp)
-        {
-            super.driverButtonEvent(gamepad, button, pressed);
-        }
-    }   //driverButtonEvent
 
-    /**
-     * This method is called when an operator gamepad button event occurs.
-     *
-     * @param gamepad specifies the game controller object that generated the event.
-     * @param button specifies the button ID that generates the event
-     * @param pressed specifies true if the button is pressed, false otherwise.
-     */
-    @Override
-    public void operatorButtonEvent(TrcGameController gamepad, int button, boolean pressed)
-    {
-        boolean passToTeleOp = true;
-        //
-        // In addition to or instead of the gamepad controls handled by FtcTeleOp, we can add to or override the
-        // FtcTeleOp gamepad actions.
-        //
-        robot.dashboard.displayPrintf(8, "%s: %04x->%s", gamepad, button, pressed ? "Pressed" : "Released");
-        switch (button)
-        {
-            case FtcGamepad.GAMEPAD_A:
-            case FtcGamepad.GAMEPAD_B:
-            case FtcGamepad.GAMEPAD_X:
-            case FtcGamepad.GAMEPAD_Y:
-            case FtcGamepad.GAMEPAD_DPAD_UP:
-            case FtcGamepad.GAMEPAD_DPAD_DOWN:
-            case FtcGamepad.GAMEPAD_DPAD_LEFT:
-            case FtcGamepad.GAMEPAD_DPAD_RIGHT:
+            case Back:
+                break;
+
+            case Start:
                 break;
         }
         //
@@ -799,7 +766,47 @@ public class FtcTest extends FtcTeleOp
         //
         if (passToTeleOp)
         {
-            super.operatorButtonEvent(gamepad, button, pressed);
+            super.driverButtonEvent(button, pressed);
+        }
+    }   //driverButtonEvent
+
+    /**
+     * This method is called when operator gamepad button event is detected.
+     *
+     * @param button specifies the button that generates the event.
+     * @param pressed specifies true if the button is pressed, false otherwise.
+     */
+    @Override
+    public void operatorButtonEvent(FtcGamepad.ButtonType button, boolean pressed)
+    {
+        boolean passToTeleOp = true;
+        //
+        // In addition to or instead of the gamepad controls handled by FtcTeleOp, we can add to or override the
+        // FtcTeleOp gamepad actions.
+        //
+        robot.dashboard.displayPrintf(8, "Operator: %s=%s", button, pressed? "Pressed": "Released");
+        switch (button)
+        {
+            case A:
+            case B:
+            case X:
+            case Y:
+            case LeftBumper:
+            case RightBumper:
+            case DpadUp:
+            case DpadDown:
+            case DpadLeft:
+            case DpadRight:
+            case Back:
+            case Start:
+                break;
+        }
+        //
+        // If the control was not processed by this method, pass it back to TeleOp.
+        //
+        if (passToTeleOp)
+        {
+            super.operatorButtonEvent(button, pressed);
         }
     }   //operatorButtonEvent
 
