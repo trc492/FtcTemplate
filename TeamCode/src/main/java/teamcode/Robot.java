@@ -125,7 +125,7 @@ public class Robot
     @Override
     public String toString()
     {
-        return robotInfo != null? robotInfo.robotName: RobotParams.System.DEF_ROBOT_NAME;
+        return robotInfo != null? robotInfo.robotName: RobotParams.Robot.ROBOT_CODEBASE;
     }   //toString
 
     /**
@@ -267,6 +267,9 @@ public class Robot
             //
             // Display other subsystem status here.
             //
+            if (RobotParams.Preferences.showSubsystems)
+            {
+            }
         }
     }   //updateStatus
 

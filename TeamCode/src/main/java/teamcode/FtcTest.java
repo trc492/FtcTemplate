@@ -117,7 +117,7 @@ public class FtcTest extends FtcTeleOp
 
     }   //class TestChoices
 
-    private final FtcPidCoeffCache pidCoeffCache = new FtcPidCoeffCache(RobotParams.System.TEAM_FOLDER_PATH);
+    private final FtcPidCoeffCache pidCoeffCache = new FtcPidCoeffCache(RobotParams.Robot.TEAM_FOLDER_PATH);
     private final TestChoices testChoices = new TestChoices();
     private TrcElapsedTimer elapsedTimer = null;
     private FtcChoiceMenu<Test> testMenu = null;

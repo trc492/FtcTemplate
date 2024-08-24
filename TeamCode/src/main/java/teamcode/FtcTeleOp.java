@@ -68,8 +68,8 @@ public class FtcTeleOp extends FtcOpMode
         // Create and initialize robot object.
         //
         robot = new Robot(TrcRobot.getRunMode());
-        drivePowerScale = robot.robotInfo.driveNormalScale;
-        turnPowerScale = robot.robotInfo.turnNormalScale;
+        drivePowerScale = RobotParams.Robot.DRIVE_NORMAL_SCALE;
+        turnPowerScale = RobotParams.Robot.TURN_NORMAL_SCALE;
 
         //
         // Open trace log.
@@ -79,7 +79,7 @@ public class FtcTeleOp extends FtcOpMode
             String filePrefix = Robot.matchInfo != null?
                 String.format(Locale.US, "%s%02d_TeleOp", Robot.matchInfo.matchType, Robot.matchInfo.matchNumber):
                 "Unknown_TeleOp";
-            TrcDbgTrace.openTraceLog(RobotParams.System.LOG_FOLDER_PATH, filePrefix);
+            TrcDbgTrace.openTraceLog(RobotParams.Robot.LOG_FOLDER_PATH, filePrefix);
         }
         //
         // Create and initialize Gamepads.
@@ -90,7 +90,7 @@ public class FtcTeleOp extends FtcOpMode
         operatorGamepad.setButtonEventHandler(this::operatorButtonEvent);
         driverGamepad.setLeftStickInverted(false, true);
         operatorGamepad.setRightStickInverted(false, true);
-        setDriveOrientation(robot.robotInfo.driveOrientation);
+        setDriveOrientation(RobotParams.Robot.DRIVE_ORIENTATION);
     }   //robotInit
 
     //
@@ -183,7 +183,7 @@ public class FtcTeleOp extends FtcOpMode
                 else
                 {
                     double[] inputs = driverGamepad.getDriveInputs(
-                        robot.robotInfo.driveMode, true, drivePowerScale, turnPowerScale);
+                        RobotParams.Robot.DRIVE_MODE, true, drivePowerScale, turnPowerScale);
 
                     if (robot.robotDrive.driveBase.supportsHolonomicDrive())
                     {
@@ -312,14 +312,14 @@ public class FtcTeleOp extends FtcOpMode
                 if (pressed)
                 {
                     robot.globalTracer.traceInfo(moduleName, ">>>>> DrivePower slow.");
-                    drivePowerScale = robot.robotInfo.driveSlowScale;
-                    turnPowerScale = robot.robotInfo.turnSlowScale;
+                    drivePowerScale = RobotParams.Robot.DRIVE_SLOW_SCALE;
+                    turnPowerScale = RobotParams.Robot.TURN_SLOW_SCALE;
                 }
                 else
                 {
                     robot.globalTracer.traceInfo(moduleName, ">>>>> DrivePower normal.");
-                    drivePowerScale = robot.robotInfo.driveNormalScale;
-                    turnPowerScale = robot.robotInfo.turnNormalScale;
+                    drivePowerScale = RobotParams.Robot.DRIVE_NORMAL_SCALE;
+                    turnPowerScale = RobotParams.Robot.TURN_NORMAL_SCALE;
                 }
                 break;
 
