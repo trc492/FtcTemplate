@@ -106,7 +106,7 @@ public class Vision
     {
         FtcOpMode opMode = FtcOpMode.getInstance();
 
-        if (robot.robotInfo.webCam1Name == null &&
+        if (robot.robotInfo.webCam1.camName == null &&
             (RobotParams.Preferences.useWebCam || RobotParams.Preferences.tuneColorBlobVision))
         {
             throw new IllegalArgumentException("Must provide a valid WebCam 1 name.");
@@ -114,10 +114,10 @@ public class Vision
 
         this.tracer = new TrcDbgTrace();
         this.robot = robot;
-        this.webcam1 = robot.robotInfo.webCam1Name != null?
-            opMode.hardwareMap.get(WebcamName.class, robot.robotInfo.webCam1Name): null;
-        this.webcam2 = robot.robotInfo.webCam2Name != null?
-            opMode.hardwareMap.get(WebcamName.class, robot.robotInfo.webCam2Name): null;
+        this.webcam1 = robot.robotInfo.webCam1.camName != null?
+            opMode.hardwareMap.get(WebcamName.class, robot.robotInfo.webCam1.camName): null;
+        this.webcam2 = robot.robotInfo.webCam2.camName != null?
+            opMode.hardwareMap.get(WebcamName.class, robot.robotInfo.webCam2.camName): null;
         if (RobotParams.Preferences.tuneColorBlobVision)
         {
             OpenCvCamera openCvCamera;
@@ -140,8 +140,9 @@ public class Vision
             rawColorBlobPipeline.setVideoOutput(0);
             rawColorBlobPipeline.setAnnotateEnabled(true);
             rawColorBlobVision = new FtcRawEocvVision(
-                "rawColorBlobVision", robot.robotInfo.camImageWidth, robot.robotInfo.camImageHeight, null, null,
-                openCvCamera, robot.robotInfo.camOrientation);
+                "rawColorBlobVision", robot.robotInfo.webCam1.camImageWidth, robot.robotInfo.webCam1.camImageHeight,
+                null, null,
+                openCvCamera, robot.robotInfo.webCam1.camOrientation);
             rawColorBlobVision.setFpsMeterEnabled(RobotParams.Preferences.showVisionStat);
             setRawColorBlobVisionEnabled(false);
         }
@@ -172,13 +173,13 @@ public class Vision
 
                 redBlobVision = new FtcVisionEocvColorBlob(
                     "RedBlob", colorConversion, redBlobColorThresholds, colorBlobFilterContourParams, true,
-                    robot.robotInfo.cameraRect, robot.robotInfo.worldRect, true);
+                    robot.robotInfo.webCam1.cameraRect, robot.robotInfo.webCam1.worldRect, true);
                 redBlobProcessor = redBlobVision.getVisionProcessor();
                 visionProcessorsList.add(redBlobProcessor);
 
                 blueBlobVision = new FtcVisionEocvColorBlob(
                     "BlueBlob", colorConversion, blueBlobColorThresholds, colorBlobFilterContourParams, true,
-                    robot.robotInfo.cameraRect, robot.robotInfo.worldRect, true);
+                    robot.robotInfo.webCam1.cameraRect, robot.robotInfo.webCam1.worldRect, true);
                 blueBlobProcessor = blueBlobVision.getVisionProcessor();
                 visionProcessorsList.add(blueBlobProcessor);
             }
@@ -187,8 +188,8 @@ public class Vision
             {
                 tracer.traceInfo(moduleName, "Starting TensorFlowVision...");
                 tensorFlowVision = new FtcVisionTensorFlow(
-                    null, true, TFOD_MODEL_ASSET, TFOD_TARGET_LABELS, robot.robotInfo.cameraRect,
-                    robot.robotInfo.worldRect);
+                    null, true, TFOD_MODEL_ASSET, TFOD_TARGET_LABELS, robot.robotInfo.webCam1.cameraRect,
+                    robot.robotInfo.webCam1.worldRect);
                 tensorFlowProcessor = tensorFlowVision.getVisionProcessor();
                 tensorFlowProcessor.setMinResultConfidence(TFOD_MIN_CONFIDENCE);
                 visionProcessorsList.add(tensorFlowProcessor);
@@ -200,7 +201,7 @@ public class Vision
             {
                 // Use USB webcams.
                 vision = new FtcVision(
-                    webcam1, webcam2, robot.robotInfo.camImageWidth, robot.robotInfo.camImageHeight,
+                    webcam1, webcam2, robot.robotInfo.webCam1.camImageWidth, robot.robotInfo.webCam1.camImageHeight,
                     RobotParams.Preferences.showVisionView, RobotParams.Preferences.showVisionStat, visionProcessors);
             }
             else
@@ -209,7 +210,7 @@ public class Vision
                 vision = new FtcVision(
                     RobotParams.Preferences.useBuiltinCamBack?
                         BuiltinCameraDirection.BACK: BuiltinCameraDirection.FRONT,
-                    robot.robotInfo.camImageWidth, robot.robotInfo.camImageHeight,
+                    robot.robotInfo.webCam1.camImageWidth, robot.robotInfo.webCam1.camImageHeight,
                     RobotParams.Preferences.showVisionView, RobotParams.Preferences.showVisionStat, visionProcessors);
             }
             // Disable all vision until they are needed.
@@ -437,7 +438,7 @@ public class Vision
             TrcPose2D aprilTagPose =
                 RobotParams.Game.APRILTAG_POSES[aprilTagInfo.detectedObj.aprilTagDetection.id - 1];
             TrcPose2D cameraPose = aprilTagPose.subtractRelativePose(aprilTagInfo.objPose);
-            robotPose = cameraPose.subtractRelativePose(robot.robotInfo.camPose);
+            robotPose = cameraPose.subtractRelativePose(robot.robotInfo.webCam1.camPose);
             tracer.traceInfo(
                 moduleName,
                 "AprilTagId=" + aprilTagInfo.detectedObj.aprilTagDetection.id +

@@ -58,7 +58,6 @@ import trclib.timer.TrcTimer;
 public class Robot
 {
     private static final String moduleName = Robot.class.getSimpleName();
-    private static final double STATUS_UPDATE_INTERVAL = 0.1;   // 100 msec
     // Global objects.
     public final FtcOpMode opMode;
     public final TrcDbgTrace globalTracer;
@@ -194,7 +193,7 @@ public class Robot
     @Override
     public String toString()
     {
-        return robotInfo != null? robotInfo.robotName: RobotParams.System.DEF_ROBOT_NAME;
+        return robotInfo != null? robotInfo.robotName: RobotParams.Robot.ROBOT_CODEBASE;
     }   //toString
 
     /**
@@ -324,11 +323,11 @@ public class Robot
      */
     public void updateStatus()
     {
-        if (TrcTimer.getCurrentTime() > nextStatusUpdateTime)
+        double currTime = TrcTimer.getCurrentTime();
+        if (currTime > nextStatusUpdateTime)
         {
             int lineNum = 2;
-
-            nextStatusUpdateTime += STATUS_UPDATE_INTERVAL;
+            nextStatusUpdateTime = currTime + RobotParams.Robot.DASHBOARD_UPDATE_INTERVAL;
             if (robotDrive != null)
             {
                 dashboard.displayPrintf(lineNum++, "DriveBase: Pose=%s", robotDrive.driveBase.getFieldPosition());

@@ -129,7 +129,7 @@ public class FtcAuto extends FtcOpMode
             Robot.matchInfo = FtcMatchInfo.getMatchInfo();
             String filePrefix = String.format(
                 Locale.US, "%s%02d_Auto", Robot.matchInfo.matchType, Robot.matchInfo.matchNumber);
-            TrcDbgTrace.openTraceLog(RobotParams.System.LOG_FOLDER_PATH, filePrefix);
+            TrcDbgTrace.openTraceLog(RobotParams.Robot.LOG_FOLDER_PATH, filePrefix);
         }
         //
         // Create and run choice menus.
