@@ -33,7 +33,6 @@ import ftclib.drivebase.FtcSwerveDrive;
 import ftclib.motor.FtcMotorActuator.MotorType;
 import trclib.dataprocessor.TrcUtil;
 import trclib.drivebase.TrcDriveBase.DriveOrientation;
-import trclib.driverio.TrcGameController;
 import trclib.driverio.TrcGameController.DriveMode;
 import trclib.pathdrive.TrcPose2D;
 import trclib.robotcore.TrcPidController.PidCoefficients;
@@ -139,6 +138,7 @@ public class RobotParams
         public static final boolean useBatteryMonitor           = false;
         // Status Update: Status Update may affect robot loop time, don't do it when in competition.
         public static final boolean doStatusUpdate              = !inCompetition;
+        public static final boolean showSubsystems              = true;
         // Vision
         public static final boolean useVision                   = false;
         public static final boolean useWebCam                   = false;
@@ -149,7 +149,6 @@ public class RobotParams
         public static final boolean useTensorFlowVision         = false;
         public static final boolean showVisionView              = !inCompetition;
         public static final boolean showVisionStat              = false;
-        public static final boolean showSubsystems              = true;
         // Drive Base
         public static final boolean useDriveBase                = false;
         public static final boolean useExternalOdometry         = false;
