@@ -273,6 +273,20 @@ public class Robot
     }   //updateStatus
 
     /**
+     * This method is called to cancel all pending operations and release the ownership of all subsystems.
+     */
+    public void cancelAll()
+    {
+        globalTracer.traceInfo(moduleName, "Cancel all operations.");
+
+        if (robotDrive != null)
+        {
+            // Cancel all auto-assist driving.
+            robotDrive.cancel();
+        }
+    }   //cancelAll
+
+    /**
      * This method zero calibrates all subsystems.
      *
      * @param owner specifies the owner ID to check if the caller has ownership of the motor.

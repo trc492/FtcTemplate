@@ -249,22 +249,6 @@ public class FtcTeleOp extends FtcOpMode
         switch (button)
         {
             case A:
-            case B:
-                break;
-
-            case X:
-                if (pressed)
-                {
-                    robot.globalTracer.traceInfo(moduleName, ">>>>> CancelAll is pressed.");
-                    if (robot.robotDrive != null)
-                    {
-                        // Cancel all auto-assist driving.
-                        robot.robotDrive.cancel();
-                    }
-                }
-                break;
-
-            case Y:
                 // Toggle between field or robot oriented driving, only applicable for holonomic drive base.
                 if (driverAltFunc)
                 {
@@ -302,6 +286,11 @@ public class FtcTeleOp extends FtcOpMode
                 }
                 break;
 
+            case B:
+            case X:
+            case Y:
+                break;
+
             case LeftBumper:
                 robot.globalTracer.traceInfo(moduleName, ">>>>> DriverAltFunc=" + pressed);
                 driverAltFunc = pressed;
@@ -333,6 +322,7 @@ public class FtcTeleOp extends FtcOpMode
                 if (pressed)
                 {
                     robot.globalTracer.traceInfo(moduleName, ">>>>> ZeroCalibrate pressed.");
+                    robot.cancelAll();
                     robot.zeroCalibrate();
                     if (robot.robotDrive != null && robot.robotDrive instanceof FtcSwerveDrive)
                     {
@@ -404,6 +394,7 @@ public class FtcTeleOp extends FtcOpMode
                 {
                     // Zero calibrate all subsystems (arm, elevator and turret).
                     robot.globalTracer.traceInfo(moduleName, ">>>>> ZeroCalibrate pressed.");
+                    robot.cancelAll();
                     robot.zeroCalibrate(moduleName);
                 }
                 break;
