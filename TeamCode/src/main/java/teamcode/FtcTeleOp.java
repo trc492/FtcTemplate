@@ -333,6 +333,47 @@ public class FtcTeleOp extends FtcOpMode
         switch (button)
         {
             case A:
+                // Toggle between field or robot oriented driving, only applicable for holonomic drive base.
+                if (driverAltFunc)
+                {
+                    if (pressed && robot.robotDrive != null)
+                    {
+                        if (robot.robotDrive.driveBase.isGyroAssistEnabled())
+                        {
+                            // Disable GyroAssist drive.
+                            robot.globalTracer.traceInfo(moduleName, ">>>>> Disabling GyroAssist.");
+                            robot.robotDrive.driveBase.setGyroAssistEnabled(null);
+                        }
+                        else
+                        {
+                            // Enable GyroAssist drive.
+                            robot.globalTracer.traceInfo(moduleName, ">>>>> Enabling GyroAssist.");
+                            robot.robotDrive.driveBase.setGyroAssistEnabled(robot.robotDrive.pidDrive.getTurnPidCtrl());
+                        }
+                    }
+                }
+                else
+                {
+                    if (pressed && robot.robotDrive != null && robot.robotDrive.driveBase.supportsHolonomicDrive())
+                    {
+                        if (robot.robotDrive.driveBase.getDriveOrientation() != TrcDriveBase.DriveOrientation.FIELD)
+                        {
+                            robot.globalTracer.traceInfo(moduleName, ">>>>> Enabling FIELD mode.");
+                            setDriveOrientation(TrcDriveBase.DriveOrientation.FIELD);
+                        }
+                        else
+                        {
+                            robot.globalTracer.traceInfo(moduleName, ">>>>> Enabling ROBOT mode.");
+                            setDriveOrientation(TrcDriveBase.DriveOrientation.ROBOT);
+                        }
+                    }
+                }
+                break;
+
+            case B:
+                break;
+
+            case X:
                 if (robot.simpleServo != null)
                 {
                     if (pressed)
@@ -394,57 +435,7 @@ public class FtcTeleOp extends FtcOpMode
                 }
                 break;
 
-            case B:
-                break;
-
-            case X:
-                if (pressed)
-                {
-                    robot.globalTracer.traceInfo(moduleName, ">>>>> CancelAll is pressed.");
-                    if (robot.robotDrive != null)
-                    {
-                        // Cancel all auto-assist driving.
-                        robot.robotDrive.cancel();
-                    }
-                }
-                break;
-
             case Y:
-                // Toggle between field or robot oriented driving, only applicable for holonomic drive base.
-                if (driverAltFunc)
-                {
-                    if (pressed && robot.robotDrive != null)
-                    {
-                        if (robot.robotDrive.driveBase.isGyroAssistEnabled())
-                        {
-                            // Disable GyroAssist drive.
-                            robot.globalTracer.traceInfo(moduleName, ">>>>> Disabling GyroAssist.");
-                            robot.robotDrive.driveBase.setGyroAssistEnabled(null);
-                        }
-                        else
-                        {
-                            // Enable GyroAssist drive.
-                            robot.globalTracer.traceInfo(moduleName, ">>>>> Enabling GyroAssist.");
-                            robot.robotDrive.driveBase.setGyroAssistEnabled(robot.robotDrive.pidDrive.getTurnPidCtrl());
-                        }
-                    }
-                }
-                else
-                {
-                    if (pressed && robot.robotDrive != null && robot.robotDrive.driveBase.supportsHolonomicDrive())
-                    {
-                        if (robot.robotDrive.driveBase.getDriveOrientation() != TrcDriveBase.DriveOrientation.FIELD)
-                        {
-                            robot.globalTracer.traceInfo(moduleName, ">>>>> Enabling FIELD mode.");
-                            setDriveOrientation(TrcDriveBase.DriveOrientation.FIELD);
-                        }
-                        else
-                        {
-                            robot.globalTracer.traceInfo(moduleName, ">>>>> Enabling ROBOT mode.");
-                            setDriveOrientation(TrcDriveBase.DriveOrientation.ROBOT);
-                        }
-                    }
-                }
                 break;
 
             case LeftBumper:
@@ -540,6 +531,7 @@ public class FtcTeleOp extends FtcOpMode
                 if (pressed)
                 {
                     robot.globalTracer.traceInfo(moduleName, ">>>>> ZeroCalibrate pressed.");
+                    robot.cancelAll();
                     robot.zeroCalibrate();
                     if (robot.robotDrive != null && robot.robotDrive instanceof FtcSwerveDrive)
                     {
@@ -611,6 +603,7 @@ public class FtcTeleOp extends FtcOpMode
                 {
                     // Zero calibrate all subsystems (arm, elevator and turret).
                     robot.globalTracer.traceInfo(moduleName, ">>>>> ZeroCalibrate pressed.");
+                    robot.cancelAll();
                     robot.zeroCalibrate(moduleName);
                 }
                 break;
