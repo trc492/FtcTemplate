@@ -51,9 +51,9 @@ import trclib.vision.TrcOpenCvDetector;
 import trclib.vision.TrcVisionTargetInfo;
 
 /**
- * This class implements AprilTag/Eocv Vision for the game season. It creates and initializes all the
- * vision target info as well as providing info for the robot, camera and the field. It also provides methods to get
- * the location of the robot and detected targets.
+ * This class implements AprilTag/Eocv Vision for the game season. It creates and initializes all the vision target
+ * info as well as providing info for the robot, camera and the field. It also provides methods to get the location
+ * of the robot and detected targets.
  */
 public class Vision
 {
