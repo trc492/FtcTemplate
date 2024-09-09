@@ -209,14 +209,6 @@ public class FtcTest extends FtcTeleOp
                 }
                 break;
         }
-        //
-        // Only VISION_TEST needs TensorFlow, shut it down for all other tests.
-        //
-        if (robot.vision != null && robot.vision.tensorFlowVision != null && testChoices.test != Test.VISION_TEST)
-        {
-            robot.globalTracer.traceInfo(moduleName, "Disabling TensorFlowVision.");
-            robot.vision.setTensorFlowVisionEnabled(false);
-        }
     }   //robotInit
 
     //
@@ -257,12 +249,6 @@ public class FtcTest extends FtcTeleOp
                     {
                         robot.globalTracer.traceInfo(moduleName, "Enabling BlueBlobVision.");
                         robot.vision.setBlueBlobVisionEnabled(true);
-                    }
-
-                    if (robot.vision.tensorFlowVision != null)
-                    {
-                        robot.globalTracer.traceInfo(moduleName, "Enabling TensorFlowVison.");
-                        robot.vision.setTensorFlowVisionEnabled(true);
                     }
                 }
                 break;
@@ -1098,11 +1084,6 @@ public class FtcTest extends FtcTeleOp
             if (robot.vision.blueBlobVision != null)
             {
                 robot.vision.getDetectedBlueBlob(lineNum++);
-            }
-
-            if (robot.vision.tensorFlowVision != null)
-            {
-                robot.vision.getDetectedTensorFlowPixel(lineNum++);
             }
         }
     }   //doVisionTest

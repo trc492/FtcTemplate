@@ -105,8 +105,7 @@ public class Robot
         if (RobotParams.Preferences.useVision &&
             (RobotParams.Preferences.tuneColorBlobVision ||
              RobotParams.Preferences.useAprilTagVision ||
-             RobotParams.Preferences.useColorBlobVision ||
-             RobotParams.Preferences.useTensorFlowVision))
+             RobotParams.Preferences.useColorBlobVision))
         {
             vision = new Vision(this);
         }
@@ -288,11 +287,6 @@ public class Robot
                 vision.setBlueBlobVisionEnabled(false);
             }
 
-            if (vision.tensorFlowVision != null)
-            {
-                globalTracer.traceInfo(moduleName, "Disabling TensorFlowVision.");
-                vision.setTensorFlowVisionEnabled(false);
-            }
             vision.close();
        }
 

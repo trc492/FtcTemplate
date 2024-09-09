@@ -183,12 +183,6 @@ public class FtcAuto extends FtcOpMode
 //                robot.globalTracer.traceInfo(moduleName, "Enabling BlueBlobVision.");
 //                robot.vision.setBlueBlobVisionEnabled(true);
 //            }
-//
-//            if (robot.vision.tensorFlowVision != null)
-//            {
-//                robot.globalTracer.traceInfo(moduleName, "Enabling TensorFlowVision.");
-//                robot.vision.setTensorFlowVisionEnabled(true);
-//            }
         }
 
         robot.zeroCalibrate();
@@ -234,16 +228,6 @@ public class FtcAuto extends FtcOpMode
         // Tell robot object opmode is about to start so it can do the necessary start initialization for the mode.
         //
         robot.startMode(nextMode);
-
-        if (robot.vision != null)
-        {
-            // We are done with detecting object with TensorFlow, shut it down.
-            if (robot.vision.tensorFlowVision != null)
-            {
-                robot.globalTracer.traceInfo(moduleName, "Disabling TensorFlowVision.");
-                robot.vision.setTensorFlowVisionEnabled(false);
-            }
-        }
 
         if (robot.battery != null)
         {
