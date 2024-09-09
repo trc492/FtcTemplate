@@ -36,7 +36,6 @@ public class BlinkinLEDs extends FtcRevBlinkin
     public static final String APRIL_TAG = "AprilTag";
     public static final String RED_BLOB = "RedBlob";
     public static final String BLUE_BLOB = "BlueBlob";
-    public static final String TENSOR_FLOW = "TensorFlow";
     public static final String DRIVE_ORIENTATION_FIELD = "FieldMode";
     public static final String DRIVE_ORIENTATION_ROBOT = "RobotMode";
     public static final String DRIVE_ORIENTATION_INVERTED = "InvertedMode";
@@ -56,7 +55,6 @@ public class BlinkinLEDs extends FtcRevBlinkin
             new TrcRevBlinkin.Pattern(APRIL_TAG, RevLedPattern.SolidAqua),
             new TrcRevBlinkin.Pattern(RED_BLOB, RevLedPattern.SolidRed),
             new TrcRevBlinkin.Pattern(BLUE_BLOB, RevLedPattern.SolidBlue),
-            new TrcRevBlinkin.Pattern(TENSOR_FLOW, RevLedPattern.SolidYellow),
             new TrcRevBlinkin.Pattern(DRIVE_ORIENTATION_FIELD, RevLedPattern.SolidViolet),
             new TrcRevBlinkin.Pattern(DRIVE_ORIENTATION_ROBOT, RevLedPattern.SolidWhite),
             new TrcRevBlinkin.Pattern(DRIVE_ORIENTATION_INVERTED, RevLedPattern.SolidGray),

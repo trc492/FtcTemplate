@@ -146,7 +146,6 @@ public class RobotParams
         public static final boolean tuneColorBlobVision         = false;
         public static final boolean useAprilTagVision           = false;
         public static final boolean useColorBlobVision          = false;
-        public static final boolean useTensorFlowVision         = false;
         public static final boolean showVisionView              = !inCompetition;
         public static final boolean showVisionStat              = false;
         // Drive Base

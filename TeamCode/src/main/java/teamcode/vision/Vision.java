@@ -28,7 +28,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.vision.VisionProcessor;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
-import org.firstinspires.ftc.vision.tfod.TfodProcessor;
 import org.opencv.imgproc.Imgproc;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
@@ -42,7 +41,6 @@ import ftclib.vision.FtcRawEocvVision;
 import ftclib.vision.FtcVision;
 import ftclib.vision.FtcVisionAprilTag;
 import ftclib.vision.FtcVisionEocvColorBlob;
-import ftclib.vision.FtcVisionTensorFlow;
 import teamcode.Robot;
 import teamcode.RobotParams;
 import teamcode.subsystems.BlinkinLEDs;
@@ -53,7 +51,7 @@ import trclib.vision.TrcOpenCvDetector;
 import trclib.vision.TrcVisionTargetInfo;
 
 /**
- * This class implements AprilTag/TensorFlow/Eocv Vision for the game season. It creates and initializes all the
+ * This class implements AprilTag/Eocv Vision for the game season. It creates and initializes all the
  * vision target info as well as providing info for the robot, camera and the field. It also provides methods to get
  * the location of the robot and detected targets.
  */
@@ -93,8 +91,6 @@ public class Vision
     private FtcEocvColorBlobProcessor redBlobProcessor;
     public FtcVisionEocvColorBlob blueBlobVision;
     private FtcEocvColorBlobProcessor blueBlobProcessor;
-    public FtcVisionTensorFlow tensorFlowVision;
-    private TfodProcessor tensorFlowProcessor;
     public FtcVision vision;
 
     /**
@@ -182,17 +178,6 @@ public class Vision
                     robot.robotInfo.webCam1.cameraRect, robot.robotInfo.webCam1.worldRect, true);
                 blueBlobProcessor = blueBlobVision.getVisionProcessor();
                 visionProcessorsList.add(blueBlobProcessor);
-            }
-
-            if (RobotParams.Preferences.useTensorFlowVision)
-            {
-                tracer.traceInfo(moduleName, "Starting TensorFlowVision...");
-                tensorFlowVision = new FtcVisionTensorFlow(
-                    null, true, TFOD_MODEL_ASSET, TFOD_TARGET_LABELS, robot.robotInfo.webCam1.cameraRect,
-                    robot.robotInfo.webCam1.worldRect);
-                tensorFlowProcessor = tensorFlowVision.getVisionProcessor();
-                tensorFlowProcessor.setMinResultConfidence(TFOD_MIN_CONFIDENCE);
-                visionProcessorsList.add(tensorFlowProcessor);
             }
 
             VisionProcessor[] visionProcessors = new VisionProcessor[visionProcessorsList.size()];
@@ -572,54 +557,6 @@ public class Vision
     }   //getDetectedBlueBlob
 
     /**
-     * This method enables/disables TensorFlow vision.
-     *
-     * @param enabled specifies true to enable, false to disable.
-     */
-    public void setTensorFlowVisionEnabled(boolean enabled)
-    {
-        if (tensorFlowProcessor != null)
-        {
-            vision.setProcessorEnabled(tensorFlowProcessor, enabled);
-        }
-    }   //setTensorFlowVisionEnabled
-
-    /**
-     * This method checks if TensorFlow vision is enabled.
-     *
-     * @return true if enabled, false if disabled.
-     */
-    public boolean isTensorFlowVisionEnabled()
-    {
-        return tensorFlowProcessor != null && vision.isVisionProcessorEnabled(tensorFlowProcessor);
-    }   //isTensorFlowVisionEnabled
-
-    /**
-     * This method calls TensorFlow vision to detect the Pixel objects.
-     *
-     * @param lineNum specifies the dashboard line number to display the detected object info, -1 to disable printing.
-     * @return detected Pixel object info.
-     */
-    public TrcVisionTargetInfo<FtcVisionTensorFlow.DetectedObject> getDetectedTensorFlowPixel(int lineNum)
-    {
-        TrcVisionTargetInfo<FtcVisionTensorFlow.DetectedObject> tensorFlowInfo =
-            tensorFlowVision.getBestDetectedTargetInfo(TFOD_OBJECT_LABEL, null, this::compareConfidence, 0.0, 0.0);
-
-        if (tensorFlowInfo != null && robot.blinkin != null)
-        {
-            robot.blinkin.setDetectedPattern(BlinkinLEDs.TENSOR_FLOW);
-        }
-
-        if (lineNum != -1)
-        {
-            robot.dashboard.displayPrintf(
-                lineNum, "%s: %s", BlinkinLEDs.TENSOR_FLOW, tensorFlowInfo != null? tensorFlowInfo: "Not found.");
-        }
-
-        return tensorFlowInfo;
-    }   //getDetectedTensorFlowPixel
-
-    /**
      * This method is called by the Arrays.sort to sort the target object by increasing distance.
      *
      * @param a specifies the first target
@@ -633,20 +570,5 @@ public class Vision
     {
         return (int)((b.objPose.y - a.objPose.y)*100);
     }   //compareDistance
-
-    /**
-     * This method is called by the Arrays.sort to sort the target object by decreasing confidence.
-     *
-     * @param a specifies the first target
-     * @param b specifies the second target.
-     * @return negative value if a has higher confidence than b, 0 if a and b have equal confidence, positive value
-     *         if a has lower confidence than b.
-     */
-    private int compareConfidence(
-        TrcVisionTargetInfo<FtcVisionTensorFlow.DetectedObject> a,
-        TrcVisionTargetInfo<FtcVisionTensorFlow.DetectedObject> b)
-    {
-        return (int)((b.detectedObj.confidence - a.detectedObj.confidence)*100);
-    }   //compareConfidence
 
 }   //class Vision
