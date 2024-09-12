@@ -85,7 +85,8 @@ public class Robot
         if (RobotParams.Preferences.useVision &&
             (RobotParams.Preferences.tuneColorBlobVision ||
              RobotParams.Preferences.useAprilTagVision ||
-             RobotParams.Preferences.useColorBlobVision))
+             RobotParams.Preferences.useColorBlobVision ||
+             RobotParams.Preferences.useLimelightVision))
         {
             vision = new Vision(this);
         }

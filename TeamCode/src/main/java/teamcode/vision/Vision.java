@@ -22,6 +22,8 @@
 
 package teamcode.vision;
 
+import com.qualcomm.hardware.limelightvision.LLResult;
+
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -36,6 +38,7 @@ import java.util.ArrayList;
 
 import ftclib.robotcore.FtcOpMode;
 import ftclib.vision.FtcEocvColorBlobProcessor;
+import ftclib.vision.FtcLimelightVision;
 import ftclib.vision.FtcRawEocvColorBlobPipeline;
 import ftclib.vision.FtcRawEocvVision;
 import ftclib.vision.FtcVision;
@@ -51,9 +54,9 @@ import trclib.vision.TrcOpenCvDetector;
 import trclib.vision.TrcVisionTargetInfo;
 
 /**
- * This class implements AprilTag/Eocv Vision for the game season. It creates and initializes all the vision target
- * info as well as providing info for the robot, camera and the field. It also provides methods to get the location
- * of the robot and detected targets.
+ * This class implements AprilTag/Eocv/Limelight Vision for the game season. It creates and initializes all the vision
+ * target info as well as providing info for the robot, camera and the field. It also provides methods to get the
+ * location of the robot and detected targets.
  */
 public class Vision
 {
@@ -75,11 +78,6 @@ public class Vision
             .setVerticesRange(0.0, 1000.0)
             .setAspectRatioRange(0.3, 1.0);
 
-    private static final String TFOD_MODEL_ASSET = "MyObject.tflite";
-    private static final float TFOD_MIN_CONFIDENCE = 0.75f;
-    public static final String TFOD_OBJECT_LABEL = "MyObject";
-    public static final String[] TFOD_TARGET_LABELS = {TFOD_OBJECT_LABEL};
-
     private final TrcDbgTrace tracer;
     private final Robot robot;
     private final WebcamName webcam1, webcam2;
@@ -92,6 +90,7 @@ public class Vision
     public FtcVisionEocvColorBlob blueBlobVision;
     private FtcEocvColorBlobProcessor blueBlobProcessor;
     public FtcVision vision;
+    public FtcLimelightVision limelightVision;
 
     /**
      * Constructor: Create an instance of the object.
@@ -141,6 +140,11 @@ public class Vision
                 openCvCamera, robot.robotInfo.webCam1.camOrientation);
             rawColorBlobVision.setFpsMeterEnabled(RobotParams.Preferences.showVisionStat);
             setRawColorBlobVisionEnabled(false);
+        }
+        else if (RobotParams.Preferences.useLimelightVision)
+        {
+            limelightVision = new FtcLimelightVision(
+                robot.robotInfo.limelight.camName, robot.robotInfo.limelight.camPose, this::getTargetGroundOffset);
         }
         else
         {
@@ -315,7 +319,6 @@ public class Vision
         }
     }   //setRawColorBlobThresholds
 
-
     /**
      * This method enables/disables raw ColorBlob vision.
      *
@@ -423,7 +426,9 @@ public class Vision
             TrcPose2D aprilTagPose =
                 RobotParams.Game.APRILTAG_POSES[aprilTagInfo.detectedObj.aprilTagDetection.id - 1];
             TrcPose2D cameraPose = aprilTagPose.subtractRelativePose(aprilTagInfo.objPose);
-            robotPose = cameraPose.subtractRelativePose(robot.robotInfo.webCam1.camPose);
+            robotPose = cameraPose.subtractRelativePose(
+                new TrcPose2D(robot.robotInfo.webCam1.camXOffset, robot.robotInfo.webCam1.camYOffset,
+                              robot.robotInfo.webCam1.camYaw));
             tracer.traceInfo(
                 moduleName,
                 "AprilTagId=" + aprilTagInfo.detectedObj.aprilTagDetection.id +
@@ -555,6 +560,17 @@ public class Vision
 
         return colorBlobInfo;
     }   //getDetectedBlueBlob
+
+    /**
+     * This method returns the target Z offset from ground.
+     *
+     * @param result specifies the detected object.
+     * @return target ground offset.
+     */
+    private double getTargetGroundOffset(LLResult result)
+    {
+        return 0.0;
+    }   //getTargetGroundOffset
 
     /**
      * This method is called by the Arrays.sort to sort the target object by increasing distance.
