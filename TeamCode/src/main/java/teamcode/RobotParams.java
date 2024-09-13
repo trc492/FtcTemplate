@@ -297,12 +297,12 @@ public class RobotParams
             driveMotorInverted = new boolean[] {true, false};
             // Odometry Wheels
             odWheelScale = Math.PI * ODWHEEL_DIAMETER / ODWHEEL_CPR;    // 0.00105687652708656383937269814237 in/count
-            xOdWheelOffsetX = 0.0;
-            xOdWheelOffsetY = -168.0 * TrcUtil.INCHES_PER_MM;
-            yLeftOdWheelOffsetX = -144.0 * TrcUtil.INCHES_PER_MM;
-            yLeftOdWheelOffsetY = -12.0 * TrcUtil.INCHES_PER_MM;
-            yRightOdWheelOffsetX = 144.0 * TrcUtil.INCHES_PER_MM;
-            yRightOdWheelOffsetY = -12.0 * TrcUtil.INCHES_PER_MM;
+            xOdWheelIndices = new int[] {FtcRobotDrive.INDEX_RIGHT_BACK};
+            xOdWheelXOffsets = new double[] {0.0};
+            xOdWheelYOffsets = new double[] {-168.0 * TrcUtil.INCHES_PER_MM};
+            yOdWheelIndices = new int[] {FtcRobotDrive.INDEX_LEFT_FRONT, FtcRobotDrive.INDEX_RIGHT_FRONT};
+            yOdWheelXOffsets = new double[] {-144.0 * TrcUtil.INCHES_PER_MM, -12.0 * TrcUtil.INCHES_PER_MM};
+            yOdWheelYOffsets = new double[] {144.0 * TrcUtil.INCHES_PER_MM, -12.0 * TrcUtil.INCHES_PER_MM};
             // Drive Motor Odometry
             yDrivePosScale = 0.02166184604662450653409090909091;        // in/count
             // Robot Drive Characteristics
@@ -362,12 +362,12 @@ public class RobotParams
             driveMotorInverted = new boolean[] {true, false, true, false};
             // Odometry Wheels
             odWheelScale = Math.PI * ODWHEEL_DIAMETER / ODWHEEL_CPR;    // 0.00105687652708656383937269814237 in/count
-            xOdWheelOffsetX = 0.0;
-            xOdWheelOffsetY = -168.0 * TrcUtil.INCHES_PER_MM;
-            yLeftOdWheelOffsetX = -144.0 * TrcUtil.INCHES_PER_MM;
-            yLeftOdWheelOffsetY = -12.0 * TrcUtil.INCHES_PER_MM;
-            yRightOdWheelOffsetX = 144.0 * TrcUtil.INCHES_PER_MM;
-            yRightOdWheelOffsetY = -12.0 * TrcUtil.INCHES_PER_MM;
+            xOdWheelIndices = new int[] {FtcRobotDrive.INDEX_RIGHT_BACK};
+            xOdWheelXOffsets = new double[] {0.0};
+            xOdWheelYOffsets = new double[] {-168.0 * TrcUtil.INCHES_PER_MM};
+            yOdWheelIndices = new int[] {FtcRobotDrive.INDEX_LEFT_FRONT, FtcRobotDrive.INDEX_RIGHT_FRONT};
+            yOdWheelXOffsets = new double[] {-144.0 * TrcUtil.INCHES_PER_MM, -12.0 * TrcUtil.INCHES_PER_MM};
+            yOdWheelYOffsets = new double[] {144.0 * TrcUtil.INCHES_PER_MM, -12.0 * TrcUtil.INCHES_PER_MM};
             // Drive Motor Odometry
             xDrivePosScale = 0.01924724265461924299065420560748;        // in/count
             yDrivePosScale = 0.02166184604662450653409090909091;        // in/count
@@ -431,12 +431,12 @@ public class RobotParams
             driveMotorInverted = new boolean[] {true, false, true, false};
             // Odometry Wheels
             odWheelScale = Math.PI * ODWHEEL_DIAMETER / ODWHEEL_CPR;    // 0.00105687652708656383937269814237 in/count
-            xOdWheelOffsetX = 0.0;
-            xOdWheelOffsetY = -168.0 * TrcUtil.INCHES_PER_MM;
-            yLeftOdWheelOffsetX = -144.0 * TrcUtil.INCHES_PER_MM;
-            yLeftOdWheelOffsetY = -12.0 * TrcUtil.INCHES_PER_MM;
-            yRightOdWheelOffsetX = 144.0 * TrcUtil.INCHES_PER_MM;
-            yRightOdWheelOffsetY = -12.0 * TrcUtil.INCHES_PER_MM;
+            xOdWheelIndices = new int[] {FtcRobotDrive.INDEX_RIGHT_BACK};
+            xOdWheelXOffsets = new double[] {0.0};
+            xOdWheelYOffsets = new double[] {-168.0 * TrcUtil.INCHES_PER_MM};
+            yOdWheelIndices = new int[] {FtcRobotDrive.INDEX_LEFT_FRONT, FtcRobotDrive.INDEX_RIGHT_FRONT};
+            yOdWheelXOffsets = new double[] {-144.0 * TrcUtil.INCHES_PER_MM, -12.0 * TrcUtil.INCHES_PER_MM};
+            yOdWheelYOffsets = new double[] {144.0 * TrcUtil.INCHES_PER_MM, -12.0 * TrcUtil.INCHES_PER_MM};
             // Drive Motor Odometry
             xDrivePosScale = 0.01924724265461924299065420560748;        // in/count
             yDrivePosScale = 0.01924724265461924299065420560748;        // in/count
