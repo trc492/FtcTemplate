@@ -304,7 +304,7 @@ public class RobotParams
             driveMotorNames = new String[] {"lfDriveMotor", "rfDriveMotor"};
             driveMotorInverted = new boolean[] {true, false};
             // Odometry Wheels
-            odWheelScale = Math.PI * ODWHEEL_DIAMETER / ODWHEEL_CPR;    // 0.00105687652708656383937269814237 in/count
+            odWheelXScale = odWheelYScale = Math.PI * ODWHEEL_DIAMETER / ODWHEEL_CPR;
             xOdWheelIndices = new int[] {FtcRobotDrive.INDEX_RIGHT_BACK};
             xOdWheelXOffsets = new double[] {0.0};
             xOdWheelYOffsets = new double[] {-168.0 * TrcUtil.INCHES_PER_MM};
@@ -369,7 +369,7 @@ public class RobotParams
             driveMotorNames = new String[] {"lfDriveMotor", "rfDriveMotor", "lbDriveMotor", "rbDriveMotor"};
             driveMotorInverted = new boolean[] {true, false, true, false};
             // Odometry Wheels
-            odWheelScale = Math.PI * ODWHEEL_DIAMETER / ODWHEEL_CPR;    // 0.00105687652708656383937269814237 in/count
+            odWheelXScale = odWheelYScale = Math.PI * ODWHEEL_DIAMETER / ODWHEEL_CPR;
             xOdWheelIndices = new int[] {FtcRobotDrive.INDEX_RIGHT_BACK};
             xOdWheelXOffsets = new double[] {0.0};
             xOdWheelYOffsets = new double[] {-168.0 * TrcUtil.INCHES_PER_MM};
@@ -438,7 +438,7 @@ public class RobotParams
             driveMotorNames = new String[] {"lfDriveMotor", "rfDriveMotor", "lbDriveMotor", "rbDriveMotor"};
             driveMotorInverted = new boolean[] {true, false, true, false};
             // Odometry Wheels
-            odWheelScale = Math.PI * ODWHEEL_DIAMETER / ODWHEEL_CPR;    // 0.00105687652708656383937269814237 in/count
+            odWheelXScale = odWheelYScale = Math.PI * ODWHEEL_DIAMETER / ODWHEEL_CPR;
             xOdWheelIndices = new int[] {FtcRobotDrive.INDEX_RIGHT_BACK};
             xOdWheelXOffsets = new double[] {0.0};
             xOdWheelYOffsets = new double[] {-168.0 * TrcUtil.INCHES_PER_MM};
