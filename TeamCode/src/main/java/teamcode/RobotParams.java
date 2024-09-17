@@ -299,9 +299,11 @@ public class RobotParams
             odometryType = TrcDriveBase.OdometryType.MotorOdometry;
             // Odometry Wheels
             odWheelXScale = odWheelYScale = Math.PI * ODWHEEL_DIAMETER / ODWHEEL_CPR;
+            xOdWheelSensorNames = null;
             xOdWheelIndices = new int[] {FtcRobotDrive.INDEX_RIGHT_BACK};
             xOdWheelXOffsets = new double[] {0.0};
             xOdWheelYOffsets = new double[] {-168.0 * TrcUtil.INCHES_PER_MM};
+            yOdWheelSensorNames = null;
             yOdWheelIndices = new int[] {FtcRobotDrive.INDEX_LEFT_FRONT, FtcRobotDrive.INDEX_RIGHT_FRONT};
             yOdWheelXOffsets = new double[] {-144.0 * TrcUtil.INCHES_PER_MM, -12.0 * TrcUtil.INCHES_PER_MM};
             yOdWheelYOffsets = new double[] {144.0 * TrcUtil.INCHES_PER_MM, -12.0 * TrcUtil.INCHES_PER_MM};
@@ -367,10 +369,12 @@ public class RobotParams
             odometryType = TrcDriveBase.OdometryType.AbsoluteOdometry;
             // Odometry Wheels
             odWheelXScale = odWheelYScale = Math.PI * ODWHEEL_DIAMETER / ODWHEEL_CPR;
-            xOdWheelIndices = new int[] {FtcRobotDrive.INDEX_RIGHT_BACK};
+            xOdWheelSensorNames = new String[] {"xOdWheelSensor"};
+            xOdWheelIndices = new int[] {0};
             xOdWheelXOffsets = new double[] {0.0};
             xOdWheelYOffsets = new double[] {-168.0 * TrcUtil.INCHES_PER_MM};
-            yOdWheelIndices = new int[] {FtcRobotDrive.INDEX_LEFT_FRONT, FtcRobotDrive.INDEX_RIGHT_FRONT};
+            yOdWheelSensorNames = new String[] {"yLeftOdWheelSensor", "yRightOdWheelSensor"};
+            yOdWheelIndices = new int[] {1, 2};
             yOdWheelXOffsets = new double[] {-144.0 * TrcUtil.INCHES_PER_MM, -12.0 * TrcUtil.INCHES_PER_MM};
             yOdWheelYOffsets = new double[] {144.0 * TrcUtil.INCHES_PER_MM, -12.0 * TrcUtil.INCHES_PER_MM};
             // Absolute Odometry
@@ -449,9 +453,11 @@ public class RobotParams
             odometryType = TrcDriveBase.OdometryType.OdometryWheels;
             // Odometry Wheels
             odWheelXScale = odWheelYScale = Math.PI * ODWHEEL_DIAMETER / ODWHEEL_CPR;
+            xOdWheelSensorNames = null;
             xOdWheelIndices = new int[] {FtcRobotDrive.INDEX_RIGHT_BACK};
             xOdWheelXOffsets = new double[] {0.0};
             xOdWheelYOffsets = new double[] {-168.0 * TrcUtil.INCHES_PER_MM};
+            yOdWheelSensorNames = null;
             yOdWheelIndices = new int[] {FtcRobotDrive.INDEX_LEFT_FRONT, FtcRobotDrive.INDEX_RIGHT_FRONT};
             yOdWheelXOffsets = new double[] {-144.0 * TrcUtil.INCHES_PER_MM, -12.0 * TrcUtil.INCHES_PER_MM};
             yOdWheelYOffsets = new double[] {144.0 * TrcUtil.INCHES_PER_MM, -12.0 * TrcUtil.INCHES_PER_MM};
