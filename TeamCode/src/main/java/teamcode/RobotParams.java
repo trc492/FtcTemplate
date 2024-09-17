@@ -31,7 +31,9 @@ import org.openftc.easyopencv.OpenCvCameraRotation;
 import ftclib.drivebase.FtcRobotDrive;
 import ftclib.drivebase.FtcSwerveDrive;
 import ftclib.motor.FtcMotorActuator.MotorType;
+import ftclib.sensor.FtcSparkFunOtos;
 import trclib.dataprocessor.TrcUtil;
+import trclib.drivebase.TrcDriveBase;
 import trclib.drivebase.TrcDriveBase.DriveOrientation;
 import trclib.driverio.TrcGameController.DriveMode;
 import trclib.pathdrive.TrcPose2D;
@@ -152,7 +154,6 @@ public class RobotParams
         public static final boolean showVisionStat              = false;
         // Drive Base
         public static final boolean useDriveBase                = false;
-        public static final boolean useExternalOdometry         = false;
         // Subsystems
         public static final boolean useSubsystems               = false;
     }   //class Preferences
@@ -295,6 +296,7 @@ public class RobotParams
             driveMotorType = MotorType.DcMotor;
             driveMotorNames = new String[] {"lfDriveMotor", "rfDriveMotor"};
             driveMotorInverted = new boolean[] {true, false};
+            odometryType = TrcDriveBase.OdometryType.MotorOdometry;
             // Odometry Wheels
             odWheelXScale = odWheelYScale = Math.PI * ODWHEEL_DIAMETER / ODWHEEL_CPR;
             xOdWheelIndices = new int[] {FtcRobotDrive.INDEX_RIGHT_BACK};
@@ -303,6 +305,8 @@ public class RobotParams
             yOdWheelIndices = new int[] {FtcRobotDrive.INDEX_LEFT_FRONT, FtcRobotDrive.INDEX_RIGHT_FRONT};
             yOdWheelXOffsets = new double[] {-144.0 * TrcUtil.INCHES_PER_MM, -12.0 * TrcUtil.INCHES_PER_MM};
             yOdWheelYOffsets = new double[] {144.0 * TrcUtil.INCHES_PER_MM, -12.0 * TrcUtil.INCHES_PER_MM};
+            // Absolute Odometry
+            absoluteOdometry = null;
             // Drive Motor Odometry
             yDrivePosScale = 0.02166184604662450653409090909091;        // in/count
             // Robot Drive Characteristics
@@ -360,6 +364,7 @@ public class RobotParams
             driveMotorType = MotorType.DcMotor;
             driveMotorNames = new String[] {"lfDriveMotor", "rfDriveMotor", "lbDriveMotor", "rbDriveMotor"};
             driveMotorInverted = new boolean[] {true, false, true, false};
+            odometryType = TrcDriveBase.OdometryType.AbsoluteOdometry;
             // Odometry Wheels
             odWheelXScale = odWheelYScale = Math.PI * ODWHEEL_DIAMETER / ODWHEEL_CPR;
             xOdWheelIndices = new int[] {FtcRobotDrive.INDEX_RIGHT_BACK};
@@ -368,6 +373,18 @@ public class RobotParams
             yOdWheelIndices = new int[] {FtcRobotDrive.INDEX_LEFT_FRONT, FtcRobotDrive.INDEX_RIGHT_FRONT};
             yOdWheelXOffsets = new double[] {-144.0 * TrcUtil.INCHES_PER_MM, -12.0 * TrcUtil.INCHES_PER_MM};
             yOdWheelYOffsets = new double[] {144.0 * TrcUtil.INCHES_PER_MM, -12.0 * TrcUtil.INCHES_PER_MM};
+            // Absolute Odometry
+            if (odometryType == TrcDriveBase.OdometryType.AbsoluteOdometry)
+            {
+                FtcSparkFunOtos.Config otosConfig = new FtcSparkFunOtos.Config()
+                    .setOffset(0.0, 0.0, 0.0)
+                    .setScale(1.0, 1.0);
+                absoluteOdometry = new FtcSparkFunOtos("SparkfunOtos", otosConfig);
+            }
+            else
+            {
+                absoluteOdometry = null;
+            }
             // Drive Motor Odometry
             xDrivePosScale = 0.01924724265461924299065420560748;        // in/count
             yDrivePosScale = 0.02166184604662450653409090909091;        // in/count
@@ -429,6 +446,7 @@ public class RobotParams
             driveMotorType = MotorType.DcMotor;
             driveMotorNames = new String[] {"lfDriveMotor", "rfDriveMotor", "lbDriveMotor", "rbDriveMotor"};
             driveMotorInverted = new boolean[] {true, false, true, false};
+            odometryType = TrcDriveBase.OdometryType.OdometryWheels;
             // Odometry Wheels
             odWheelXScale = odWheelYScale = Math.PI * ODWHEEL_DIAMETER / ODWHEEL_CPR;
             xOdWheelIndices = new int[] {FtcRobotDrive.INDEX_RIGHT_BACK};
@@ -437,6 +455,8 @@ public class RobotParams
             yOdWheelIndices = new int[] {FtcRobotDrive.INDEX_LEFT_FRONT, FtcRobotDrive.INDEX_RIGHT_FRONT};
             yOdWheelXOffsets = new double[] {-144.0 * TrcUtil.INCHES_PER_MM, -12.0 * TrcUtil.INCHES_PER_MM};
             yOdWheelYOffsets = new double[] {144.0 * TrcUtil.INCHES_PER_MM, -12.0 * TrcUtil.INCHES_PER_MM};
+            // Absolute Odometry
+            absoluteOdometry = null;
             // Drive Motor Odometry
             xDrivePosScale = 0.01924724265461924299065420560748;        // in/count
             yDrivePosScale = 0.01924724265461924299065420560748;        // in/count
