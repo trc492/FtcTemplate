@@ -50,21 +50,18 @@ public class RobotBase
 
             case DifferentialRobot:
                 robotInfo = new RobotParams.DifferentialParams();
-                robotDrive = RobotParams.Preferences.useDriveBase?
-                    new FtcDifferentialDrive(robotInfo, RobotParams.Preferences.useExternalOdometry): null;
+                robotDrive = RobotParams.Preferences.useDriveBase? new FtcDifferentialDrive(robotInfo): null;
                 break;
 
             case MecanumRobot:
                 robotInfo = new RobotParams.MecanumParams();
-                robotDrive = RobotParams.Preferences.useDriveBase?
-                    new FtcMecanumDrive(robotInfo, RobotParams.Preferences.useExternalOdometry): null;
+                robotDrive = RobotParams.Preferences.useDriveBase? new FtcMecanumDrive(robotInfo): null;
                 break;
 
             case SwerveRobot:
                 robotInfo = new RobotParams.SwerveParams();
                 robotDrive = RobotParams.Preferences.useDriveBase?
-                    new FtcSwerveDrive(
-                        (RobotParams.SwerveParams) robotInfo, RobotParams.Preferences.useExternalOdometry): null;
+                    new FtcSwerveDrive((RobotParams.SwerveParams) robotInfo): null;
                 break;
 
             default:
