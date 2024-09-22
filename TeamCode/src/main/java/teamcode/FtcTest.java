@@ -549,17 +549,6 @@ public class FtcTest extends FtcTeleOp
                     }
                     passToTeleOp = false;
                 }
-                else if ((testChoices.test == Test.TUNE_COLORBLOB_VISION || testChoices.test == Test.VISION_TEST) &&
-                         robot.vision != null)
-                {
-                    // Can only switch camera if we have two.
-                    if (pressed && frontWebcam != null && rearWebcam != null)
-                    {
-                        robot.vision.setActiveWebcam(
-                            robot.vision.getActiveWebcam() != frontWebcam? frontWebcam: rearWebcam);
-                    }
-                    passToTeleOp = false;
-                }
                 break;
 
             case B:
