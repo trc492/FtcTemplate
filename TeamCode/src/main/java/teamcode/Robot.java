@@ -210,13 +210,13 @@ public class Robot
             if (vision.redBlobVision != null)
             {
                 globalTracer.traceInfo(moduleName, "Disabling RedBlobVision.");
-                vision.setRedBlobVisionEnabled(false);
+                vision.setColorBlobVisionEnabled(Vision.ColorBlobType.RedBlob, false);
             }
 
             if (vision.blueBlobVision != null)
             {
                 globalTracer.traceInfo(moduleName, "Disabling BlueBlobVision.");
-                vision.setBlueBlobVisionEnabled(false);
+                vision.setColorBlobVisionEnabled(Vision.ColorBlobType.BlueBlob, false);
             }
 
             vision.close();
