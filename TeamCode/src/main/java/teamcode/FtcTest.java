@@ -26,8 +26,6 @@ import androidx.annotation.NonNull;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-
 import java.util.Arrays;
 import java.util.Locale;
 
@@ -38,6 +36,7 @@ import ftclib.driverio.FtcGamepad;
 import ftclib.driverio.FtcMenu;
 import ftclib.driverio.FtcValueMenu;
 import ftclib.robotcore.FtcPidCoeffCache;
+import teamcode.vision.Vision;
 import trclib.command.CmdDriveMotorsTest;
 import trclib.command.CmdPidDrive;
 import trclib.command.CmdTimedDrive;
@@ -138,8 +137,6 @@ public class FtcTest extends FtcTeleOp
     private double colorThresholdMultiplier = 1.0;
     private boolean teleOpControlEnabled = true;
     private long exposure;
-    private WebcamName frontWebcam = null;
-    private WebcamName rearWebcam = null;
     private boolean fpsMeterEnabled = false;
     //
     // Overrides FtcOpMode abstract method.
@@ -156,12 +153,6 @@ public class FtcTest extends FtcTeleOp
         // TeleOp initialization.
         //
         super.robotInit();
-        if (robot.vision != null)
-        {
-            frontWebcam = robot.vision.getFrontWebcam();
-            rearWebcam = robot.vision.getRearWebcam();
-        }
-
         if (RobotParams.Preferences.useLoopPerformanceMonitor)
         {
             elapsedTimer = new TrcElapsedTimer("TestLoopMonitor", 2.0);
@@ -242,13 +233,13 @@ public class FtcTest extends FtcTeleOp
                     if (robot.vision.redBlobVision != null)
                     {
                         robot.globalTracer.traceInfo(moduleName, "Enabling RedBlobVision.");
-                        robot.vision.setRedBlobVisionEnabled(true);
+                        robot.vision.setColorBlobVisionEnabled(Vision.ColorBlobType.RedBlob, true);
                     }
 
                     if (robot.vision.blueBlobVision != null)
                     {
                         robot.globalTracer.traceInfo(moduleName, "Enabling BlueBlobVision.");
-                        robot.vision.setBlueBlobVisionEnabled(true);
+                        robot.vision.setColorBlobVisionEnabled(Vision.ColorBlobType.BlueBlob, true);
                     }
                 }
                 break;
@@ -1072,12 +1063,12 @@ public class FtcTest extends FtcTeleOp
 
             if (robot.vision.redBlobVision != null)
             {
-                robot.vision.getDetectedRedBlob(lineNum++);
+                robot.vision.getDetectedColorBlob(Vision.ColorBlobType.RedBlob, lineNum++);
             }
 
             if (robot.vision.blueBlobVision != null)
             {
-                robot.vision.getDetectedBlueBlob(lineNum++);
+                robot.vision.getDetectedColorBlob(Vision.ColorBlobType.BlueBlob, lineNum++);
             }
         }
     }   //doVisionTest
