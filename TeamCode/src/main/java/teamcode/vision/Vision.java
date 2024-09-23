@@ -109,10 +109,10 @@ public class Vision
     {
         FtcOpMode opMode = FtcOpMode.getInstance();
 
-        if (robot.robotInfo.webCam1.camName == null &&
+        if (robot.robotInfo.webCam1 == null &&
             (RobotParams.Preferences.useWebCam || RobotParams.Preferences.tuneColorBlobVision))
         {
-            throw new IllegalArgumentException("Must provide a valid WebCam 1 name.");
+            throw new IllegalArgumentException("Must provide valid WebCam 1 info.");
         }
 
         this.tracer = new TrcDbgTrace();
