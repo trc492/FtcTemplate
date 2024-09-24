@@ -219,6 +219,12 @@ public class Robot
                 vision.setColorBlobVisionEnabled(Vision.ColorBlobType.BlueBlob, false);
             }
 
+            if (vision.limelightVision != null)
+            {
+                globalTracer.traceInfo(moduleName, "Disabling LimelightVision.");
+                vision.setLimelightVisionEnabled(0, false);
+            }
+
             vision.close();
        }
 

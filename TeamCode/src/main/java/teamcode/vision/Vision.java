@@ -612,6 +612,71 @@ public class Vision
     }   //getDetectedColorBlob
 
     /**
+     * This method enables/disables Limelight vision for the specified pipeline.
+     *
+     * @param pipelineIndex specifies the limelight pipeline index to be selected, ignore if disabled.
+     * @param enabled specifies true to enable, false to disable.
+     */
+    public void setLimelightVisionEnabled(int pipelineIndex, boolean enabled)
+    {
+        if (limelightVision != null)
+        {
+            if (enabled)
+            {
+                limelightVision.setPipeline(pipelineIndex);
+            }
+            limelightVision.setVisionEnabled(enabled);
+        }
+    }   //setLimelightVisionEnabled
+
+    /**
+     * This method checks if Limelight vision is enabled.
+     *
+     * @return true if enabled, false if disabled.
+     */
+    public boolean isLimelightVisionEnabled()
+    {
+        return limelightVision != null && limelightVision.isVisionEnabled();
+    }   //isLimelightVisionEnabled
+
+    /**
+     * This method calls Limelight vision to detect the object.
+     *
+     * @param resultType specifies the result type to look for.
+     * @param label specifies the detected object label, can be null to match any label.
+     * @param lineNum specifies the dashboard line number to display the detected object info, -1 to disable printing.
+     * @return detected Limelight object info.
+     */
+    public TrcVisionTargetInfo<FtcLimelightVision.DetectedObject> getLimelightDetectedObject(
+        FtcLimelightVision.ResultType resultType, String label, int lineNum)
+    {
+        TrcVisionTargetInfo<FtcLimelightVision.DetectedObject> limelightInfo = null;
+        String objectName = null;
+
+        if (limelightVision != null)
+        {
+            limelightInfo = limelightVision.getBestDetectedTargetInfo(resultType, label, null);
+            if (limelightInfo != null)
+            {
+                objectName = limelightInfo.detectedObj.label;
+            }
+        }
+
+        if (objectName != null && robot.blinkin != null)
+        {
+            robot.blinkin.setDetectedPattern(objectName);
+        }
+
+        if (lineNum != -1)
+        {
+            robot.dashboard.displayPrintf(
+                lineNum, "%s: %s", objectName, limelightInfo != null? limelightInfo: "Not found.");
+        }
+
+        return limelightInfo;
+    }   //getLimelightDetectedObject
+
+    /**
      * This method returns the target Z offset from ground.
      *
      * @param result specifies the detected object.

@@ -144,7 +144,7 @@ public class RobotParams
         public static final boolean showSubsystems              = true;
         // Vision
         public static final boolean useVision                   = false;
-        public static final boolean useWebCam                   = false;
+        public static final boolean useWebCam                   = false;    // false to use Android phone camera.
         public static final boolean useBuiltinCamBack           = false;    // For Android Phone as Robot Controller.
         public static final boolean tuneColorBlobVision         = false;
         public static final boolean useAprilTagVision           = false;
@@ -233,7 +233,7 @@ public class RobotParams
     {
         public LimelightParams()
         {
-            camName = "limelight3a";
+            camName = "Limelight3a";
             camImageWidth = 640;
             camImageHeight = 480;
             camXOffset = 0.0;                   // Inches to the right from robot center
