@@ -22,8 +22,6 @@
 
 package teamcode.vision;
 
-import com.qualcomm.hardware.limelightvision.LLResult;
-
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -679,12 +677,19 @@ public class Vision
     /**
      * This method returns the target Z offset from ground.
      *
-     * @param result specifies the detected object.
+     * @param resultType specifies the detected object result type.
      * @return target ground offset.
      */
-    private double getTargetGroundOffset(LLResult result)
+    private double getTargetGroundOffset(FtcLimelightVision.ResultType resultType)
     {
-        return 0.0;
+        double offset = 0.0;
+
+        if ( resultType == FtcLimelightVision.ResultType.Fiducial)
+        {
+            offset = 5.75;
+        }
+
+        return offset;
     }   //getTargetGroundOffset
 
     /**
