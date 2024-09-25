@@ -223,7 +223,10 @@ public class FtcTest extends FtcTeleOp
             case VISION_TEST:
                 if (robot.vision != null)
                 {
-                    exposure = robot.vision.vision.getCurrentExposure();
+                    if (robot.vision.vision != null)
+                    {
+                        exposure = robot.vision.vision.getCurrentExposure();
+                    }
                     // Vision generally will impact performance, so we only enable it if it's needed.
                     if (robot.vision.aprilTagVision != null)
                     {
@@ -603,7 +606,7 @@ public class FtcTest extends FtcTeleOp
                 break;
 
             case LeftBumper:
-                if (testChoices.test == Test.VISION_TEST && robot.vision != null)
+                if (testChoices.test == Test.VISION_TEST && robot.vision != null && robot.vision.vision != null)
                 {
                     if (pressed)
                     {
@@ -615,7 +618,7 @@ public class FtcTest extends FtcTeleOp
                 break;
 
             case RightBumper:
-                if (testChoices.test == Test.VISION_TEST && robot.vision != null)
+                if (testChoices.test == Test.VISION_TEST && robot.vision != null && robot.vision.vision != null)
                 {
                     if (pressed)
                     {
