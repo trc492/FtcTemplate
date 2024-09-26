@@ -32,7 +32,7 @@ import teamcode.RobotParams;
 import trclib.subsystem.TrcServoGrabber;
 
 /**
- * This class implements an Elevator Subsystem.
+ * This class implements a Grabber Subsystem.
  */
 public class Grabber
 {

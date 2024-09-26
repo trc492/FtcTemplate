@@ -27,7 +27,7 @@ import teamcode.RobotParams;
 import trclib.subsystem.TrcIntake;
 
 /**
- * This class implements an Elevator Subsystem.
+ * This class implements an Intake Subsystem.
  */
 public class Intake
 {
