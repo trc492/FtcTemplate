@@ -58,7 +58,7 @@ import trclib.vision.TrcVisionTargetInfo;
  */
 public class Vision
 {
-    private static final String moduleName = Vision.class.getSimpleName();
+    private final String moduleName = getClass().getSimpleName();
 
     public enum ColorBlobType
     {

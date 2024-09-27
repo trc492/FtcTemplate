@@ -45,7 +45,7 @@ import trclib.timer.TrcTimer;
  */
 public class Robot
 {
-    private static final String moduleName = Robot.class.getSimpleName();
+    private final String moduleName = getClass().getSimpleName();
     // Global objects.
     public final FtcOpMode opMode;
     public final TrcDbgTrace globalTracer;

@@ -34,7 +34,7 @@ import trclib.timer.TrcTimer;
  */
 public class CmdAuto implements TrcRobot.RobotCommand
 {
-    private static final String moduleName = CmdAuto.class.getSimpleName();
+    private final String moduleName = getClass().getSimpleName();
 
     private enum State
     {

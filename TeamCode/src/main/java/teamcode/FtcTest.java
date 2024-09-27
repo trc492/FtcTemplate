@@ -57,7 +57,7 @@ import trclib.timer.TrcTimer;
 @TeleOp(name="FtcTest", group="Ftcxxxx")
 public class FtcTest extends FtcTeleOp
 {
-    private static final String moduleName = FtcTest.class.getSimpleName();
+    private final String moduleName = getClass().getSimpleName();
     private static final boolean logEvents = true;
     private static final boolean debugPid = true;
 
