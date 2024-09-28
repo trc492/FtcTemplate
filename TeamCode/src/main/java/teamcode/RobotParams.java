@@ -529,7 +529,6 @@ public class RobotParams
         public static final MotorType MOTOR_TYPE                = MotorType.DcMotor;
 
         public static final boolean MOTOR_INVERTED              = true;
-        public static final boolean VOLTAGE_COMP_ENABLED        = true;
         public static final double INCHES_PER_COUNT             = 18.25/4941.0;
         public static final double POS_OFFSET                   = 10.875;
         public static final double POWER_LIMIT                  = 1.0;
@@ -559,7 +558,6 @@ public class RobotParams
         public static final MotorType MOTOR_TYPE                = MotorType.DcMotor;
 
         public static final boolean MOTOR_INVERTED              = true;
-        public static final boolean VOLTAGE_COMP_ENABLED        = true;
         public static final double GOBILDA312_CPR               = (((1.0 + (46.0/17.0))) * (1.0 + (46.0/11.0))) * 28.0;
         public static final double DEG_PER_COUNT                = 360.0 / GOBILDA312_CPR;
         public static final double POS_OFFSET                   = 39.0;
