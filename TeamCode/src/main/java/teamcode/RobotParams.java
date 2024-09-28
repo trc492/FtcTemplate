@@ -652,7 +652,7 @@ public class RobotParams
         public static final boolean ANALOG_TRIGGER_INVERTED     = true;
 
         public static final boolean USE_DIGITAL_SENSOR          = false;
-        public static final int SENSOR_DIGITAL_CHANNEL          = 0;
+        public static final String DIGITAL_SENSOR_NAME          = SUBSYSTEM_NAME + ".sensor";
         public static final boolean DIGITAL_TRIGGER_INVERTED    = false;
     }   //class Grabber
 

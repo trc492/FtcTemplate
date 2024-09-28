@@ -70,7 +70,7 @@ public class Grabber
         else if (RobotParams.Grabber.USE_DIGITAL_SENSOR)
         {
             grabberParams.setDigitalInputTrigger(
-                RobotParams.Grabber.REV_2M_SENSOR_NAME, RobotParams.Grabber.DIGITAL_TRIGGER_INVERTED, null);
+                RobotParams.Grabber.DIGITAL_SENSOR_NAME, RobotParams.Grabber.DIGITAL_TRIGGER_INVERTED, null);
         }
 
         grabber = new FtcServoGrabber(RobotParams.Grabber.SUBSYSTEM_NAME, grabberParams).getGrabber();
