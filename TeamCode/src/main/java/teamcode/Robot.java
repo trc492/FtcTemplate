@@ -252,13 +252,15 @@ public class Robot
 
     /**
      * This method update all subsystem status on the dashboard.
+     *
+     * @param startLineNum specifies the first Dashboard line for printing status.
      */
-    public void updateStatus()
+    public void updateStatus(int startLineNum)
     {
         double currTime = TrcTimer.getCurrentTime();
         if (currTime > nextStatusUpdateTime)
         {
-            int lineNum = 2;
+            int lineNum = startLineNum;
             nextStatusUpdateTime = currTime + RobotParams.Robot.DASHBOARD_UPDATE_INTERVAL;
             if (robotDrive != null)
             {

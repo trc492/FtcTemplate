@@ -208,7 +208,7 @@ public class FtcTeleOp extends FtcOpMode
             // Display subsystem status.
             if (RobotParams.Preferences.doStatusUpdate)
             {
-                robot.updateStatus();
+                robot.updateStatus(2);
             }
         }
     }   //periodic
