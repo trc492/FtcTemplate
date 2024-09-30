@@ -429,7 +429,7 @@ public class FtcTeleOp extends FtcOpMode
                         }
                         else
                         {
-                            robot.grabber.cancelAutoAssist();
+                            robot.grabber.cancel();
                         }
                     }
                 }
