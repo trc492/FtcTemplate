@@ -65,12 +65,12 @@ public class Grabber
             grabberParams.setAnalogSensorTrigger(
                 this::getSensorData, RobotParams.Grabber.ANALOG_TRIGGER_INVERTED,
                 RobotParams.Grabber.SENSOR_TRIGGER_THRESHOLD, RobotParams.Grabber.HAS_OBJECT_THRESHOLD,
-                null);
+                null, false);
         }
         else if (RobotParams.Grabber.USE_DIGITAL_SENSOR)
         {
             grabberParams.setDigitalInputTrigger(
-                RobotParams.Grabber.DIGITAL_SENSOR_NAME, RobotParams.Grabber.DIGITAL_TRIGGER_INVERTED, null);
+                RobotParams.Grabber.DIGITAL_SENSOR_NAME, RobotParams.Grabber.DIGITAL_TRIGGER_INVERTED, null, false);
         }
 
         grabber = new FtcServoGrabber(RobotParams.Grabber.SUBSYSTEM_NAME, grabberParams).getGrabber();
