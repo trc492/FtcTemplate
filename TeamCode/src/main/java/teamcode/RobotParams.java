@@ -31,6 +31,7 @@ import org.openftc.easyopencv.OpenCvCameraRotation;
 import ftclib.drivebase.FtcRobotDrive;
 import ftclib.drivebase.FtcSwerveDrive;
 import ftclib.motor.FtcMotorActuator.MotorType;
+import ftclib.sensor.FtcPinpointOdometry;
 import ftclib.sensor.FtcSparkFunOtos;
 import trclib.dataprocessor.TrcUtil;
 import trclib.drivebase.TrcDriveBase;
@@ -154,6 +155,8 @@ public class RobotParams
         public static final boolean showVisionStat              = false;
         // Drive Base
         public static final boolean useDriveBase                = false;
+        public static final boolean usePinpointOdometry         = false;
+        public static final boolean useSparkfunOTOS             = false;
         // Subsystems
         public static final boolean useSubsystems               = false;
     }   //class Preferences
@@ -169,7 +172,7 @@ public class RobotParams
     {
         public FrontCamParams()
         {
-            camName = "WebCam 1";
+            camName = "Webcam 1";
             camImageWidth = 640;
             camImageHeight = 480;
             camXOffset = 0.0;                   // Inches to the right from robot center
@@ -201,7 +204,7 @@ public class RobotParams
     {
         public BackCamParams()
         {
-            camName = "WebCam 2";
+            camName = "Webcam 2";
             camImageWidth = 640;
             camImageHeight = 480;
             camXOffset = 0.0;                   // Inches to the right from robot center
@@ -308,7 +311,28 @@ public class RobotParams
             yOdWheelXOffsets = new double[] {-144.0 * TrcUtil.INCHES_PER_MM, -12.0 * TrcUtil.INCHES_PER_MM};
             yOdWheelYOffsets = new double[] {144.0 * TrcUtil.INCHES_PER_MM, -12.0 * TrcUtil.INCHES_PER_MM};
             // Absolute Odometry
-            absoluteOdometry = null;
+            if (odometryType == TrcDriveBase.OdometryType.AbsoluteOdometry)
+            {
+                if (RobotParams.Preferences.usePinpointOdometry)
+                {
+                    FtcPinpointOdometry.Config ppOdoConfig = new FtcPinpointOdometry.Config()
+                        .setPodOffsets(0.0, 0.0)
+                        .setEncoderResolution(ODWHEEL_CPR / Math.PI * ODWHEEL_DIAMETER)
+                        .setEncodersInverted(false, false);
+                    absoluteOdometry = new FtcPinpointOdometry("pinpointOdo", ppOdoConfig);
+                }
+                else if (RobotParams.Preferences.useSparkfunOTOS)
+                {
+                    FtcSparkFunOtos.Config otosConfig = new FtcSparkFunOtos.Config()
+                        .setOffset(0.0, 0.0, 0.0)
+                        .setScale(1.0, 1.0);
+                    absoluteOdometry = new FtcSparkFunOtos("sparkfunOtos", otosConfig);
+                }
+            }
+            else
+            {
+                absoluteOdometry = null;
+            }
             // Drive Motor Odometry
             yDrivePosScale = 0.02166184604662450653409090909091;        // in/count
             // Robot Drive Characteristics
@@ -380,10 +404,21 @@ public class RobotParams
             // Absolute Odometry
             if (odometryType == TrcDriveBase.OdometryType.AbsoluteOdometry)
             {
-                FtcSparkFunOtos.Config otosConfig = new FtcSparkFunOtos.Config()
-                    .setOffset(0.0, 0.0, 0.0)
-                    .setScale(1.0, 1.0);
-                absoluteOdometry = new FtcSparkFunOtos("SparkfunOtos", otosConfig);
+                if (RobotParams.Preferences.usePinpointOdometry)
+                {
+                    FtcPinpointOdometry.Config ppOdoConfig = new FtcPinpointOdometry.Config()
+                        .setPodOffsets(0.0, 0.0)
+                        .setEncoderResolution(ODWHEEL_CPR / Math.PI * ODWHEEL_DIAMETER)
+                        .setEncodersInverted(false, false);
+                    absoluteOdometry = new FtcPinpointOdometry("pinpointOdo", ppOdoConfig);
+                }
+                else if (RobotParams.Preferences.useSparkfunOTOS)
+                {
+                    FtcSparkFunOtos.Config otosConfig = new FtcSparkFunOtos.Config()
+                        .setOffset(0.0, 0.0, 0.0)
+                        .setScale(1.0, 1.0);
+                    absoluteOdometry = new FtcSparkFunOtos("sparkfunOtos", otosConfig);
+                }
             }
             else
             {
@@ -462,7 +497,28 @@ public class RobotParams
             yOdWheelXOffsets = new double[] {-144.0 * TrcUtil.INCHES_PER_MM, -12.0 * TrcUtil.INCHES_PER_MM};
             yOdWheelYOffsets = new double[] {144.0 * TrcUtil.INCHES_PER_MM, -12.0 * TrcUtil.INCHES_PER_MM};
             // Absolute Odometry
-            absoluteOdometry = null;
+            if (odometryType == TrcDriveBase.OdometryType.AbsoluteOdometry)
+            {
+                if (RobotParams.Preferences.usePinpointOdometry)
+                {
+                    FtcPinpointOdometry.Config ppOdoConfig = new FtcPinpointOdometry.Config()
+                        .setPodOffsets(0.0, 0.0)
+                        .setEncoderResolution(ODWHEEL_CPR / Math.PI * ODWHEEL_DIAMETER)
+                        .setEncodersInverted(false, false);
+                    absoluteOdometry = new FtcPinpointOdometry("pinpointOdo", ppOdoConfig);
+                }
+                else if (RobotParams.Preferences.useSparkfunOTOS)
+                {
+                    FtcSparkFunOtos.Config otosConfig = new FtcSparkFunOtos.Config()
+                        .setOffset(0.0, 0.0, 0.0)
+                        .setScale(1.0, 1.0);
+                    absoluteOdometry = new FtcSparkFunOtos("sparkfunOtos", otosConfig);
+                }
+            }
+            else
+            {
+                absoluteOdometry = null;
+            }
             // Drive Motor Odometry
             xDrivePosScale = 0.01924724265461924299065420560748;        // in/count
             yDrivePosScale = 0.01924724265461924299065420560748;        // in/count
