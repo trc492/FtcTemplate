@@ -148,9 +148,10 @@ public class RobotParams
         public static final boolean useWebCam                   = false;    // false to use Android phone camera.
         public static final boolean useBuiltinCamBack           = false;    // For Android Phone as Robot Controller.
         public static final boolean tuneColorBlobVision         = false;
+        public static final boolean useLimelightVision          = false;
+        public static final boolean useCameraStreamProcessor    = false;
         public static final boolean useAprilTagVision           = false;
         public static final boolean useColorBlobVision          = false;
-        public static final boolean useLimelightVision          = false;
         public static final boolean showVisionView              = !inCompetition;
         public static final boolean showVisionStat              = false;
         // Drive Base

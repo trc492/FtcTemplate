@@ -89,6 +89,8 @@ public class Vision
     private final WebcamName webcam1, webcam2;
     private FtcRawEocvColorBlobPipeline rawColorBlobPipeline;
     public FtcRawEocvVision rawColorBlobVision;
+    public FtcLimelightVision limelightVision;
+    public CameraStreamProcessor cameraStreamProcessor;
     public FtcVisionAprilTag aprilTagVision;
     private AprilTagProcessor aprilTagProcessor;
     public FtcVisionEocvColorBlob redBlobVision;
@@ -96,7 +98,6 @@ public class Vision
     public FtcVisionEocvColorBlob blueBlobVision;
     private FtcEocvColorBlobProcessor blueBlobProcessor;
     public FtcVision vision;
-    public FtcLimelightVision limelightVision;
 
     /**
      * Constructor: Create an instance of the object.
@@ -156,6 +157,14 @@ public class Vision
             }
             // Creating Vision Processors for VisionPortal.
             ArrayList<VisionProcessor> visionProcessorsList = new ArrayList<>();
+
+            if (RobotParams.Preferences.useCameraStreamProcessor)
+            {
+                cameraStreamProcessor = new CameraStreamProcessor();
+                visionProcessorsList.add(cameraStreamProcessor);
+//                FtcDashboard.getInstance().startCameraStream(processor, 0);
+            }
+
             if (RobotParams.Preferences.useAprilTagVision)
             {
                 tracer.traceInfo(moduleName, "Starting AprilTagVision...");
