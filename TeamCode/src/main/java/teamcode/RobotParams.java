@@ -702,8 +702,8 @@ public class RobotParams
         public static final double CLOSE_POS                    = 0.55;
         public static final double CLOSE_TIME                   = 0.5;
 
-        public static final boolean USE_REV_2M_SENSOR           = true;
-        public static final String REV_2M_SENSOR_NAME           = SUBSYSTEM_NAME + ".sensor";
+        public static final boolean USE_ANALOG_SENSOR           = true;
+        public static final String ANALOG_SENSOR_NAME           = SUBSYSTEM_NAME + ".sensor";
         public static final double SENSOR_TRIGGER_THRESHOLD     = 2.0;
         public static final double HAS_OBJECT_THRESHOLD         = 2.0;
         public static final boolean ANALOG_TRIGGER_INVERTED     = true;

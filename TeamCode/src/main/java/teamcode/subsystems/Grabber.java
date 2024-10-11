@@ -36,7 +36,7 @@ import trclib.subsystem.TrcServoGrabber;
  */
 public class Grabber
 {
-    private final Rev2mDistanceSensor rev2mSensor;
+    private final Rev2mDistanceSensor analogSensor;
     private final TrcServoGrabber grabber;
 
     /**
@@ -44,14 +44,14 @@ public class Grabber
      */
     public Grabber()
     {
-        if (RobotParams.Grabber.USE_REV_2M_SENSOR)
+        if (RobotParams.Grabber.USE_ANALOG_SENSOR)
         {
-            rev2mSensor = FtcOpMode.getInstance().hardwareMap.get(
-                Rev2mDistanceSensor.class, RobotParams.Grabber.REV_2M_SENSOR_NAME);
+            analogSensor = FtcOpMode.getInstance().hardwareMap.get(
+                Rev2mDistanceSensor.class, RobotParams.Grabber.ANALOG_SENSOR_NAME);
         }
         else
         {
-            rev2mSensor = null;
+            analogSensor = null;
         }
 
         FtcServoGrabber.Params grabberParams = new FtcServoGrabber.Params()
@@ -60,17 +60,16 @@ public class Grabber
             .setOpenCloseParams(RobotParams.Grabber.OPEN_POS, RobotParams.Grabber.OPEN_TIME,
                                 RobotParams.Grabber.CLOSE_POS, RobotParams.Grabber.CLOSE_TIME);
 
-        if (rev2mSensor != null)
+        if (analogSensor != null)
         {
             grabberParams.setAnalogSensorTrigger(
                 this::getSensorData, RobotParams.Grabber.ANALOG_TRIGGER_INVERTED,
-                RobotParams.Grabber.SENSOR_TRIGGER_THRESHOLD, RobotParams.Grabber.HAS_OBJECT_THRESHOLD,
-                null, false);
+                RobotParams.Grabber.SENSOR_TRIGGER_THRESHOLD, RobotParams.Grabber.HAS_OBJECT_THRESHOLD);
         }
         else if (RobotParams.Grabber.USE_DIGITAL_SENSOR)
         {
             grabberParams.setDigitalInputTrigger(
-                RobotParams.Grabber.DIGITAL_SENSOR_NAME, RobotParams.Grabber.DIGITAL_TRIGGER_INVERTED, null, false);
+                RobotParams.Grabber.DIGITAL_SENSOR_NAME, RobotParams.Grabber.DIGITAL_TRIGGER_INVERTED);
         }
 
         grabber = new FtcServoGrabber(RobotParams.Grabber.SUBSYSTEM_NAME, grabberParams).getGrabber();
@@ -84,9 +83,9 @@ public class Grabber
 
     private double getSensorData()
     {
-        if (rev2mSensor != null)
+        if (analogSensor != null)
         {
-            return rev2mSensor.getDistance(DistanceUnit.INCH);
+            return analogSensor.getDistance(DistanceUnit.INCH);
         }
         else
         {
