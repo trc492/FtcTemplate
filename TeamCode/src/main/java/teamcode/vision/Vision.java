@@ -135,6 +135,11 @@ public class Vision
                 openCvCamera = OpenCvCameraFactory.getInstance().createWebcam(webcam1);
             }
 
+//            if (RobotParams.Preferences.useCameraStreamProcessor)
+//            {
+//                FtcDashboard.getInstance().startCameraStream(openCvCamera, 0);
+//            }
+
             tracer.traceInfo(moduleName, "Starting RawEocvColorBlobVision...");
             rawColorBlobPipeline = new FtcRawEocvColorBlobPipeline(
                 "rawColorBlobPipeline", colorConversion, redBlobColorThresholds, colorBlobFilterContourParams, true);
