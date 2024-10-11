@@ -221,6 +221,7 @@ public class Vision
                         robot.robotInfo.webCam1.camImageWidth, robot.robotInfo.webCam1.camImageHeight,
                         RobotParams.Preferences.showVisionView, RobotParams.Preferences.showVisionStat, visionProcessors);
                 }
+
                 // Disable all vision until they are needed.
                 for (VisionProcessor processor: visionProcessors)
                 {
@@ -383,16 +384,123 @@ public class Vision
     }   //getDetectedRawColorBlob
 
     /**
+     * This method enables/disables Limelight vision for the specified pipeline.
+     *
+     * @param pipelineIndex specifies the limelight pipeline index to be selected, ignore if disabled.
+     * @param enabled specifies true to enable, false to disable.
+     */
+    public void setLimelightVisionEnabled(int pipelineIndex, boolean enabled)
+    {
+        if (limelightVision != null)
+        {
+            if (enabled)
+            {
+                limelightVision.setPipeline(pipelineIndex);
+            }
+            limelightVision.setVisionEnabled(enabled);
+        }
+    }   //setLimelightVisionEnabled
+
+    /**
+     * This method checks if Limelight vision is enabled.
+     *
+     * @return true if enabled, false if disabled.
+     */
+    public boolean isLimelightVisionEnabled()
+    {
+        return limelightVision != null && limelightVision.isVisionEnabled();
+    }   //isLimelightVisionEnabled
+
+    /**
+     * This method calls Limelight vision to detect the object.
+     *
+     * @param resultType specifies the result type to look for.
+     * @param label specifies the detected object label, can be null to match any label.
+     * @param lineNum specifies the dashboard line number to display the detected object info, -1 to disable printing.
+     * @return detected Limelight object info.
+     */
+    public TrcVisionTargetInfo<FtcLimelightVision.DetectedObject> getLimelightDetectedObject(
+        FtcLimelightVision.ResultType resultType, String label, int lineNum)
+    {
+        TrcVisionTargetInfo<FtcLimelightVision.DetectedObject> limelightInfo = null;
+        String objectName = null;
+
+        if (limelightVision != null)
+        {
+            limelightInfo = limelightVision.getBestDetectedTargetInfo(resultType, label, null);
+            if (limelightInfo != null)
+            {
+                objectName = limelightInfo.detectedObj.label;
+            }
+        }
+
+        if (objectName != null && robot.blinkin != null)
+        {
+            robot.blinkin.setDetectedPattern(objectName);
+        }
+
+        if (lineNum != -1)
+        {
+            robot.dashboard.displayPrintf(
+                lineNum, "%s: %s", objectName, limelightInfo != null? limelightInfo: "Not found.");
+        }
+
+        return limelightInfo;
+    }   //getLimelightDetectedObject
+
+    /**
+     * This method enables/disables the Vision Processor.
+     *
+     * @param processor specifies the vision processor to enable/disable.
+     * @param enabled specifies true to enable, false to disable.
+     */
+    public void setVisionProcessorEnabled(VisionProcessor processor, boolean enabled)
+    {
+        if (processor != null)
+        {
+            vision.setProcessorEnabled(processor, enabled);
+        }
+    }   //setVisionProcessorEnabled
+
+    /**
+     * This method checks if the Vision Processor is enabled.
+     *
+     * @param processor specifies the vision processor to enable/disable.
+     * @return true if enabled, false if disabled.
+     */
+    public boolean isVisionProcessorEnabled(VisionProcessor processor)
+    {
+        return processor != null && vision.isVisionProcessorEnabled(processor);
+    }   //isVisionProcessorEnabled
+
+    /**
+     * This method enables/disables the CameraStream processor.
+     *
+     * @param enabled specifies true to enable, false to disable.
+     */
+    public void setCameraStreamEnabled(boolean enabled)
+    {
+        setVisionProcessorEnabled(cameraStreamProcessor, enabled);
+    }   //setCameraStreamEnabled
+
+    /**
+     * This method checks if the CameraStream processor is enabled.
+     *
+     * @return true if enabled, false if disabled.
+     */
+    public boolean isCameraStreamEnabled()
+    {
+        return isVisionProcessorEnabled(cameraStreamProcessor);
+    }   //isAprilTagVisionEnabled
+
+    /**
      * This method enables/disables AprilTag vision.
      *
      * @param enabled specifies true to enable, false to disable.
      */
     public void setAprilTagVisionEnabled(boolean enabled)
     {
-        if (aprilTagProcessor != null)
-        {
-            vision.setProcessorEnabled(aprilTagProcessor, enabled);
-        }
+        setVisionProcessorEnabled(aprilTagProcessor, enabled);
     }   //setAprilTagVisionEnabled
 
     /**
@@ -402,7 +510,7 @@ public class Vision
      */
     public boolean isAprilTagVisionEnabled()
     {
-        return aprilTagProcessor != null && vision.isVisionProcessorEnabled(aprilTagProcessor);
+        return isVisionProcessorEnabled(aprilTagProcessor);
     }   //isAprilTagVisionEnabled
 
     /**
@@ -496,28 +604,16 @@ public class Vision
         switch (colorBlobType)
         {
             case RedBlob:
-                if (redBlobProcessor != null)
-                {
-                    vision.setProcessorEnabled(redBlobProcessor, enabled);
-                }
+                setVisionProcessorEnabled(redBlobProcessor, enabled);
                 break;
 
             case BlueBlob:
-                if (blueBlobProcessor != null)
-                {
-                    vision.setProcessorEnabled(blueBlobProcessor, enabled);
-                }
+                setVisionProcessorEnabled(blueBlobProcessor, enabled);
                 break;
 
             case AnyColorBlob:
-                if (redBlobProcessor != null)
-                {
-                    vision.setProcessorEnabled(redBlobProcessor, enabled);
-                }
-                if (blueBlobProcessor != null)
-                {
-                    vision.setProcessorEnabled(blueBlobProcessor, enabled);
-                }
+                setVisionProcessorEnabled(redBlobProcessor, enabled);
+                setVisionProcessorEnabled(blueBlobProcessor, enabled);
                 break;
         }
     }   //setColorBlobVisionEnabled
@@ -535,17 +631,15 @@ public class Vision
         switch (colorBlobType)
         {
             case RedBlob:
-                enabled = redBlobProcessor != null && vision.isVisionProcessorEnabled(redBlobProcessor);
+                enabled = isVisionProcessorEnabled(redBlobProcessor);
                 break;
 
             case BlueBlob:
-                enabled = blueBlobProcessor != null && vision.isVisionProcessorEnabled(blueBlobProcessor);
+                enabled = isVisionProcessorEnabled(blueBlobProcessor);
                 break;
 
             case AnyColorBlob:
-                enabled =
-                    redBlobProcessor != null && vision.isVisionProcessorEnabled(redBlobProcessor) ||
-                    blueBlobProcessor != null && vision.isVisionProcessorEnabled(blueBlobProcessor);
+                enabled = isVisionProcessorEnabled(redBlobProcessor) || isVisionProcessorEnabled(blueBlobProcessor);
                 break;
         }
 
@@ -622,71 +716,6 @@ public class Vision
 
         return colorBlobInfo;
     }   //getDetectedColorBlob
-
-    /**
-     * This method enables/disables Limelight vision for the specified pipeline.
-     *
-     * @param pipelineIndex specifies the limelight pipeline index to be selected, ignore if disabled.
-     * @param enabled specifies true to enable, false to disable.
-     */
-    public void setLimelightVisionEnabled(int pipelineIndex, boolean enabled)
-    {
-        if (limelightVision != null)
-        {
-            if (enabled)
-            {
-                limelightVision.setPipeline(pipelineIndex);
-            }
-            limelightVision.setVisionEnabled(enabled);
-        }
-    }   //setLimelightVisionEnabled
-
-    /**
-     * This method checks if Limelight vision is enabled.
-     *
-     * @return true if enabled, false if disabled.
-     */
-    public boolean isLimelightVisionEnabled()
-    {
-        return limelightVision != null && limelightVision.isVisionEnabled();
-    }   //isLimelightVisionEnabled
-
-    /**
-     * This method calls Limelight vision to detect the object.
-     *
-     * @param resultType specifies the result type to look for.
-     * @param label specifies the detected object label, can be null to match any label.
-     * @param lineNum specifies the dashboard line number to display the detected object info, -1 to disable printing.
-     * @return detected Limelight object info.
-     */
-    public TrcVisionTargetInfo<FtcLimelightVision.DetectedObject> getLimelightDetectedObject(
-        FtcLimelightVision.ResultType resultType, String label, int lineNum)
-    {
-        TrcVisionTargetInfo<FtcLimelightVision.DetectedObject> limelightInfo = null;
-        String objectName = null;
-
-        if (limelightVision != null)
-        {
-            limelightInfo = limelightVision.getBestDetectedTargetInfo(resultType, label, null);
-            if (limelightInfo != null)
-            {
-                objectName = limelightInfo.detectedObj.label;
-            }
-        }
-
-        if (objectName != null && robot.blinkin != null)
-        {
-            robot.blinkin.setDetectedPattern(objectName);
-        }
-
-        if (lineNum != -1)
-        {
-            robot.dashboard.displayPrintf(
-                lineNum, "%s: %s", objectName, limelightInfo != null? limelightInfo: "Not found.");
-        }
-
-        return limelightInfo;
-    }   //getLimelightDetectedObject
 
     /**
      * This method returns the target Z offset from ground.
