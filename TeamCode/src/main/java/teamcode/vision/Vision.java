@@ -167,7 +167,7 @@ public class Vision
             {
                 cameraStreamProcessor = new CameraStreamProcessor();
                 visionProcessorsList.add(cameraStreamProcessor);
-//                FtcDashboard.getInstance().startCameraStream(processor, 0);
+//                FtcDashboard.getInstance().startCameraStream(cameraStreamProcessor, 0);
             }
 
             if (RobotParams.Preferences.useAprilTagVision)
