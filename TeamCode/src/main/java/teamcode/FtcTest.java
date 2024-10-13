@@ -223,6 +223,7 @@ public class FtcTest extends FtcTeleOp
             case VISION_TEST:
                 if (robot.vision != null)
                 {
+                    robot.vision.setCameraStreamEnabled(true);
                     if (robot.vision.vision != null)
                     {
                         exposure = robot.vision.vision.getCurrentExposure();
@@ -258,6 +259,7 @@ public class FtcTest extends FtcTeleOp
                 if (robot.vision != null && robot.vision.rawColorBlobVision != null)
                 {
                     robot.globalTracer.traceInfo(moduleName, "Enabling FtcRawEocvVision.");
+                    robot.vision.setCameraStreamEnabled(true);
                     robot.vision.setRawColorBlobVisionEnabled(true);
                     colorThresholds = robot.vision.getRawColorBlobThresholds();
                     colorThresholdIndex = 0;

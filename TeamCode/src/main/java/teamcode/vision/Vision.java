@@ -239,7 +239,7 @@ public class Vision
     {
         if (vision != null)
         {
-            vision.getVisionPortal().close();
+            vision.close();
         }
     }   //close
 
@@ -375,6 +375,12 @@ public class Vision
         TrcVisionTargetInfo<TrcOpenCvDetector.DetectedObject<?>> colorBlobInfo =
             rawColorBlobVision != null? rawColorBlobVision.getBestDetectedTargetInfo(null, null, 0.0, 0.0): null;
 
+        if (cameraStreamProcessor != null && colorBlobInfo != null)
+        {
+            cameraStreamProcessor.addRectInfo(
+                colorBlobInfo.detectedObj.label, colorBlobInfo.detectedObj.getRotatedRectVertices());
+        }
+
         if (lineNum != -1)
         {
             robot.dashboard.displayPrintf(
@@ -481,7 +487,10 @@ public class Vision
      */
     public void setCameraStreamEnabled(boolean enabled)
     {
-        setVisionProcessorEnabled(cameraStreamProcessor, enabled);
+        if (vision != null && cameraStreamProcessor != null)
+        {
+            cameraStreamProcessor.setCameraStreamEnabled(vision, enabled);
+        }
     }   //setCameraStreamEnabled
 
     /**
@@ -491,7 +500,7 @@ public class Vision
      */
     public boolean isCameraStreamEnabled()
     {
-        return isVisionProcessorEnabled(cameraStreamProcessor);
+        return cameraStreamProcessor != null && cameraStreamProcessor.isCameraStreamEnabled();
     }   //isAprilTagVisionEnabled
 
     /**
@@ -525,6 +534,13 @@ public class Vision
     {
         TrcVisionTargetInfo<FtcVisionAprilTag.DetectedObject> aprilTagInfo =
             aprilTagVision.getBestDetectedTargetInfo(id, null);
+
+        if (cameraStreamProcessor != null && aprilTagInfo != null)
+        {
+            cameraStreamProcessor.addRectInfo(
+                Integer.toString(aprilTagInfo.detectedObj.aprilTagDetection.id),
+                                 aprilTagInfo.detectedObj.getRotatedRectVertices());
+        }
 
         if (aprilTagInfo != null && robot.blinkin != null)
         {
@@ -702,6 +718,12 @@ public class Vision
                     colorBlobName = colorBlobInfo.detectedObj.label;
                 }
                 break;
+        }
+
+        if (cameraStreamProcessor != null && colorBlobInfo != null)
+        {
+            cameraStreamProcessor.addRectInfo(
+                colorBlobInfo.detectedObj.label, colorBlobInfo.detectedObj.getRotatedRectVertices());
         }
 
         if (colorBlobInfo != null && robot.blinkin != null)
