@@ -35,6 +35,7 @@ import org.openftc.easyopencv.OpenCvCameraFactory;
 import java.util.ArrayList;
 
 import ftclib.robotcore.FtcOpMode;
+import ftclib.vision.FtcCameraStreamProcessor;
 import ftclib.vision.FtcEocvColorBlobProcessor;
 import ftclib.vision.FtcLimelightVision;
 import ftclib.vision.FtcRawEocvColorBlobPipeline;
@@ -90,7 +91,7 @@ public class Vision
     private FtcRawEocvColorBlobPipeline rawColorBlobPipeline;
     public FtcRawEocvVision rawColorBlobVision;
     public FtcLimelightVision limelightVision;
-    public CameraStreamProcessor cameraStreamProcessor;
+    public FtcCameraStreamProcessor cameraStreamProcessor;
     public FtcVisionAprilTag aprilTagVision;
     private AprilTagProcessor aprilTagProcessor;
     public FtcVisionEocvColorBlob redBlobVision;
@@ -165,7 +166,7 @@ public class Vision
 
             if (RobotParams.Preferences.useCameraStreamProcessor)
             {
-                cameraStreamProcessor = new CameraStreamProcessor();
+                cameraStreamProcessor = new FtcCameraStreamProcessor();
                 visionProcessorsList.add(cameraStreamProcessor);
 //                FtcDashboard.getInstance().startCameraStream(cameraStreamProcessor, 0);
             }
