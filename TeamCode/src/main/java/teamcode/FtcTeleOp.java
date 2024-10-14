@@ -425,7 +425,7 @@ public class FtcTeleOp extends FtcOpMode
                     {
                         if (pressed)
                         {
-                            robot.grabber.enableAutoAssist(null, 0.0, null, 0.0);
+                            robot.grabber.autoAssistGrab(null, 0.0, null, 0.0);
                         }
                         else
                         {
