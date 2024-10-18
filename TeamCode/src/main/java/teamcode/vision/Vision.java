@@ -22,6 +22,8 @@
 
 package teamcode.vision;
 
+import com.qualcomm.robotcore.hardware.LED;
+
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -45,7 +47,7 @@ import ftclib.vision.FtcVisionAprilTag;
 import ftclib.vision.FtcVisionEocvColorBlob;
 import teamcode.Robot;
 import teamcode.RobotParams;
-import teamcode.subsystems.BlinkinLEDs;
+import teamcode.subsystems.LEDIndicator;
 import trclib.pathdrive.TrcPose2D;
 import trclib.robotcore.TrcDbgTrace;
 import trclib.vision.TrcOpenCvColorBlobPipeline;
@@ -441,9 +443,9 @@ public class Vision
             }
         }
 
-        if (objectName != null && robot.blinkin != null)
+        if (objectName != null && robot.ledIndicator != null)
         {
-            robot.blinkin.setDetectedPattern(objectName);
+            robot.ledIndicator.setDetectedPattern(objectName);
         }
 
         if (lineNum != -1)
@@ -542,15 +544,15 @@ public class Vision
                                  aprilTagInfo.detectedObj.getRotatedRectVertices());
         }
 
-        if (aprilTagInfo != null && robot.blinkin != null)
+        if (aprilTagInfo != null && robot.ledIndicator != null)
         {
-            robot.blinkin.setDetectedPattern(BlinkinLEDs.APRIL_TAG);
+            robot.ledIndicator.setDetectedPattern(LEDIndicator.APRIL_TAG);
         }
 
         if (lineNum != -1)
         {
             robot.dashboard.displayPrintf(
-                lineNum, "%s: %s", BlinkinLEDs.APRIL_TAG, aprilTagInfo != null? aprilTagInfo : "Not found.");
+                lineNum, "%s: %s", LEDIndicator.APRIL_TAG, aprilTagInfo != null? aprilTagInfo : "Not found.");
         }
 
         return aprilTagInfo;
@@ -681,13 +683,13 @@ public class Vision
             case RedBlob:
                 colorBlobInfo = redBlobVision != null? redBlobVision.getBestDetectedTargetInfo(
                     null, this::compareDistance, 0.0, 0.0): null;
-                colorBlobName = BlinkinLEDs.RED_BLOB;
+                colorBlobName = LEDIndicator.RED_BLOB;
                 break;
 
             case BlueBlob:
                 colorBlobInfo = blueBlobVision != null? blueBlobVision.getBestDetectedTargetInfo(
                     null, this::compareDistance, 0.0, 0.0): null;
-                colorBlobName = BlinkinLEDs.BLUE_BLOB;
+                colorBlobName = LEDIndicator.BLUE_BLOB;
                 break;
 
             case AnyColorBlob:
@@ -726,9 +728,9 @@ public class Vision
                 colorBlobInfo.detectedObj.label, colorBlobInfo.detectedObj.getRotatedRectVertices());
         }
 
-        if (colorBlobInfo != null && robot.blinkin != null)
+        if (colorBlobInfo != null && robot.ledIndicator != null)
         {
-            robot.blinkin.setDetectedPattern(colorBlobName);
+            robot.ledIndicator.setDetectedPattern(colorBlobName);
         }
 
         if (lineNum != -1)

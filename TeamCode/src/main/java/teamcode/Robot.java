@@ -32,10 +32,10 @@ import ftclib.motor.FtcServo;
 import ftclib.robotcore.FtcOpMode;
 import ftclib.sensor.FtcRobotBattery;
 import teamcode.subsystems.Arm;
-import teamcode.subsystems.BlinkinLEDs;
 import teamcode.subsystems.Elevator;
 import teamcode.subsystems.Grabber;
 import teamcode.subsystems.Intake;
+import teamcode.subsystems.LEDIndicator;
 import teamcode.subsystems.RobotBase;
 import teamcode.subsystems.Shooter;
 import teamcode.vision.Vision;
@@ -71,7 +71,7 @@ public class Robot
     // Vision subsystems.
     public Vision vision;
     // Sensors and indicators.
-    public BlinkinLEDs blinkin;
+    public LEDIndicator ledIndicator;
     public FtcRobotBattery battery;
     // Subsystems.
     public FtcDcMotor simpleMotor;
@@ -115,9 +115,9 @@ public class Robot
         if (RobotParams.Preferences.robotType != RobotParams.RobotType.VisionOnly)
         {
             // Create and initialize sensors and indicators.
-            if (robotInfo.blinkinName != null)
+            if (robotInfo.indicatorName != null)
             {
-                blinkin = new BlinkinLEDs(robotInfo.blinkinName);
+                ledIndicator = new LEDIndicator(robotInfo.indicatorName);
             }
 
             if (RobotParams.Preferences.useBatteryMonitor)
