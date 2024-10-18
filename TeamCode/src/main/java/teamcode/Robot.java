@@ -29,7 +29,7 @@ import ftclib.driverio.FtcDashboard;
 import ftclib.driverio.FtcMatchInfo;
 import ftclib.robotcore.FtcOpMode;
 import ftclib.sensor.FtcRobotBattery;
-import teamcode.subsystems.BlinkinLEDs;
+import teamcode.subsystems.LEDIndicator;
 import teamcode.subsystems.RobotBase;
 import teamcode.vision.Vision;
 import trclib.motor.TrcMotor;
@@ -59,7 +59,7 @@ public class Robot
     // Vision subsystems.
     public Vision vision;
     // Sensors and indicators.
-    public BlinkinLEDs blinkin;
+    public LEDIndicator ledIndicator;
     public FtcRobotBattery battery;
     // Subsystems.
 
@@ -95,9 +95,9 @@ public class Robot
         if (RobotParams.Preferences.robotType != RobotParams.RobotType.VisionOnly)
         {
             // Create and initialize sensors and indicators.
-            if (robotInfo.blinkinName != null)
+            if (robotInfo.indicatorName != null)
             {
-                blinkin = new BlinkinLEDs(robotInfo.blinkinName);
+                ledIndicator = new LEDIndicator(robotInfo.indicatorName);
             }
 
             if (RobotParams.Preferences.useBatteryMonitor)

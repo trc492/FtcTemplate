@@ -143,6 +143,8 @@ public class RobotParams
         // Status Update: Status Update may affect robot loop time, don't do it when in competition.
         public static final boolean doStatusUpdate              = !inCompetition;
         public static final boolean showSubsystems              = true;
+        public static final boolean useBlinkinLED               = true;
+        public static final boolean useGobildaLED               = false;
         // Vision
         public static final boolean useVision                   = false;
         public static final boolean useWebCam                   = false;    // false to use Android phone camera.
@@ -362,7 +364,7 @@ public class RobotParams
             webCam2 = new BackCamParams();
             limelight = new LimelightParams();
             // Miscellaneous
-            blinkinName = "blinkin";
+            indicatorName = "blinkin";
         }   //DifferentialParams
     }   //class DifferentialParams
 
@@ -457,7 +459,7 @@ public class RobotParams
             webCam2 = new BackCamParams();
             limelight = new LimelightParams();
             // Miscellaneous
-            blinkinName = "blinkin";
+            indicatorName = "blinkin";
         }   //MecanumParams
     }   //class MecanumParams
 
@@ -549,7 +551,7 @@ public class RobotParams
             webCam2 = new BackCamParams();
             limelight = new LimelightParams();
             // Miscellaneous
-            blinkinName = "blinkin";
+            indicatorName = "blinkin";
             // Steer Encoders
             steerEncoderNames = new String[] {"lfSteerEncoder", "rfSteerEncoder", "lbSteerEncoder", "rbSteerEncoder"};
             steerEncoderInverted = new boolean[] {false, false, false, false};
