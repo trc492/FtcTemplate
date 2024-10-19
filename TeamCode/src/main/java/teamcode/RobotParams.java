@@ -52,7 +52,13 @@ public class RobotParams
      */
     public static class Gobilda
     {
-        // https://www.gobilda.com/5203-series-yellow-jacket-planetary-gear-motor-19-2-1-ratio-24mm-length-8mm-rex-shaft-312-rpm-3-3-5v-encoder/
+        //https://www.gobilda.com/5203-series-yellow-jacket-planetary-gear-motor-71-2-1-ratio-24mm-length-8mm-rex-shaft-84-rpm-3-3-5v-encoder/
+        public static final double MOTOR_5203_84_ENC_PPR        =
+            (((1.0 + 46.0/17.0) * (1.0 + 46.0/17.0) * (1.0 + 46.0/11.0)) * 28.0);
+        public static final double MOTOR_5203_84_MAX_RPM        = 84.0;
+        public static final double MOTOR_5203_84_MAX_VEL_PPS    =
+            MOTOR_5203_84_ENC_PPR * MOTOR_5203_84_MAX_RPM / 60.0;     // 2789.661 pps
+        //https://www.gobilda.com/5203-series-yellow-jacket-planetary-gear-motor-19-2-1-ratio-24mm-length-8mm-rex-shaft-312-rpm-3-3-5v-encoder/
         public static final double MOTOR_5203_312_ENC_PPR       = (((1.0 + 46.0/17.0)*(1.0 + 46.0/11.0))*28.0);
         public static final double MOTOR_5203_312_MAX_RPM       = 312.0;
         public static final double MOTOR_5203_312_MAX_VEL_PPS   =
@@ -143,7 +149,7 @@ public class RobotParams
         // Status Update: Status Update may affect robot loop time, don't do it when in competition.
         public static final boolean doStatusUpdate              = !inCompetition;
         public static final boolean showSubsystems              = true;
-        public static final boolean useBlinkinLED               = true;
+        public static final boolean useBlinkinLED               = false;
         public static final boolean useGobildaLED               = false;
         // Vision
         public static final boolean useVision                   = false;
@@ -269,9 +275,7 @@ public class RobotParams
         public VisionOnlyParams()
         {
             robotName = "VisionOnly";
-            // Front Camera
             webCam1 = new FrontCamParams();
-            // Back Camera
             webCam2 = new BackCamParams();
             limelight = new LimelightParams();
         }   //VisionOnlyParams
