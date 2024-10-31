@@ -184,8 +184,6 @@ public class FtcAuto extends FtcOpMode
 //                robot.vision.setBlueBlobVisionEnabled(true);
 //            }
         }
-
-        robot.zeroCalibrate();
     }   //robotInit
 
     //

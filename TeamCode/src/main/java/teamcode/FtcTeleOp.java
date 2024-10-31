@@ -68,8 +68,6 @@ public class FtcTeleOp extends FtcOpMode
         // Create and initialize robot object.
         //
         robot = new Robot(TrcRobot.getRunMode());
-        drivePowerScale = RobotParams.Robot.DRIVE_NORMAL_SCALE;
-        turnPowerScale = RobotParams.Robot.TURN_NORMAL_SCALE;
 
         //
         // Open trace log.
@@ -86,10 +84,14 @@ public class FtcTeleOp extends FtcOpMode
         //
         driverGamepad = new FtcGamepad("DriverGamepad", gamepad1);
         driverGamepad.setButtonEventHandler(this::driverButtonEvent);
+        driverGamepad.setLeftStickInverted(false, true);
+
         operatorGamepad = new FtcGamepad("OperatorGamepad", gamepad2);
         operatorGamepad.setButtonEventHandler(this::operatorButtonEvent);
-        driverGamepad.setLeftStickInverted(false, true);
         operatorGamepad.setRightStickInverted(false, true);
+
+        drivePowerScale = RobotParams.Robot.DRIVE_NORMAL_SCALE;
+        turnPowerScale = RobotParams.Robot.TURN_NORMAL_SCALE;
         setDriveOrientation(RobotParams.Robot.DRIVE_ORIENTATION);
     }   //robotInit
 
@@ -122,10 +124,18 @@ public class FtcTeleOp extends FtcOpMode
         //
         // Enable AprilTag vision for re-localization.
         //
-        if (robot.vision != null && robot.vision.aprilTagVision != null)
+        if (robot.vision != null)
         {
-            robot.globalTracer.traceInfo(moduleName, "Enabling AprilTagVision.");
-            robot.vision.setAprilTagVisionEnabled(true);
+            if (robot.vision.limelightVision != null)
+            {
+                robot.globalTracer.traceInfo(moduleName, "Enabling Limelight AprilTagVision.");
+                robot.vision.setLimelightVisionEnabled(0, true);
+            }
+            else if (robot.vision.aprilTagVision != null)
+            {
+                robot.globalTracer.traceInfo(moduleName, "Enabling WebCam AprilTagVision.");
+                robot.vision.setAprilTagVisionEnabled(true);
+            }
         }
     }   //startMode
 
@@ -204,6 +214,7 @@ public class FtcTeleOp extends FtcOpMode
             //
             if (RobotParams.Preferences.useSubsystems)
             {
+                // Analog control of subsystems.
             }
             // Display subsystem status.
             if (RobotParams.Preferences.doStatusUpdate)
@@ -249,29 +260,24 @@ public class FtcTeleOp extends FtcOpMode
         switch (button)
         {
             case A:
-                // Toggle between field or robot oriented driving, only applicable for holonomic drive base.
-                if (driverAltFunc)
+                if (robot.robotDrive != null && pressed)
                 {
-                    if (pressed && robot.robotDrive != null)
+                    if (driverAltFunc)
                     {
                         if (robot.robotDrive.driveBase.isGyroAssistEnabled())
                         {
-                            // Disable GyroAssist drive.
                             robot.globalTracer.traceInfo(moduleName, ">>>>> Disabling GyroAssist.");
                             robot.robotDrive.driveBase.setGyroAssistEnabled(null);
                         }
                         else
                         {
-                            // Enable GyroAssist drive.
                             robot.globalTracer.traceInfo(moduleName, ">>>>> Enabling GyroAssist.");
                             robot.robotDrive.driveBase.setGyroAssistEnabled(robot.robotDrive.pidDrive.getTurnPidCtrl());
                         }
                     }
-                }
-                else
-                {
-                    if (pressed && robot.robotDrive != null && robot.robotDrive.driveBase.supportsHolonomicDrive())
+                    else if (robot.robotDrive.driveBase.supportsHolonomicDrive())
                     {
+                        // Toggle between field or robot oriented driving, only applicable for holonomic drive base.
                         if (robot.robotDrive.driveBase.getDriveOrientation() != TrcDriveBase.DriveOrientation.FIELD)
                         {
                             robot.globalTracer.traceInfo(moduleName, ">>>>> Enabling FIELD mode.");
@@ -321,7 +327,7 @@ public class FtcTeleOp extends FtcOpMode
             case Back:
                 if (pressed)
                 {
-                    robot.globalTracer.traceInfo(moduleName, ">>>>> ZeroCalibrate pressed.");
+                    robot.globalTracer.traceInfo(moduleName, ">>>>> ZeroCalibrating.");
                     robot.cancelAll();
                     robot.zeroCalibrate();
                     if (robot.robotDrive != null && robot.robotDrive instanceof FtcSwerveDrive)
@@ -334,7 +340,9 @@ public class FtcTeleOp extends FtcOpMode
                 break;
 
             case Start:
-                if (robot.vision != null && robot.vision.aprilTagVision != null && robot.robotDrive != null)
+                if (robot.vision != null &&
+                    (robot.vision.isLimelightVisionEnabled() || robot.vision.isAprilTagVisionEnabled()) &&
+                    robot.robotDrive != null)
                 {
                     // On press of the button, we will start looking for AprilTag for re-localization.
                     // On release of the button, we will set the robot's field location if we found the AprilTag.
