@@ -287,8 +287,9 @@ public class Robot
     public void cancelAll()
     {
         globalTracer.traceInfo(moduleName, "Cancel all operations.");
-
+        // Cancel subsystems.
         if (robotDrive != null) robotDrive.cancel();
+        // Cancel auto tasks.
     }   //cancelAll
 
     /**
