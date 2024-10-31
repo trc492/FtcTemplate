@@ -29,6 +29,9 @@ import java.util.Locale;
 import ftclib.drivebase.FtcSwerveDrive;
 import ftclib.driverio.FtcGamepad;
 import ftclib.robotcore.FtcOpMode;
+import teamcode.subsystems.Arm;
+import teamcode.subsystems.Elevator;
+import teamcode.subsystems.Intake;
 import trclib.drivebase.TrcDriveBase;
 import trclib.pathdrive.TrcPose2D;
 import trclib.robotcore.TrcDbgTrace;
@@ -75,8 +78,6 @@ public class FtcTeleOp extends FtcOpMode
         // Create and initialize robot object.
         //
         robot = new Robot(TrcRobot.getRunMode());
-        drivePowerScale = RobotParams.Robot.DRIVE_NORMAL_SCALE;
-        turnPowerScale = RobotParams.Robot.TURN_NORMAL_SCALE;
 
         //
         // Open trace log.
@@ -93,10 +94,16 @@ public class FtcTeleOp extends FtcOpMode
         //
         driverGamepad = new FtcGamepad("DriverGamepad", gamepad1);
         driverGamepad.setButtonEventHandler(this::driverButtonEvent);
+        driverGamepad.setLeftStickInverted(false, true);
+        driverGamepad.setRightStickInverted(false, true);
+
         operatorGamepad = new FtcGamepad("OperatorGamepad", gamepad2);
         operatorGamepad.setButtonEventHandler(this::operatorButtonEvent);
-        driverGamepad.setLeftStickInverted(false, true);
+        operatorGamepad.setLeftStickInverted(false, true);
         operatorGamepad.setRightStickInverted(false, true);
+
+        drivePowerScale = RobotParams.Robot.DRIVE_NORMAL_SCALE;
+        turnPowerScale = RobotParams.Robot.TURN_NORMAL_SCALE;
         setDriveOrientation(RobotParams.Robot.DRIVE_ORIENTATION);
     }   //robotInit
 
@@ -129,10 +136,18 @@ public class FtcTeleOp extends FtcOpMode
         //
         // Enable AprilTag vision for re-localization.
         //
-        if (robot.vision != null && robot.vision.aprilTagVision != null)
+        if (robot.vision != null)
         {
-            robot.globalTracer.traceInfo(moduleName, "Enabling AprilTagVision.");
-            robot.vision.setAprilTagVisionEnabled(true);
+            if (robot.vision.limelightVision != null)
+            {
+                robot.globalTracer.traceInfo(moduleName, "Enabling Limelight AprilTagVision.");
+                robot.vision.setLimelightVisionEnabled(0, true);
+            }
+            else if (robot.vision.aprilTagVision != null)
+            {
+                robot.globalTracer.traceInfo(moduleName, "Enabling WebCam AprilTagVision.");
+                robot.vision.setAprilTagVisionEnabled(true);
+            }
         }
     }   //startMode
 
@@ -211,6 +226,7 @@ public class FtcTeleOp extends FtcOpMode
             //
             if (RobotParams.Preferences.useSubsystems)
             {
+                // Analog control of subsystems.
                 if (robot.simpleMotor != null)
                 {
                     double motorPower = driverGamepad.getLeftStickY(true);
@@ -244,7 +260,7 @@ public class FtcTeleOp extends FtcOpMode
                         else
                         {
                             robot.elevator.setPidPower(
-                                elevatorPower, RobotParams.Elevator.MIN_POS, RobotParams.Elevator.MAX_POS, true);
+                                elevatorPower, Elevator.Params.MIN_POS, Elevator.Params.MAX_POS, true);
                         }
                         prevElevatorPower = elevatorPower;
                     }
@@ -262,7 +278,7 @@ public class FtcTeleOp extends FtcOpMode
                         }
                         else
                         {
-                            robot.arm.setPidPower(armPower, RobotParams.Arm.MIN_POS, RobotParams.Arm.MAX_POS, true);
+                            robot.arm.setPidPower(armPower, Arm.Params.MIN_POS, Arm.Params.MAX_POS, true);
                         }
                         prevArmPower = armPower;
                     }
@@ -333,29 +349,24 @@ public class FtcTeleOp extends FtcOpMode
         switch (button)
         {
             case A:
-                // Toggle between field or robot oriented driving, only applicable for holonomic drive base.
-                if (driverAltFunc)
+                if (robot.robotDrive != null && pressed)
                 {
-                    if (pressed && robot.robotDrive != null)
+                    if (driverAltFunc)
                     {
                         if (robot.robotDrive.driveBase.isGyroAssistEnabled())
                         {
-                            // Disable GyroAssist drive.
                             robot.globalTracer.traceInfo(moduleName, ">>>>> Disabling GyroAssist.");
                             robot.robotDrive.driveBase.setGyroAssistEnabled(null);
                         }
                         else
                         {
-                            // Enable GyroAssist drive.
                             robot.globalTracer.traceInfo(moduleName, ">>>>> Enabling GyroAssist.");
                             robot.robotDrive.driveBase.setGyroAssistEnabled(robot.robotDrive.pidDrive.getTurnPidCtrl());
                         }
                     }
-                }
-                else
-                {
-                    if (pressed && robot.robotDrive != null && robot.robotDrive.driveBase.supportsHolonomicDrive())
+                    else if (robot.robotDrive.driveBase.supportsHolonomicDrive())
                     {
+                        // Toggle between field or robot oriented driving, only applicable for holonomic drive base.
                         if (robot.robotDrive.driveBase.getDriveOrientation() != TrcDriveBase.DriveOrientation.FIELD)
                         {
                             robot.globalTracer.traceInfo(moduleName, ">>>>> Enabling FIELD mode.");
@@ -397,8 +408,8 @@ public class FtcTeleOp extends FtcOpMode
                     if (pressed)
                     {
                         robot.intake.autoIntakeForward(
-                            RobotParams.Intake.INTAKE_FORWARD_POWER, RobotParams.Intake.RETAIN_POWER,
-                            RobotParams.Intake.FINISH_DELAY);
+                            Intake.Params.INTAKE_FORWARD_POWER, Intake.Params.RETAIN_POWER,
+                            Intake.Params.FINISH_DELAY);
                     }
                     else
                     {
@@ -425,7 +436,7 @@ public class FtcTeleOp extends FtcOpMode
                     {
                         if (pressed)
                         {
-                            robot.grabber.autoAssistGrab(null, 0.0, null, 0.0);
+                            robot.grabber.autoGrab(null, 0.0, null, 0.0);
                         }
                         else
                         {
@@ -464,14 +475,14 @@ public class FtcTeleOp extends FtcOpMode
                 {
                     if (pressed)
                     {
-                        robot.elevator.presetPositionUp(null, RobotParams.Elevator.POWER_LIMIT);
+                        robot.elevator.presetPositionUp(null, Elevator.Params.POWER_LIMIT);
                     }
                 }
                 else if (robot.arm != null)
                 {
                     if (pressed)
                     {
-                        robot.arm.presetPositionUp(null, RobotParams.Arm.POWER_LIMIT);
+                        robot.arm.presetPositionUp(null, Arm.Params.POWER_LIMIT);
                     }
                 }
                 else if (robot.shooter != null)
@@ -488,14 +499,14 @@ public class FtcTeleOp extends FtcOpMode
                 {
                     if (pressed)
                     {
-                        robot.elevator.presetPositionDown(null, RobotParams.Elevator.POWER_LIMIT);
+                        robot.elevator.presetPositionDown(null, Elevator.Params.POWER_LIMIT);
                     }
                 }
                 else if (robot.arm != null)
                 {
                     if (pressed)
                     {
-                        robot.arm.presetPositionDown(null, RobotParams.Arm.POWER_LIMIT);
+                        robot.arm.presetPositionDown(null, Arm.Params.POWER_LIMIT);
                     }
                 }
                 else if (robot.shooter != null)
@@ -530,7 +541,7 @@ public class FtcTeleOp extends FtcOpMode
             case Back:
                 if (pressed)
                 {
-                    robot.globalTracer.traceInfo(moduleName, ">>>>> ZeroCalibrate pressed.");
+                    robot.globalTracer.traceInfo(moduleName, ">>>>> ZeroCalibrating.");
                     robot.cancelAll();
                     robot.zeroCalibrate();
                     if (robot.robotDrive != null && robot.robotDrive instanceof FtcSwerveDrive)
@@ -543,7 +554,9 @@ public class FtcTeleOp extends FtcOpMode
                 break;
 
             case Start:
-                if (robot.vision != null && robot.vision.aprilTagVision != null && robot.robotDrive != null)
+                if (robot.vision != null &&
+                    (robot.vision.isLimelightVisionEnabled() || robot.vision.isAprilTagVisionEnabled()) &&
+                    robot.robotDrive != null)
                 {
                     // On press of the button, we will start looking for AprilTag for re-localization.
                     // On release of the button, we will set the robot's field location if we found the AprilTag.

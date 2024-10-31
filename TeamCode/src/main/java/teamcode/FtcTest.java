@@ -37,7 +37,7 @@ import ftclib.driverio.FtcMenu;
 import ftclib.driverio.FtcValueMenu;
 import ftclib.robotcore.FtcPidCoeffCache;
 import ftclib.vision.FtcLimelightVision;
-import teamcode.vision.Vision;
+import teamcode.subsystems.Vision;
 import trclib.command.CmdDriveMotorsTest;
 import trclib.command.CmdPidDrive;
 import trclib.command.CmdTimedDrive;
@@ -126,6 +126,7 @@ public class FtcTest extends FtcTeleOp
     // Drive Speed Test.
     private double maxDriveVelocity = 0.0;
     private double maxDriveAcceleration = 0.0;
+    private double maxTurnVelocity = 0.0;
     private double prevTime = 0.0;
     private double prevVelocity = 0.0;
     // Swerve Steering Calibration.
@@ -395,12 +396,19 @@ public class FtcTest extends FtcTeleOp
                         maxDriveAcceleration = acceleration;
                     }
 
+                    if (velPose.angle > maxTurnVelocity)
+                    {
+                        maxTurnVelocity = velPose.angle;
+                    }
+
                     prevTime = currTime;
                     prevVelocity = velocity;
 
                     robot.dashboard.displayPrintf(lineNum++, "Drive Vel: (%.1f/%.1f)", velocity, maxDriveVelocity);
                     robot.dashboard.displayPrintf(
                         lineNum++, "Drive Accel: (%.1f/%.1f)", acceleration, maxDriveAcceleration);
+                    robot.dashboard.displayPrintf(
+                        lineNum++, "Turn Vel: (%.1f/%.1f)", velPose.angle, maxTurnVelocity);
                 }
                 break;
         }

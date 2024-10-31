@@ -61,12 +61,12 @@ public class LEDIndicator
                 // Highest priority.
                 new TrcGobildaIndicatorLight.Pattern(RED_BLOB, TrcGobildaIndicatorLight.Color.Red),
                 new TrcGobildaIndicatorLight.Pattern(BLUE_BLOB, TrcGobildaIndicatorLight.Color.Blue),
-                new TrcGobildaIndicatorLight.Pattern(NO_BLOB, TrcGobildaIndicatorLight.Color.Azure),
+                new TrcGobildaIndicatorLight.Pattern(NO_BLOB, TrcGobildaIndicatorLight.Color.Cyan),
                 new TrcGobildaIndicatorLight.Pattern(APRIL_TAG, TrcGobildaIndicatorLight.Color.Green),
                 new TrcGobildaIndicatorLight.Pattern(DRIVE_ORIENTATION_FIELD, TrcGobildaIndicatorLight.Color.Violet),
                 new TrcGobildaIndicatorLight.Pattern(DRIVE_ORIENTATION_ROBOT, TrcGobildaIndicatorLight.Color.White),
                 new TrcGobildaIndicatorLight.Pattern(DRIVE_ORIENTATION_INVERTED, TrcGobildaIndicatorLight.Color.Orange),
-                new TrcGobildaIndicatorLight.Pattern(OFF_PATTERN, TrcGobildaIndicatorLight.Color.Off)
+                new TrcGobildaIndicatorLight.Pattern(OFF_PATTERN, TrcGobildaIndicatorLight.Color.Black)
                 // Lowest priority.
             };
             indicator = new FtcGobildaIndicatorLight(indicatorName);

@@ -78,15 +78,6 @@ public class TaskAuto extends TrcAutoTask<TaskAuto.State>
         startAutoTask(State.START, new TaskParams(), completionEvent);
     }   //autoAssist
 
-    /**
-     * This method cancels an in progress auto-assist operation if any.
-     */
-    public void autoAssistCancel()
-    {
-        tracer.traceInfo(moduleName, "Canceling auto-assist.");
-        stopAutoTask(false);
-    }   //autoAssistCancel
-
     //
     // Implement TrcAutoTask abstract methods.
     //

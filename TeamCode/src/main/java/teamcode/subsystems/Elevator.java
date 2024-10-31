@@ -23,14 +23,43 @@
 package teamcode.subsystems;
 
 import ftclib.motor.FtcMotorActuator;
-import teamcode.RobotParams;
 import trclib.motor.TrcMotor;
+import trclib.robotcore.TrcPidController;
 
 /**
  * This class implements an Elevator Subsystem.
  */
 public class Elevator
 {
+    public static final class Params
+    {
+        public static final String SUBSYSTEM_NAME               = "Elevator";
+
+        public static final String MOTOR_NAME                   = SUBSYSTEM_NAME + ".motor";
+        public static final FtcMotorActuator.MotorType MOTOR_TYPE= FtcMotorActuator.MotorType.DcMotor;
+
+        public static final boolean MOTOR_INVERTED              = true;
+        public static final double INCHES_PER_COUNT             = 18.25/4941.0;
+        public static final double POS_OFFSET                   = 10.875;
+        public static final double POWER_LIMIT                  = 1.0;
+        public static final double ZERO_CAL_POWER               = -0.25;
+
+        public static final double MIN_POS                      = POS_OFFSET;
+        public static final double MAX_POS                      = 30.25;
+        public static final double[] posPresets                 = {MIN_POS, 15.0, 20.0, 25.0, 30.0};
+        public static final double POS_PRESET_TOLERANCE         = 1.0;
+
+        public static final boolean SOFTWARE_PID_ENABLED        = true;
+        public static final TrcPidController.PidCoefficients posPidCoeffs =
+            new TrcPidController.PidCoefficients(1.0, 0.0, 0.0, 0.0, 0.0);
+        public static final double POS_PID_TOLERANCE            = 0.1;
+        public static final double GRAVITY_COMP_POWER           = 0.0;
+        public static final double STALL_MIN_POWER              = Math.abs(ZERO_CAL_POWER);
+        public static final double STALL_TOLERANCE              = 0.1;
+        public static final double STALL_TIMEOUT                = 0.1;
+        public static final double STALL_RESET_TIMEOUT          = 0.0;
+    }   //class Params
+
     private final TrcMotor elevatorMotor;
 
     /**
@@ -39,18 +68,15 @@ public class Elevator
     public Elevator()
     {
         FtcMotorActuator.Params motorParams = new FtcMotorActuator.Params()
-            .setPrimaryMotor(RobotParams.Elevator.MOTOR_NAME, RobotParams.Elevator.MOTOR_TYPE,
-                             RobotParams.Elevator.MOTOR_INVERTED)
-            .setPositionScaleAndOffset(RobotParams.Elevator.INCHES_PER_COUNT, RobotParams.Elevator.POS_OFFSET)
-            .setPositionPresets(RobotParams.Elevator.POS_PRESET_TOLERANCE, RobotParams.Elevator.posPresets);
+            .setPrimaryMotor(Params.MOTOR_NAME, Params.MOTOR_TYPE, Params.MOTOR_INVERTED)
+            .setPositionScaleAndOffset(Params.INCHES_PER_COUNT, Params.POS_OFFSET)
+            .setPositionPresets(Params.POS_PRESET_TOLERANCE, Params.posPresets);
         elevatorMotor = new FtcMotorActuator(motorParams).getMotor();
-        elevatorMotor.setSoftwarePidEnabled(RobotParams.Elevator.SOFTWARE_PID_ENABLED);
-        elevatorMotor.setPositionPidParameters(
-            RobotParams.Elevator.posPidCoeffs, RobotParams.Elevator.POS_PID_TOLERANCE);
+        elevatorMotor.setSoftwarePidEnabled(Params.SOFTWARE_PID_ENABLED);
+        elevatorMotor.setPositionPidParameters(Params.posPidCoeffs, Params.POS_PID_TOLERANCE);
         // elevatorMotor.setPositionPidPowerComp(this::getGravityComp);
         elevatorMotor.setStallProtection(
-            RobotParams.Elevator.STALL_MIN_POWER, RobotParams.Elevator.STALL_TOLERANCE,
-            RobotParams.Elevator.STALL_TIMEOUT, RobotParams.Elevator.STALL_RESET_TIMEOUT);
+            Params.STALL_MIN_POWER, Params.STALL_TOLERANCE, Params.STALL_TIMEOUT, Params.STALL_RESET_TIMEOUT);
     }
 
     public TrcMotor getElevatorMotor()

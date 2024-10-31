@@ -28,7 +28,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import ftclib.robotcore.FtcOpMode;
 import ftclib.subsystem.FtcServoGrabber;
-import teamcode.RobotParams;
 import trclib.subsystem.TrcServoGrabber;
 
 /**
@@ -36,6 +35,31 @@ import trclib.subsystem.TrcServoGrabber;
  */
 public class Grabber
 {
+    public static final class Params
+    {
+        public static final String SUBSYSTEM_NAME               = "Grabber";
+
+        public static final String PRIMARY_SERVO_NAME           = SUBSYSTEM_NAME + ".primary";
+        public static final boolean PRIMARY_SERVO_INVERTED      = false;
+
+        public static final String FOLLOWER_SERVO_NAME          = SUBSYSTEM_NAME + ".follower";
+        public static final boolean FOLLOWER_SERVO_INVERTED     = !PRIMARY_SERVO_INVERTED;
+
+        public static final double OPEN_POS                     = 0.2;
+        public static final double OPEN_TIME                    = 0.5;
+        public static final double CLOSE_POS                    = 0.55;
+        public static final double CLOSE_TIME                   = 0.5;
+
+        public static final boolean USE_ANALOG_SENSOR           = true;
+        public static final String ANALOG_SENSOR_NAME           = SUBSYSTEM_NAME + ".sensor";
+        public static final double SENSOR_TRIGGER_THRESHOLD     = 2.0;
+        public static final boolean ANALOG_TRIGGER_INVERTED     = true;
+
+        public static final boolean USE_DIGITAL_SENSOR          = false;
+        public static final String DIGITAL_SENSOR_NAME          = SUBSYSTEM_NAME + ".sensor";
+        public static final boolean DIGITAL_TRIGGER_INVERTED    = false;
+    }   //class Params
+
     private final Rev2mDistanceSensor analogSensor;
     private final TrcServoGrabber grabber;
 
@@ -44,10 +68,10 @@ public class Grabber
      */
     public Grabber()
     {
-        if (RobotParams.Grabber.USE_ANALOG_SENSOR)
+        if (Params.USE_ANALOG_SENSOR)
         {
             analogSensor = FtcOpMode.getInstance().hardwareMap.get(
-                Rev2mDistanceSensor.class, RobotParams.Grabber.ANALOG_SENSOR_NAME);
+                Rev2mDistanceSensor.class, Params.ANALOG_SENSOR_NAME);
         }
         else
         {
@@ -55,24 +79,21 @@ public class Grabber
         }
 
         FtcServoGrabber.Params grabberParams = new FtcServoGrabber.Params()
-            .setPrimaryServo(RobotParams.Grabber.PRIMARY_SERVO_NAME, RobotParams.Grabber.PRIMARY_SERVO_INVERTED)
-            .setFollowerServo(RobotParams.Grabber.FOLLOWER_SERVO_NAME, RobotParams.Grabber.FOLLOWER_SERVO_INVERTED)
-            .setOpenCloseParams(RobotParams.Grabber.OPEN_POS, RobotParams.Grabber.OPEN_TIME,
-                                RobotParams.Grabber.CLOSE_POS, RobotParams.Grabber.CLOSE_TIME);
+            .setPrimaryServo(Params.PRIMARY_SERVO_NAME, Params.PRIMARY_SERVO_INVERTED)
+            .setFollowerServo(Params.FOLLOWER_SERVO_NAME, Params.FOLLOWER_SERVO_INVERTED)
+            .setOpenCloseParams(Params.OPEN_POS, Params.OPEN_TIME, Params.CLOSE_POS, Params.CLOSE_TIME);
 
         if (analogSensor != null)
         {
             grabberParams.setAnalogSensorTrigger(
-                this::getSensorData, RobotParams.Grabber.ANALOG_TRIGGER_INVERTED,
-                RobotParams.Grabber.SENSOR_TRIGGER_THRESHOLD, RobotParams.Grabber.HAS_OBJECT_THRESHOLD);
+                this::getSensorData, Params.ANALOG_TRIGGER_INVERTED, Params.SENSOR_TRIGGER_THRESHOLD);
         }
-        else if (RobotParams.Grabber.USE_DIGITAL_SENSOR)
+        else if (Params.USE_DIGITAL_SENSOR)
         {
-            grabberParams.setDigitalInputTrigger(
-                RobotParams.Grabber.DIGITAL_SENSOR_NAME, RobotParams.Grabber.DIGITAL_TRIGGER_INVERTED);
+            grabberParams.setDigitalInputTrigger(Params.DIGITAL_SENSOR_NAME, Params.DIGITAL_TRIGGER_INVERTED);
         }
 
-        grabber = new FtcServoGrabber(RobotParams.Grabber.SUBSYSTEM_NAME, grabberParams).getGrabber();
+        grabber = new FtcServoGrabber(Params.SUBSYSTEM_NAME, grabberParams).getGrabber();
         grabber.open();
     }
 
