@@ -22,6 +22,8 @@
 
 package teamcode.autotasks;
 
+import androidx.annotation.NonNull;
+
 import teamcode.Robot;
 import trclib.robotcore.TrcAutoTask;
 import trclib.robotcore.TrcEvent;
@@ -47,6 +49,12 @@ public class TaskAuto extends TrcAutoTask<TaskAuto.State>
         TaskParams()
         {
         }   //TaskParams
+
+        @NonNull
+        public String toString()
+        {
+            return "";
+        }   //toString
     }   //class TaskParams
 
     private final String ownerName;
@@ -74,8 +82,9 @@ public class TaskAuto extends TrcAutoTask<TaskAuto.State>
      */
     public void autoAssist(TrcEvent completionEvent)
     {
-        tracer.traceInfo(moduleName, "event=" + completionEvent);
-        startAutoTask(State.START, new TaskParams(), completionEvent);
+        TaskParams taskParams = new TaskParams();
+        tracer.traceInfo(moduleName, "taskParams=(" + taskParams + ", event=" + completionEvent);
+        startAutoTask(State.START, taskParams, completionEvent);
     }   //autoAssist
 
     //
