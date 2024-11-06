@@ -577,11 +577,15 @@ public class FtcTest extends FtcTeleOp
                     }
                     passToTeleOp = false;
                 }
-                else if (testChoices.test == Test.VISION_TEST && pressed)
+                else if (testChoices.test == Test.VISION_TEST)
                 {
-                    fpsMeterEnabled = !fpsMeterEnabled;
-                    robot.vision.setFpsMeterEnabled(fpsMeterEnabled);
-                    robot.globalTracer.traceInfo(moduleName, "fpsMeterEnabled = %s", fpsMeterEnabled);
+                    if (pressed)
+                    {
+                        fpsMeterEnabled = !fpsMeterEnabled;
+                        robot.vision.setFpsMeterEnabled(fpsMeterEnabled);
+                        robot.globalTracer.traceInfo(moduleName, "fpsMeterEnabled = %s", fpsMeterEnabled);
+                    }
+                    passToTeleOp = false;
                 }
                 break;
 
