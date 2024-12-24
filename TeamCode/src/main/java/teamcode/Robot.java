@@ -31,11 +31,13 @@ import ftclib.robotcore.FtcOpMode;
 import ftclib.sensor.FtcRobotBattery;
 import teamcode.subsystems.LEDIndicator;
 import teamcode.subsystems.RobotBase;
+import teamcode.subsystems.RumbleIndicator;
 import teamcode.subsystems.Vision;
 import trclib.motor.TrcMotor;
 import trclib.motor.TrcServo;
 import trclib.pathdrive.TrcPose2D;
 import trclib.robotcore.TrcDbgTrace;
+import trclib.robotcore.TrcEvent;
 import trclib.robotcore.TrcRobot;
 import trclib.sensor.TrcDigitalInput;
 import trclib.timer.TrcTimer;
@@ -60,6 +62,8 @@ public class Robot
     public Vision vision;
     // Sensors and indicators.
     public LEDIndicator ledIndicator;
+    public RumbleIndicator driverRumble;
+    public RumbleIndicator operatorRumble;
     public FtcRobotBattery battery;
     // Subsystems.
     // Autotasks.
@@ -201,15 +205,21 @@ public class Robot
         if (vision != null)
         {
             vision.setCameraStreamEnabled(false);
-            if (vision.rawColorBlobVision != null)
+            if (vision.isRawColorBlobVisionEnabled())
             {
                 globalTracer.traceInfo(moduleName, "Disabling RawColorBlobVision.");
                 vision.setRawColorBlobVisionEnabled(false);
             }
 
-            if (vision.aprilTagVision != null)
+            if (vision.isLimelightVisionEnabled())
             {
-                globalTracer.traceInfo(moduleName, "Disabling AprilTagVision.");
+                globalTracer.traceInfo(moduleName, "Disabling LimelightVision.");
+                vision.setLimelightVisionEnabled(0, false);
+            }
+
+            if (vision.isAprilTagVisionEnabled())
+            {
+                globalTracer.traceInfo(moduleName, "Disabling Webcam AprilTagVision.");
                 vision.setAprilTagVisionEnabled(false);
             }
 
@@ -296,8 +306,9 @@ public class Robot
      * This method zero calibrates all subsystems.
      *
      * @param owner specifies the owner ID to check if the caller has ownership of the motor.
+     * @param event specifies the event to signal when the zero calibration is done.
      */
-    public void zeroCalibrate(String owner)
+    public void zeroCalibrate(String owner, TrcEvent event)
     {
     }   //zeroCalibrate
 
@@ -306,7 +317,7 @@ public class Robot
      */
     public void zeroCalibrate()
     {
-        zeroCalibrate(null);
+        zeroCalibrate(null, null);
     }   //zeroCalibrate
 
     /**
@@ -372,7 +383,7 @@ public class Robot
      */
     public TrcPose2D adjustPoseByAlliance(double x, double y, double heading, FtcAuto.Alliance alliance)
     {
-        return adjustPoseByAlliance(x, y, heading, alliance, true);
+        return adjustPoseByAlliance(x, y, heading, alliance, false);
     }   //adjustPoseByAlliance
 
     /**
@@ -391,13 +402,13 @@ public class Robot
     /**
      * This method adjusts the given pose in the red alliance to be the specified alliance.
      *
-     * @param pose specifies pose in the blue alliance in tile unit.
+     * @param pose specifies pose in the red alliance in tile unit.
      * @param alliance specifies the alliance to be converted to.
      * @return pose adjusted to be in the specified alliance in inches.
      */
     public TrcPose2D adjustPoseByAlliance(TrcPose2D pose, FtcAuto.Alliance alliance)
     {
-        return adjustPoseByAlliance(pose, alliance, true);
+        return adjustPoseByAlliance(pose, alliance, false);
     }   //adjustPoseByAlliance
 
     /**

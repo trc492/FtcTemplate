@@ -30,7 +30,7 @@ import trclib.driverio.TrcGameController.DriveMode;
 import trclib.pathdrive.TrcPose2D;
 
 /**
- * This class contains robot and subsystem constants and parameters.
+ * This class contains robot constants and parameters.
  */
 public class RobotParams
 {
@@ -54,6 +54,7 @@ public class RobotParams
         public static final boolean showSubsystems              = true;
         public static final boolean useBlinkinLED               = false;
         public static final boolean useGobildaLED               = false;
+        public static final boolean useRumble                   = false;
         // Vision
         public static final boolean useVision                   = false;
         public static final boolean useWebCam                   = false;    // false to use Android phone camera.
@@ -63,7 +64,6 @@ public class RobotParams
         public static final boolean useCameraStreamProcessor    = false;
         public static final boolean useAprilTagVision           = false;
         public static final boolean useColorBlobVision          = false;
-        public static final boolean doWatershed                 = false;
         public static final boolean showVisionView              = !inCompetition;
         public static final boolean showVisionStat              = false;
         // Drive Base
@@ -110,6 +110,11 @@ public class RobotParams
             new TrcPose2D(0.0, 0.0, 0.0)    // TagId 4
         };
         // Robot start locations.
+        // Game elapsed times.
+        public static final double AUTO_PERIOD                      = 30.0;     // 30 seconds auto period
+        public static final double TELEOP_PERIOD                    = 120.0;    // 2 minutes teleop period
+        public static final double PARKING_TIME                     = 10.0;
+        public static final double ENDGAME_DEADLINE                 = TELEOP_PERIOD - PARKING_TIME;
     }   //class Game
 
     /**

@@ -29,6 +29,7 @@ import java.util.Locale;
 import ftclib.drivebase.FtcSwerveDrive;
 import ftclib.driverio.FtcGamepad;
 import ftclib.robotcore.FtcOpMode;
+import teamcode.subsystems.RumbleIndicator;
 import trclib.drivebase.TrcDriveBase;
 import trclib.pathdrive.TrcPose2D;
 import trclib.robotcore.TrcDbgTrace;
@@ -38,7 +39,7 @@ import trclib.timer.TrcTimer;
 /**
  * This class contains the TeleOp Mode program.
  */
-@TeleOp(name="FtcTeleOp", group="Ftcxxxx")
+@TeleOp(name="FtcTeleOp", group="FtcTeam")
 public class FtcTeleOp extends FtcOpMode
 {
     private final String moduleName = getClass().getSimpleName();
@@ -50,6 +51,7 @@ public class FtcTeleOp extends FtcOpMode
     private double turnPowerScale;
     private boolean driverAltFunc = false;
     private boolean operatorAltFunc = false;
+    private boolean statusUpdateOn = false;
     private boolean relocalizing = false;
     private TrcPose2D robotFieldPose = null;
 
@@ -85,10 +87,18 @@ public class FtcTeleOp extends FtcOpMode
         driverGamepad = new FtcGamepad("DriverGamepad", gamepad1);
         driverGamepad.setButtonEventHandler(this::driverButtonEvent);
         driverGamepad.setLeftStickInverted(false, true);
+        driverGamepad.setRightStickInverted(false, true);
 
         operatorGamepad = new FtcGamepad("OperatorGamepad", gamepad2);
         operatorGamepad.setButtonEventHandler(this::operatorButtonEvent);
+        operatorGamepad.setLeftStickInverted(false, true);
         operatorGamepad.setRightStickInverted(false, true);
+
+        if (RobotParams.Preferences.useRumble)
+        {
+            robot.driverRumble = new RumbleIndicator("DriverRumble", driverGamepad);
+            robot.operatorRumble = new RumbleIndicator("OperatorRumble", operatorGamepad);
+        }
 
         drivePowerScale = RobotParams.Robot.DRIVE_NORMAL_SCALE;
         turnPowerScale = RobotParams.Robot.TURN_NORMAL_SCALE;
@@ -208,6 +218,19 @@ public class FtcTeleOp extends FtcOpMode
                         1, "RobotDrive: Power=(%.2f,y=%.2f,rot=%.2f),Mode:%s",
                         inputs[0], inputs[1], inputs[2], robot.robotDrive.driveBase.getDriveOrientation());
                 }
+                // Check for EndGame warning.
+                if (elapsedTime > RobotParams.Game.ENDGAME_DEADLINE)
+                {
+                    if (robot.driverRumble != null)
+                    {
+                        robot.driverRumble.setRumblePattern(RumbleIndicator.ENDGAME_DEADLINE);
+                    }
+
+                    if (robot.operatorRumble != null)
+                    {
+                        robot.operatorRumble.setRumblePattern(RumbleIndicator.ENDGAME_DEADLINE);
+                    }
+                }
             }
             //
             // Other subsystems.
@@ -217,7 +240,7 @@ public class FtcTeleOp extends FtcOpMode
                 // Analog control of subsystems.
             }
             // Display subsystem status.
-            if (RobotParams.Preferences.doStatusUpdate)
+            if (RobotParams.Preferences.doStatusUpdate || statusUpdateOn)
             {
                 robot.updateStatus(2);
             }
@@ -294,7 +317,14 @@ public class FtcTeleOp extends FtcOpMode
 
             case B:
             case X:
+                break;
+
             case Y:
+                if (driverAltFunc && pressed)
+                {
+                    robot.globalTracer.traceInfo(moduleName, ">>>>> Cancel all.");
+                    robot.cancelAll();
+                }
                 break;
 
             case LeftBumper:
@@ -303,18 +333,29 @@ public class FtcTeleOp extends FtcOpMode
                 break;
 
             case RightBumper:
-                // Press and hold for slow drive.
-                if (pressed)
+                if (driverAltFunc)
                 {
-                    robot.globalTracer.traceInfo(moduleName, ">>>>> DrivePower slow.");
-                    drivePowerScale = RobotParams.Robot.DRIVE_SLOW_SCALE;
-                    turnPowerScale = RobotParams.Robot.TURN_SLOW_SCALE;
+                    if (!RobotParams.Preferences.doStatusUpdate)
+                    {
+                        // Toggle status update ON/OFF.
+                        statusUpdateOn = !statusUpdateOn;
+                    }
                 }
                 else
                 {
-                    robot.globalTracer.traceInfo(moduleName, ">>>>> DrivePower normal.");
-                    drivePowerScale = RobotParams.Robot.DRIVE_NORMAL_SCALE;
-                    turnPowerScale = RobotParams.Robot.TURN_NORMAL_SCALE;
+                    // Press and hold for slow drive.
+                    if (pressed)
+                    {
+                        robot.globalTracer.traceInfo(moduleName, ">>>>> DrivePower slow.");
+                        drivePowerScale = RobotParams.Robot.DRIVE_SLOW_SCALE;
+                        turnPowerScale = RobotParams.Robot.TURN_SLOW_SCALE;
+                    }
+                    else
+                    {
+                        robot.globalTracer.traceInfo(moduleName, ">>>>> DrivePower normal.");
+                        drivePowerScale = RobotParams.Robot.DRIVE_NORMAL_SCALE;
+                        turnPowerScale = RobotParams.Robot.TURN_NORMAL_SCALE;
+                    }
                 }
                 break;
 
@@ -401,9 +442,9 @@ public class FtcTeleOp extends FtcOpMode
                 if (pressed)
                 {
                     // Zero calibrate all subsystems (arm, elevator and turret).
-                    robot.globalTracer.traceInfo(moduleName, ">>>>> ZeroCalibrate pressed.");
+                    robot.globalTracer.traceInfo(moduleName, ">>>>> ZeroCalibrating.");
                     robot.cancelAll();
-                    robot.zeroCalibrate(moduleName);
+                    robot.zeroCalibrate(moduleName, null);
                 }
                 break;
 

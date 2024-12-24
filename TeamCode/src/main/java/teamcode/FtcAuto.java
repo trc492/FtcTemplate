@@ -43,7 +43,7 @@ import trclib.timer.TrcTimer;
 /**
  * This class contains the Autonomous Mode program.
  */
-@Autonomous(name="FtcAutonomous", group="Ftcxxxx")
+@Autonomous(name="FtcAutonomous", group="FtcTeam")
 public class FtcAuto extends FtcOpMode
 {
     private final String moduleName = getClass().getSimpleName();
@@ -73,9 +73,9 @@ public class FtcAuto extends FtcOpMode
     public static class AutoChoices
     {
         public double delay = 0.0;
-        public Alliance alliance = Alliance.RED_ALLIANCE;
-        public StartPos startPos = StartPos.LEFT;
-        public AutoStrategy strategy = AutoStrategy.DO_NOTHING;
+        public Alliance alliance = null;
+        public StartPos startPos = null;
+        public AutoStrategy strategy = null;
         public double xTarget = 0.0;
         public double yTarget = 0.0;
         public double turnTarget = 0.0;
@@ -192,7 +192,8 @@ public class FtcAuto extends FtcOpMode
 
     /**
      * This method is called periodically after robotInit() is called but before competition starts. For example,
-     * we can put vision code here to detect target before autonomous starts.
+     * we can put vision code here to detect target before autonomous starts, or code to move the subsystems to a
+     * particular configuration to be within the 18-inch starting restriction.
      */
     @Override
     public void initPeriodic()
