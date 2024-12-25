@@ -162,10 +162,10 @@ public class FtcAuto extends FtcOpMode
                 break;
         }
 
-        if (robot.vision != null)
-        {
-            // Enabling vision early so we can detect target before match starts if necessary.
-            // Only enable the necessary vision for that purpose.
+//        if (robot.vision != null)
+//        {
+//            // Enabling vision early so we can detect target before match starts if necessary.
+//            // Only enable the necessary vision for that purpose.
 //            if (robot.vision.aprilTagVision != null)
 //            {
 //                robot.globalTracer.traceInfo(moduleName, "Enabling AprilTagVision.");
@@ -183,7 +183,7 @@ public class FtcAuto extends FtcOpMode
 //                robot.globalTracer.traceInfo(moduleName, "Enabling BlueBlobVision.");
 //                robot.vision.setBlueBlobVisionEnabled(true);
 //            }
-        }
+//        }
     }   //robotInit
 
     //
@@ -268,9 +268,9 @@ public class FtcAuto extends FtcOpMode
             robot.battery.setEnabled(false);
         }
 
-        printPerformanceMetrics();
         robot.globalTracer.traceInfo(
             moduleName, "***** Stopping autonomous: " + TrcTimer.getCurrentTimeString() + " *****");
+        printPerformanceMetrics();
 
         if (TrcDbgTrace.isTraceLogOpened())
         {

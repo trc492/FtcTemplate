@@ -62,7 +62,7 @@ public class RobotParams
         public static final boolean tuneColorBlobVision         = false;
         public static final boolean useLimelightVision          = false;
         public static final boolean useCameraStreamProcessor    = false;
-        public static final boolean useAprilTagVision           = false;
+        public static final boolean useWebcamAprilTagVision     = false;
         public static final boolean useColorBlobVision          = false;
         public static final boolean showVisionView              = !inCompetition;
         public static final boolean showVisionStat              = false;

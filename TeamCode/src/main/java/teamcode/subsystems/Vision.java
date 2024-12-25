@@ -273,7 +273,7 @@ public class Vision
 //                FtcDashboard.getInstance().startCameraStream(cameraStreamProcessor, 0);
             }
 
-            if (RobotParams.Preferences.useAprilTagVision)
+            if (RobotParams.Preferences.useWebcamAprilTagVision)
             {
                 tracer.traceInfo(moduleName, "Starting Webcam AprilTagVision...");
                 FtcVisionAprilTag.Parameters aprilTagParams = new FtcVisionAprilTag.Parameters()
@@ -292,14 +292,14 @@ public class Vision
                 tracer.traceInfo(moduleName, "Starting Webcam ColorBlobVision...");
 
                 redBlobVision = new FtcVisionEocvColorBlob(
-                    "RedBlob", colorConversion, redBlobColorThresholds, colorBlobFilterContourParams, true,
-                    robot.robotInfo.webCam1.cameraRect, robot.robotInfo.webCam1.worldRect, true);
+                    LEDIndicator.RED_BLOB, colorConversion, redBlobColorThresholds, colorBlobFilterContourParams,
+                    true, robot.robotInfo.webCam1.cameraRect, robot.robotInfo.webCam1.worldRect, true);
                 redBlobProcessor = redBlobVision.getVisionProcessor();
                 visionProcessorsList.add(redBlobProcessor);
 
                 blueBlobVision = new FtcVisionEocvColorBlob(
-                    "BlueBlob", colorConversion, blueBlobColorThresholds, colorBlobFilterContourParams, true,
-                    robot.robotInfo.webCam1.cameraRect, robot.robotInfo.webCam1.worldRect, true);
+                    LEDIndicator.BLUE_BLOB, colorConversion, blueBlobColorThresholds, colorBlobFilterContourParams,
+                    true, robot.robotInfo.webCam1.cameraRect, robot.robotInfo.webCam1.worldRect, true);
                 blueBlobProcessor = blueBlobVision.getVisionProcessor();
                 visionProcessorsList.add(blueBlobProcessor);
             }
@@ -485,6 +485,11 @@ public class Vision
         {
             cameraStreamProcessor.addRectInfo(
                 colorBlobInfo.detectedObj.label, colorBlobInfo.detectedObj.getRotatedRectVertices());
+        }
+
+        if (colorBlobInfo != null && robot.ledIndicator != null)
+        {
+            robot.ledIndicator.setDetectedPattern(colorBlobInfo.detectedObj.label);
         }
 
         if (lineNum != -1)

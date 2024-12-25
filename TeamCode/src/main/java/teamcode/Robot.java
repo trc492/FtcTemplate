@@ -89,7 +89,7 @@ public class Robot
         // Create and initialize vision subsystems.
         if (RobotParams.Preferences.useVision &&
             (RobotParams.Preferences.tuneColorBlobVision ||
-             RobotParams.Preferences.useAprilTagVision ||
+             RobotParams.Preferences.useWebcamAprilTagVision ||
              RobotParams.Preferences.useColorBlobVision ||
              RobotParams.Preferences.useLimelightVision))
         {
@@ -115,8 +115,13 @@ public class Robot
             if (RobotParams.Preferences.useSubsystems)
             {
                 // Create subsystems.
-                // Zero calibrate all subsystems only at init time.
-                zeroCalibrate();
+
+                // Zero calibrate all subsystems only in Auto or if TeleOp is run standalone without prior Auto.
+                // There is no reason to zero calibrate again if Auto was run right before TeleOp.
+                if (runMode == TrcRobot.RunMode.AUTO_MODE || FtcAuto.autoChoices.alliance == null)
+                {
+                    zeroCalibrate(null, null);
+                }
                 // Create autotasks.
             }
         }
@@ -310,14 +315,6 @@ public class Robot
      */
     public void zeroCalibrate(String owner, TrcEvent event)
     {
-    }   //zeroCalibrate
-
-    /**
-     * This method zero calibrates all subsystems.
-     */
-    public void zeroCalibrate()
-    {
-        zeroCalibrate(null, null);
     }   //zeroCalibrate
 
     /**

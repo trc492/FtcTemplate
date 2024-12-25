@@ -54,6 +54,7 @@ public class FtcTeleOp extends FtcOpMode
     private boolean statusUpdateOn = false;
     private boolean relocalizing = false;
     private TrcPose2D robotFieldPose = null;
+    private Integer savedLimelightPipeline = null;
 
     //
     // Implements FtcOpMode abstract method.
@@ -136,15 +137,15 @@ public class FtcTeleOp extends FtcOpMode
         //
         if (robot.vision != null)
         {
-            if (robot.vision.limelightVision != null)
-            {
-                robot.globalTracer.traceInfo(moduleName, "Enabling Limelight AprilTagVision.");
-                robot.vision.setLimelightVisionEnabled(0, true);
-            }
-            else if (robot.vision.aprilTagVision != null)
+            if (robot.vision.aprilTagVision != null)
             {
                 robot.globalTracer.traceInfo(moduleName, "Enabling WebCam AprilTagVision.");
                 robot.vision.setAprilTagVisionEnabled(true);
+            }
+            else if (robot.vision.limelightVision != null)
+            {
+                robot.globalTracer.traceInfo(moduleName, "Enabling Limelight AprilTagVision.");
+                robot.vision.setLimelightVisionEnabled(0, true);
             }
         }
     }   //startMode
@@ -163,9 +164,9 @@ public class FtcTeleOp extends FtcOpMode
         // Tell robot object opmode is about to stop so it can do the necessary cleanup for the mode.
         //
         robot.stopMode(prevMode);
-        printPerformanceMetrics();
         robot.globalTracer.traceInfo(
             moduleName, "***** Stopping TeleOp: " + TrcTimer.getCurrentTimeString() + " *****");
+        printPerformanceMetrics();
 
         if (TrcDbgTrace.isTraceLogOpened())
         {
@@ -187,6 +188,7 @@ public class FtcTeleOp extends FtcOpMode
     {
         if (slowPeriodicLoop)
         {
+            int lineNum = 1;
             //
             // DriveBase subsystem.
             //
@@ -214,9 +216,13 @@ public class FtcTeleOp extends FtcOpMode
                     {
                         robot.robotDrive.driveBase.arcadeDrive(inputs[1], inputs[2]);
                     }
-                    robot.dashboard.displayPrintf(
-                        1, "RobotDrive: Power=(%.2f,y=%.2f,rot=%.2f),Mode:%s",
-                        inputs[0], inputs[1], inputs[2], robot.robotDrive.driveBase.getDriveOrientation());
+
+                    if (RobotParams.Preferences.doStatusUpdate || statusUpdateOn)
+                    {
+                        robot.dashboard.displayPrintf(
+                            lineNum++, "RobotDrive: Power=(%.2f,y=%.2f,rot=%.2f),Mode:%s",
+                            inputs[0], inputs[1], inputs[2], robot.robotDrive.driveBase.getDriveOrientation());
+                    }
                 }
                 // Check for EndGame warning.
                 if (elapsedTime > RobotParams.Game.ENDGAME_DEADLINE)
@@ -242,7 +248,7 @@ public class FtcTeleOp extends FtcOpMode
             // Display subsystem status.
             if (RobotParams.Preferences.doStatusUpdate || statusUpdateOn)
             {
-                robot.updateStatus(2);
+                robot.updateStatus(lineNum);
             }
         }
     }   //periodic
@@ -370,7 +376,7 @@ public class FtcTeleOp extends FtcOpMode
                 {
                     robot.globalTracer.traceInfo(moduleName, ">>>>> ZeroCalibrating.");
                     robot.cancelAll();
-                    robot.zeroCalibrate();
+                    robot.zeroCalibrate(moduleName, null);
                     if (robot.robotDrive != null && robot.robotDrive instanceof FtcSwerveDrive)
                     {
                         // Drive base is a Swerve Drive, align all steering wheels forward.
@@ -381,27 +387,47 @@ public class FtcTeleOp extends FtcOpMode
                 break;
 
             case Start:
-                if (robot.vision != null &&
-                    (robot.vision.isLimelightVisionEnabled() || robot.vision.isAprilTagVisionEnabled()) &&
-                    robot.robotDrive != null)
+                if (robot.vision != null && robot.robotDrive != null)
                 {
-                    // On press of the button, we will start looking for AprilTag for re-localization.
-                    // On release of the button, we will set the robot's field location if we found the AprilTag.
-                    relocalizing = pressed;
-                    if (!pressed)
+                    boolean hasAprilTagVision = robot.vision.isAprilTagVisionEnabled();
+
+                    if (!hasAprilTagVision && robot.vision.limelightVision != null)
                     {
-                        if (robotFieldPose != null)
+                        hasAprilTagVision = true;
+                        if (pressed)
                         {
-                            // Vision found an AprilTag, set the new robot field location.
-                            robot.globalTracer.traceInfo(
-                                moduleName, ">>>>> Finish re-localizing: pose=" + robotFieldPose);
-                            robot.robotDrive.driveBase.setFieldPosition(robotFieldPose, false);
-                            robotFieldPose = null;
+                            // Webcam AprilTag vision is not enable, enable Limelight AprilTag pipeline instead.
+                            savedLimelightPipeline = robot.vision.limelightVision.getPipeline();
+                            robot.vision.setLimelightVisionEnabled(0, true);
                         }
                     }
-                    else
+
+                    if (hasAprilTagVision)
                     {
-                        robot.globalTracer.traceInfo(moduleName, ">>>>> Start re-localizing ...");
+                        // On press of the button, we will start looking for AprilTag for re-localization.
+                        // On release of the button, we will set the robot's field location if we found the AprilTag.
+                        relocalizing = pressed;
+                        if (!pressed)
+                        {
+                            if (robotFieldPose != null)
+                            {
+                                // Vision found an AprilTag, set the new robot field location.
+                                robot.globalTracer.traceInfo(
+                                    moduleName, ">>>>> Finish re-localizing: pose=" + robotFieldPose);
+                                robot.robotDrive.driveBase.setFieldPosition(robotFieldPose, false);
+                                robotFieldPose = null;
+                                if (savedLimelightPipeline != null)
+                                {
+                                    // Done with AprilTag re-localization, restore previous Limelight pipeline.
+                                    robot.vision.limelightVision.setPipeline(savedLimelightPipeline);
+                                    savedLimelightPipeline = null;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            robot.globalTracer.traceInfo(moduleName, ">>>>> Start re-localizing ...");
+                        }
                     }
                 }
                 break;
