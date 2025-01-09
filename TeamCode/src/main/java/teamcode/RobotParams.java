@@ -78,7 +78,8 @@ public class RobotParams
         public static final boolean useArm                      = false;
         public static final boolean useShooter                  = false;
         public static final boolean useIntake                   = false;
-        public static final boolean useGrabber                  = false;    }   //class Preferences
+        public static final boolean useGrabber                  = false;
+    }   //class Preferences
 
     /**
      * This class contains miscellaneous robot info.
