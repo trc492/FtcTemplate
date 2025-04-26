@@ -100,9 +100,9 @@ public class FtcTest extends FtcTeleOp
     private double prevTime = 0.0;
     private double prevVelocity = 0.0;
     // Tune Drive.
-    private TrcPose2D tuneStartPoint;
-    private TrcPose2D tuneEndPoint;
-    private boolean tuneAtEnd;
+    private TrcPose2D tuneDriveStartPoint;
+    private TrcPose2D tuneDriveEndPoint;
+    private boolean tuneDriveAtEndPoint;
     // Swerve Steering Calibration.
     private boolean steerCalibrating = false;
     private boolean teleOpControlEnabled = true;
@@ -257,11 +257,11 @@ public class FtcTest extends FtcTeleOp
             case TUNE_DRIVE_PID:
                 if (robot.robotDrive != null)
                 {
-                    tuneStartPoint = robot.robotDrive.driveBase.getFieldPosition();
-                    tuneEndPoint = tuneStartPoint.addRelativePose(
+                    tuneDriveStartPoint = robot.robotDrive.driveBase.getFieldPosition();
+                    tuneDriveEndPoint = tuneDriveStartPoint.addRelativePose(
                         new TrcPose2D(Dashboard.Drive.xTarget*12.0, Dashboard.Drive.yTarget*12.0,
                                       Dashboard.Drive.turnTarget));
-                    tuneAtEnd = false;
+                    tuneDriveAtEndPoint = false;
                 }
                 break;
         }
@@ -511,8 +511,8 @@ public class FtcTest extends FtcTeleOp
                         robot.robotDrive.purePursuitDrive.setRotOutputLimit(Dashboard.Drive.turnPower);
                         robot.robotDrive.purePursuitDrive.start(
                             false, Dashboard.Drive.maxVelocity, Dashboard.Drive.maxAcceleration,
-                            Dashboard.Drive.maxDeclearion, tuneAtEnd? tuneStartPoint: tuneEndPoint);
-                        tuneAtEnd = !tuneAtEnd;
+                            Dashboard.Drive.maxDeclearion, tuneDriveAtEndPoint? tuneDriveStartPoint: tuneDriveEndPoint);
+                        tuneDriveAtEndPoint = !tuneDriveAtEndPoint;
                     }
                     passToTeleOp = false;
                 }
