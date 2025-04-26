@@ -82,6 +82,12 @@ public class Dashboard
     @Config
     public static class Drive
     {
+        public static double xTarget = 0.0;
+        public static double yTarget = 0.0;
+        public static double turnTarget = 0.0;
+        public static double drivePower = 1.0;
+        public static double turnPower = 1.0;
+        public static double driveTime = 0.0;
         public static TrcPidController.PidCoefficients xPidCoeffs =
             new TrcPidController.PidCoefficients(0.0, 0.0, 0.0, 0.0, 0.0);
         public static TrcPidController.PidCoefficients yPidCoeffs =
@@ -90,13 +96,7 @@ public class Dashboard
             new TrcPidController.PidCoefficients(0.0, 0.0, 0.0, 0.0, 0.0);
         public static double maxVelocity = 0.0;
         public static double maxAcceleration = 0.0;
-        public static double maxDeclearion = 0.0;
-        public static double xTarget = 0.0;
-        public static double yTarget = 0.0;
-        public static double turnTarget = 0.0;
-        public static double drivePower = 1.0;
-        public static double turnPower = 1.0;
-        public static double driveTime = 0.0;
+        public static double maxDeceleration = 0.0;
     }   //class Drive
 
     @Config
