@@ -297,6 +297,11 @@ public class FtcAuto extends FtcOpMode
             //
             autoCommand.cmdPeriodic(elapsedTime);
         }
+
+        if (RobotParams.Preferences.updateDashboard)
+        {
+            Dashboard.updateDashboard(robot, 1);
+        }
     }   //periodic
 
     /**

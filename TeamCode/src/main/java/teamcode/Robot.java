@@ -32,7 +32,7 @@ import ftclib.sensor.FtcRobotBattery;
 import teamcode.subsystems.LEDIndicator;
 import teamcode.subsystems.RobotBase;
 import teamcode.subsystems.RumbleIndicator;
-import teamcode.subsystems.Vision;
+import teamcode.vision.Vision;
 import trclib.motor.TrcMotor;
 import trclib.motor.TrcServo;
 import trclib.pathdrive.TrcPose2D;
@@ -56,6 +56,7 @@ public class Robot
     private static TrcPose2D endOfAutoRobotPose = null;
     private static double nextStatusUpdateTime = 0.0;
     // Robot Drive.
+    public RobotBase robotBase;
     public FtcRobotDrive.RobotInfo robotInfo;
     public FtcRobotDrive robotDrive;
     // Vision subsystems.
@@ -83,7 +84,7 @@ public class Robot
         nextStatusUpdateTime = TrcTimer.getCurrentTime();
         speak("Init starting");
         // Create and initialize Robot Base.
-        RobotBase robotBase = new RobotBase();
+        robotBase = new RobotBase();
         robotInfo = robotBase.getRobotInfo();
         robotDrive = robotBase.getRobotDrive();
         // Create and initialize vision subsystems.
@@ -270,31 +271,6 @@ public class Robot
             }
         }
     }   //stopMode
-
-    /**
-     * This method update all subsystem status on the dashboard.
-     *
-     * @param startLineNum specifies the first Dashboard line for printing status.
-     */
-    public void updateStatus(int startLineNum)
-    {
-        double currTime = TrcTimer.getCurrentTime();
-        if (currTime > nextStatusUpdateTime)
-        {
-            int lineNum = startLineNum;
-            nextStatusUpdateTime = currTime + RobotParams.Robot.DASHBOARD_UPDATE_INTERVAL;
-            if (robotDrive != null)
-            {
-                dashboard.displayPrintf(lineNum++, "DriveBase: Pose=%s", robotDrive.driveBase.getFieldPosition());
-            }
-            //
-            // Display other subsystem status here.
-            //
-            if (RobotParams.Preferences.showSubsystems)
-            {
-            }
-        }
-    }   //updateStatus
 
     /**
      * This method is called to cancel all pending operations and release the ownership of all subsystems.

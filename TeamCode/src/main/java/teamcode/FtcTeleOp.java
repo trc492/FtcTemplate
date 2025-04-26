@@ -49,8 +49,8 @@ public class FtcTeleOp extends FtcOpMode
     protected FtcGamepad operatorGamepad;
     private double drivePowerScale;
     private double turnPowerScale;
-    private boolean driverAltFunc = false;
-    private boolean operatorAltFunc = false;
+    protected boolean driverAltFunc = false;
+    protected boolean operatorAltFunc = false;
     private boolean statusUpdateOn = false;
     private boolean relocalizing = false;
     private TrcPose2D robotFieldPose = null;
@@ -217,7 +217,7 @@ public class FtcTeleOp extends FtcOpMode
                         robot.robotDrive.driveBase.arcadeDrive(inputs[1], inputs[2]);
                     }
 
-                    if (RobotParams.Preferences.doStatusUpdate || statusUpdateOn)
+                    if (RobotParams.Preferences.updateDashboard || statusUpdateOn)
                     {
                         robot.dashboard.displayPrintf(
                             lineNum++, "RobotDrive: Power=(%.2f,y=%.2f,rot=%.2f),Mode:%s",
@@ -246,9 +246,9 @@ public class FtcTeleOp extends FtcOpMode
                 // Analog control of subsystems.
             }
             // Display subsystem status.
-            if (RobotParams.Preferences.doStatusUpdate || statusUpdateOn)
+            if (RobotParams.Preferences.updateDashboard || statusUpdateOn)
             {
-                robot.updateStatus(lineNum);
+                Dashboard.updateDashboard(robot, lineNum);
             }
         }
     }   //periodic
@@ -341,7 +341,7 @@ public class FtcTeleOp extends FtcOpMode
             case RightBumper:
                 if (driverAltFunc)
                 {
-                    if (!RobotParams.Preferences.doStatusUpdate)
+                    if (!RobotParams.Preferences.updateDashboard)
                     {
                         // Toggle status update ON/OFF.
                         statusUpdateOn = !statusUpdateOn;

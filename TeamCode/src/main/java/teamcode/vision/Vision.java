@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package teamcode.subsystems;
+package teamcode.vision;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -28,6 +28,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.vision.VisionProcessor;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfDouble;
 import org.opencv.imgproc.Imgproc;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
@@ -45,8 +48,10 @@ import ftclib.vision.FtcRawEocvVision;
 import ftclib.vision.FtcVision;
 import ftclib.vision.FtcVisionAprilTag;
 import ftclib.vision.FtcVisionEocvColorBlob;
+import teamcode.Dashboard;
 import teamcode.Robot;
 import teamcode.RobotParams;
+import teamcode.subsystems.LEDIndicator;
 import trclib.dataprocessor.TrcUtil;
 import trclib.pathdrive.TrcPose2D;
 import trclib.pathdrive.TrcPose3D;
@@ -167,7 +172,7 @@ public class Vision
     private static final int colorConversion = Imgproc.COLOR_RGB2YCrCb;
     private static final double[] redBlobColorThresholds = {10.0, 180.0, 170.0, 240.0, 80.0, 120.0};
     private static final double[] blueBlobColorThresholds = {0.0, 180.0, 80.0, 150.0, 150.0, 200.0};
-    private static final TrcOpenCvColorBlobPipeline.FilterContourParams colorBlobFilterContourParams =
+    public static final TrcOpenCvColorBlobPipeline.FilterContourParams colorBlobFilterContourParams =
         new TrcOpenCvColorBlobPipeline.FilterContourParams()
             .setMinArea(500.0)
             .setMinPerimeter(100.0)
@@ -176,15 +181,14 @@ public class Vision
             .setSolidityRange(0.0, 100.0)
             .setVerticesRange(0.0, 1000.0)
             .setAspectRatioRange(0.5, 2.5);
-    private static final TrcOpenCvColorBlobPipeline.FilterContourParams tuneFilterContourParams =
-        new TrcOpenCvColorBlobPipeline.FilterContourParams()
-            .setMinArea(10.0)
-            .setMinPerimeter(12.0)
-            .setWidthRange(0.0, 1000.0)
-            .setHeightRange(0.0, 1000.0)
-            .setSolidityRange(0.0, 100.0)
-            .setVerticesRange(0.0, 1000.0)
-            .setAspectRatioRange(0.5, 2.5);
+    private static final double objectWidth = 3.5;
+    private static final double objectHeight = 1.5;
+    // Logitech C920
+    private static final double fx = 622.001;
+    private static final double fy = 622.001;
+    private static final double cx = 319.803;
+    private static final double cy = 241.251;
+    private static final MatOfDouble distCoeffs = new MatOfDouble(0.1208, -0.261599, 0, 0, 0.10308, 0, 0, 0);
 
     private final TrcDbgTrace tracer;
     private final Robot robot;
@@ -222,6 +226,12 @@ public class Vision
             opMode.hardwareMap.get(WebcamName.class, robot.robotInfo.webCam1.camName): null;
         webcam2 = robot.robotInfo.webCam2 != null?
             opMode.hardwareMap.get(WebcamName.class, robot.robotInfo.webCam2.camName): null;
+        Mat cameraMatrix = new Mat(3, 3, CvType.CV_64FC1);
+        cameraMatrix.put(0, 0,
+                         fx, 0, cx,
+                         0, fy, cy,
+                         0, 0, 1);
+        // TuneColorBlobVision: must use webcam1.
         if (RobotParams.Preferences.tuneColorBlobVision && webcam1 != null)
         {
             OpenCvCamera openCvCamera;
@@ -237,14 +247,16 @@ public class Vision
                 openCvCamera = OpenCvCameraFactory.getInstance().createWebcam(webcam1);
             }
 
-//            if (RobotParams.Preferences.useCameraStreamProcessor)
-//            {
-//                FtcDashboard.getInstance().startCameraStream(openCvCamera, 0);
-//            }
+            if (RobotParams.Preferences.useCameraStreamProcessor)
+            {
+                com.acmerobotics.dashboard.FtcDashboard.getInstance().startCameraStream(openCvCamera, 0);
+            }
 
             tracer.traceInfo(moduleName, "Starting RawEocvColorBlobVision...");
             rawColorBlobPipeline = new FtcRawEocvColorBlobPipeline(
-                "rawColorBlobPipeline", colorConversion, redBlobColorThresholds, tuneFilterContourParams, true);
+                "rawColorBlobPipeline", colorConversion, Dashboard.Vision.colorThresholds,
+                Dashboard.Vision.filterContourParams, true, objectWidth, objectHeight,
+                RobotParams.Preferences.useSolvePnp? cameraMatrix: null, distCoeffs, robot.robotInfo.webCam1.camPose);
             // By default, display original Mat.
             rawColorBlobPipeline.setVideoOutput(0);
             rawColorBlobPipeline.setAnnotateEnabled(true);
@@ -257,6 +269,7 @@ public class Vision
         }
         else
         {
+            // LimelightVision (not a Vision Processor).
             if (RobotParams.Preferences.useLimelightVision && robot.robotInfo.limelight != null)
             {
                 limelightVision = new FtcLimelightVision(
@@ -270,7 +283,7 @@ public class Vision
             {
                 cameraStreamProcessor = new FtcCameraStreamProcessor();
                 visionProcessorsList.add(cameraStreamProcessor);
-//                FtcDashboard.getInstance().startCameraStream(cameraStreamProcessor, 0);
+                com.acmerobotics.dashboard.FtcDashboard.getInstance().startCameraStream(cameraStreamProcessor, 0);
             }
 
             if (RobotParams.Preferences.useWebcamAprilTagVision)
@@ -289,17 +302,34 @@ public class Vision
 
             if (RobotParams.Preferences.useColorBlobVision && robot.robotInfo.webCam1 != null)
             {
-                tracer.traceInfo(moduleName, "Starting Webcam ColorBlobVision...");
+                Mat camMatrix;
+                TrcHomographyMapper.Rectangle camRect, worldRect;
 
+                if (RobotParams.Preferences.useSolvePnp)
+                {
+                    camMatrix = cameraMatrix;
+                    camRect = null;
+                    worldRect = null;
+                }
+                else
+                {
+                    camMatrix = null;
+                    camRect = robot.robotInfo.webCam1.cameraRect;
+                    worldRect = robot.robotInfo.webCam1.worldRect;
+                }
+
+                tracer.traceInfo(moduleName, "Starting Webcam ColorBlobVision...");
                 redBlobVision = new FtcVisionEocvColorBlob(
                     LEDIndicator.RED_BLOB, colorConversion, redBlobColorThresholds, colorBlobFilterContourParams,
-                    true, robot.robotInfo.webCam1.cameraRect, robot.robotInfo.webCam1.worldRect, true);
+                    true, objectWidth, objectHeight, camMatrix, distCoeffs, robot.robotInfo.webCam1.camPose, camRect,
+                    worldRect, true);
                 redBlobProcessor = redBlobVision.getVisionProcessor();
                 visionProcessorsList.add(redBlobProcessor);
 
                 blueBlobVision = new FtcVisionEocvColorBlob(
                     LEDIndicator.BLUE_BLOB, colorConversion, blueBlobColorThresholds, colorBlobFilterContourParams,
-                    true, robot.robotInfo.webCam1.cameraRect, robot.robotInfo.webCam1.worldRect, true);
+                    true, objectWidth, objectHeight, camMatrix, distCoeffs, robot.robotInfo.webCam1.camPose, camRect,
+                    worldRect, true);
                 blueBlobProcessor = blueBlobVision.getVisionProcessor();
                 visionProcessorsList.add(blueBlobProcessor);
             }
@@ -899,11 +929,11 @@ public class Vision
     {
         double offset = 0.0;
 
-        if ( resultType == FtcLimelightVision.ResultType.Fiducial)
+        if (resultType == FtcLimelightVision.ResultType.Fiducial)
         {
             offset = 5.75;
         }
-        else if ( resultType == FtcLimelightVision.ResultType.Python)
+        else if (resultType == FtcLimelightVision.ResultType.Python)
         {
             offset = 10.0;
         }
@@ -925,5 +955,41 @@ public class Vision
     {
         return (int)((a.objPose.y - b.objPose.y)*100);
     }   //compareDistance
+
+    /**
+     * This method update the dashboard with vision status.
+     *
+     * @param lineNum specifies the starting line number to print the subsystem status.
+     * @return updated line number for the next subsystem to print.
+     */
+    public int updateStatus(int lineNum)
+    {
+        if (rawColorBlobVision != null)
+        {
+            lineNum = rawColorBlobVision.updateStatus(lineNum);
+        }
+
+        if (limelightVision != null)
+        {
+            lineNum = limelightVision.updateStatus(lineNum);
+        }
+
+        if (aprilTagVision != null)
+        {
+            lineNum = aprilTagVision.updateStatus(lineNum);
+        }
+
+        if (redBlobVision != null)
+        {
+            lineNum = redBlobVision.updateStatus(lineNum);
+        }
+
+        if (blueBlobVision != null)
+        {
+            lineNum = blueBlobVision.updateStatus(lineNum);
+        }
+
+        return lineNum;
+    }   //updateStatus
 
 }   //class Vision

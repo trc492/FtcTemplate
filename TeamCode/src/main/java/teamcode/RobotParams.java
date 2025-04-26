@@ -50,7 +50,10 @@ public class RobotParams
         public static final boolean useBatteryMonitor           = false;
         // Driver feedback
         // Status Update: Status Update may affect robot loop time, don't do it when in competition.
-        public static final boolean doStatusUpdate              = !inCompetition;
+        public static final boolean updateDashboard             = !inCompetition;
+        public static final boolean showDriveBase               = false;
+        public static final boolean showPidDrive                = false;
+        public static final boolean showVision                  = false;
         public static final boolean showSubsystems              = true;
         public static final boolean useBlinkinLED               = false;
         public static final boolean useGobildaLED               = false;
@@ -59,11 +62,11 @@ public class RobotParams
         public static final boolean useVision                   = false;
         public static final boolean useWebCam                   = false;    // false to use Android phone camera.
         public static final boolean useBuiltinCamBack           = false;    // For Android Phone as Robot Controller.
-        public static final boolean tuneColorBlobVision         = false;
         public static final boolean useLimelightVision          = false;
         public static final boolean useCameraStreamProcessor    = false;
         public static final boolean useWebcamAprilTagVision     = false;
         public static final boolean useColorBlobVision          = false;
+        public static final boolean useSolvePnp                 = false;
         public static final boolean showVisionView              = !inCompetition;
         public static final boolean showVisionStat              = false;
         // Drive Base
@@ -72,6 +75,9 @@ public class RobotParams
         public static final boolean useSparkfunOTOS             = false;
         // Subsystems
         public static final boolean useSubsystems               = false;
+        // Tuning
+        public static final boolean tuneColorBlobVision         = false;
+        public static final boolean tuneDriveBase               = false;
     }   //class Preferences
 
     /**
