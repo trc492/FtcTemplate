@@ -77,13 +77,16 @@ public class Dashboard
     {
         public static double[] colorThresholds = null;
         public static TrcOpenCvColorBlobPipeline.FilterContourParams filterContourParams = null;
-        public static long exposure = 0;
     }   //class Vision
 
     @Config
     public static class Drive
     {
-        public static TrcPidController.PidCoefficients pidCoeffs =
+        public static TrcPidController.PidCoefficients xPidCoeffs =
+            new TrcPidController.PidCoefficients(0.0, 0.0, 0.0, 0.0, 0.0);
+        public static TrcPidController.PidCoefficients yPidCoeffs =
+            new TrcPidController.PidCoefficients(0.0, 0.0, 0.0, 0.0, 0.0);
+        public static TrcPidController.PidCoefficients turnPidCoeffs =
             new TrcPidController.PidCoefficients(0.0, 0.0, 0.0, 0.0, 0.0);
         public static double maxVelocity = 0.0;
         public static double maxAcceleration = 0.0;
@@ -92,6 +95,7 @@ public class Dashboard
         public static double yTarget = 0.0;
         public static double turnTarget = 0.0;
         public static double drivePower = 1.0;
+        public static double turnPower = 1.0;
         public static double driveTime = 0.0;
     }   //class Drive
 
