@@ -248,18 +248,6 @@ public class FtcTest extends FtcTeleOp
                         TrcDbgTrace.MsgLevel.INFO, logEvents, debugPid, false);
                 }
                 break;
-
-            case TUNE_DRIVE_PID:
-                if (robot.robotDrive != null && robot.robotDrive.purePursuitDrive != null)
-                {
-                    robot.robotDrive.driveBase.resetOdometry();
-                    tuneDriveStartPoint = robot.robotDrive.driveBase.getFieldPosition();
-                    tuneDriveEndPoint = tuneDriveStartPoint.addRelativePose(
-                        new TrcPose2D(Dashboard.Drive.xTarget*12.0, Dashboard.Drive.yTarget*12.0,
-                                      Dashboard.Drive.turnTarget));
-                    tuneDriveAtEndPoint = false;
-                }
-                break;
         }
     }   //startMode
 
@@ -508,24 +496,36 @@ public class FtcTest extends FtcTeleOp
         switch (button)
         {
             case A:
-                if (robot.robotDrive != null && testChoices.test == Test.TUNE_DRIVE_PID)
+                if (testChoices.test == Test.TUNE_DRIVE_PID)
                 {
-                    if (pressed)
+                    if (robot.robotDrive != null && robot.robotDrive.purePursuitDrive != null)
                     {
-                        robot.robotDrive.purePursuitDrive.setXPositionPidCoefficients(Dashboard.Drive.xPidCoeffs);
-                        robot.robotDrive.purePursuitDrive.setYPositionPidCoefficients(Dashboard.Drive.yPidCoeffs);
-                        robot.robotDrive.purePursuitDrive.setTurnPidCoefficients(Dashboard.Drive.turnPidCoeffs);
-                        robot.robotDrive.purePursuitDrive.setMoveOutputLimit(Dashboard.Drive.drivePower);
-                        robot.robotDrive.purePursuitDrive.setRotOutputLimit(Dashboard.Drive.turnPower);
-                        robot.robotDrive.purePursuitDrive.start(
-                            false,
-                            Dashboard.Drive.maxVelocity,
-                            Dashboard.Drive.maxAcceleration,
-                            Dashboard.Drive.maxDeceleration,
-                            tuneDriveAtEndPoint? tuneDriveStartPoint: tuneDriveEndPoint);
-                        tuneDriveAtEndPoint = !tuneDriveAtEndPoint;
+                        if (pressed)
+                        {
+                            if (!tuneDriveAtEndPoint)
+                            {
+                                robot.robotDrive.driveBase.resetOdometry();
+                                tuneDriveStartPoint = robot.robotDrive.driveBase.getFieldPosition();
+                                tuneDriveEndPoint = tuneDriveStartPoint.addRelativePose(
+                                    new TrcPose2D(Dashboard.Drive.xTarget*12.0, Dashboard.Drive.yTarget*12.0,
+                                                  Dashboard.Drive.turnTarget));
+                                tuneDriveAtEndPoint = false;
+                            }
+                            robot.robotDrive.purePursuitDrive.setXPositionPidCoefficients(Dashboard.Drive.xPidCoeffs);
+                            robot.robotDrive.purePursuitDrive.setYPositionPidCoefficients(Dashboard.Drive.yPidCoeffs);
+                            robot.robotDrive.purePursuitDrive.setTurnPidCoefficients(Dashboard.Drive.turnPidCoeffs);
+                            robot.robotDrive.purePursuitDrive.setMoveOutputLimit(Dashboard.Drive.drivePower);
+                            robot.robotDrive.purePursuitDrive.setRotOutputLimit(Dashboard.Drive.turnPower);
+                            robot.robotDrive.purePursuitDrive.start(
+                                false,
+                                Dashboard.Drive.maxVelocity,
+                                Dashboard.Drive.maxAcceleration,
+                                Dashboard.Drive.maxDeceleration,
+                                tuneDriveAtEndPoint? tuneDriveStartPoint: tuneDriveEndPoint);
+                            tuneDriveAtEndPoint = !tuneDriveAtEndPoint;
+                        }
+                        passToTeleOp = false;
                     }
-                    passToTeleOp = false;
                 }
                 else if (testChoices.test == Test.CALIBRATE_SWERVE_STEERING)
                 {
