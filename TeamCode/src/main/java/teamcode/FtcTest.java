@@ -100,9 +100,9 @@ public class FtcTest extends FtcTeleOp
     private double prevTime = 0.0;
     private double prevVelocity = 0.0;
     // Tune Drive PID.
-    private TrcPose2D tuneDriveStartPoint;
-    private TrcPose2D tuneDriveEndPoint;
-    private boolean tuneDriveAtEndPoint;
+    private TrcPose2D tuneDriveStartPoint = null;
+    private TrcPose2D tuneDriveEndPoint = null;
+    private boolean tuneDriveAtEndPoint = false;
     // Swerve Steering Calibration.
     private boolean steerCalibrating = false;
     private boolean teleOpControlEnabled = true;
