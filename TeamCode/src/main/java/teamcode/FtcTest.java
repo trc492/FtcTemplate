@@ -507,8 +507,9 @@ public class FtcTest extends FtcTeleOp
                                 robot.robotDrive.driveBase.resetOdometry();
                                 tuneDriveStartPoint = robot.robotDrive.driveBase.getFieldPosition();
                                 tuneDriveEndPoint = tuneDriveStartPoint.addRelativePose(
-                                    new TrcPose2D(Dashboard.Drive.xTarget*12.0, Dashboard.Drive.yTarget*12.0,
-                                                  Dashboard.Drive.turnTarget));
+                                    new TrcPose2D(
+                                        Dashboard.Drive.xTarget*12.0, Dashboard.Drive.yTarget*12.0,
+                                        Dashboard.Drive.turnTarget));
                                 tuneDriveAtEndPoint = false;
                             }
                             robot.robotDrive.purePursuitDrive.setXPositionPidCoefficients(Dashboard.Drive.xPidCoeffs);
