@@ -599,17 +599,6 @@ public class FtcTest extends FtcTeleOp
                             swerveDrive.setSteerAngle(0.0, false, true);
                         }
                     }
-//                    else if (RobotParams.Preferences.tuneElevator)
-//                    {
-//                        if (pressed)
-//                        {
-//                            robot.elevator.setPositionPidParameters(
-//                                Dashboard.Subsystem.pidCoeffs, Dashboard.Subsystem.ffCoeffs,
-//                                Dashboard.Subsystem.pidTolerance, Dashboard.Subsystem.softwarePid,
-//                                Dashboard.Subsystem.enableSquid);
-//                            robot.elevator.presetPositionUp(null, Dashboard.Subsystem.powerLimit);
-//                        }
-//                    }
                     passToTeleOp = false;
                 }
                 break;
@@ -627,17 +616,6 @@ public class FtcTest extends FtcTeleOp
                             swerveDrive.setSteerAngle(180.0, false, true);
                         }
                     }
-//                    else if (RobotParams.Preferences.tuneElevator)
-//                    {
-//                        if (pressed)
-//                        {
-//                            robot.elevator.setPositionPidParameters(
-//                                Dashboard.Subsystem.pidCoeffs, Dashboard.Subsystem.ffCoeffs,
-//                                Dashboard.Subsystem.pidTolerance, Dashboard.Subsystem.softwarePid,
-//                                Dashboard.Subsystem.enableSquid);
-//                            robot.elevator.presetPositionDown(null, Dashboard.Subsystem.powerLimit);
-//                        }
-//                    }
                     passToTeleOp = false;
                 }
                 break;
