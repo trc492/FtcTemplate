@@ -40,6 +40,7 @@ import trclib.robotcore.TrcDbgTrace;
 import trclib.robotcore.TrcEvent;
 import trclib.robotcore.TrcRobot;
 import trclib.sensor.TrcDigitalInput;
+import trclib.subsystem.TrcSubsystem;
 import trclib.timer.TrcTimer;
 
 /**
@@ -280,6 +281,7 @@ public class Robot
         globalTracer.traceInfo(moduleName, "Cancel all operations.");
         // Cancel subsystems.
         if (robotDrive != null) robotDrive.cancel();
+        TrcSubsystem.cancelAll();
         // Cancel auto tasks.
     }   //cancelAll
 
@@ -291,7 +293,18 @@ public class Robot
      */
     public void zeroCalibrate(String owner, TrcEvent event)
     {
+        globalTracer.traceInfo(moduleName, "Zero calibrate all subsystems.");
+        TrcSubsystem.zeroCalibrateAll(owner, event);
     }   //zeroCalibrate
+
+    /**
+     * This method retracts all appendages for robot high speed travelling.
+     */
+    public void turtle()
+    {
+        globalTracer.traceInfo(moduleName, "Turtle mode.");
+        TrcSubsystem.resetStateAll();
+    }   //turtle
 
     /**
      * This method sets the robot's starting position according to the autonomous choices.

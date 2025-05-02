@@ -326,10 +326,18 @@ public class FtcTeleOp extends FtcOpMode
                 break;
 
             case Y:
-                if (driverAltFunc && pressed)
+                if (pressed)
                 {
-                    robot.globalTracer.traceInfo(moduleName, ">>>>> Cancel all.");
-                    robot.cancelAll();
+                    if (driverAltFunc)
+                    {
+                        robot.globalTracer.traceInfo(moduleName, ">>>>> Cancel all.");
+                        robot.cancelAll();
+                    }
+                    else
+                    {
+                        robot.globalTracer.traceInfo(moduleName, ">>>>> Turtle mode.");
+                        robot.turtle();
+                    }
                 }
                 break;
 
