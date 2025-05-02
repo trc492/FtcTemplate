@@ -29,10 +29,18 @@ import ftclib.driverio.FtcDashboard;
 import ftclib.driverio.FtcMatchInfo;
 import ftclib.robotcore.FtcOpMode;
 import ftclib.sensor.FtcRobotBattery;
+import teamcode.subsystems.Arm;
+import teamcode.subsystems.Claw;
+import teamcode.subsystems.DiffyServoWrist;
+import teamcode.subsystems.Elevator;
+import teamcode.subsystems.Intake;
 import teamcode.subsystems.LEDIndicator;
 import teamcode.subsystems.RobotBase;
 import teamcode.subsystems.RumbleIndicator;
+import teamcode.subsystems.ServoWrist;
+import teamcode.subsystems.Shooter;
 import teamcode.vision.Vision;
+import trclib.dataprocessor.TrcDiscreteValue;
 import trclib.motor.TrcMotor;
 import trclib.motor.TrcServo;
 import trclib.pathdrive.TrcPose2D;
@@ -40,7 +48,11 @@ import trclib.robotcore.TrcDbgTrace;
 import trclib.robotcore.TrcEvent;
 import trclib.robotcore.TrcRobot;
 import trclib.sensor.TrcDigitalInput;
+import trclib.subsystem.TrcIntake;
+import trclib.subsystem.TrcServoClaw;
+import trclib.subsystem.TrcShooter;
 import trclib.subsystem.TrcSubsystem;
+import trclib.timer.TrcTimer;
 
 /**
  * This class creates the robot object that consists of sensors, indicators, drive base and all the subsystems.
@@ -66,6 +78,14 @@ public class Robot
     public RumbleIndicator operatorRumble;
     public FtcRobotBattery battery;
     // Subsystems.
+    public TrcMotor elevator;
+    public TrcMotor arm;
+    public TrcShooter shooter;
+    public TrcDiscreteValue shooterVelocity;
+    public TrcIntake intake;
+    public TrcServoClaw claw;
+    public TrcServo servoWrist;
+    public DiffyServoWrist diffyServoWrist;
     // Autotasks.
 
     /**
@@ -114,7 +134,45 @@ public class Robot
             if (RobotParams.Preferences.useSubsystems)
             {
                 // Create subsystems.
+                if (RobotParams.Preferences.useElevator)
+                {
+                    elevator = new Elevator().getMotor();
+                }
 
+                if (RobotParams.Preferences.useArm)
+                {
+                    arm = new Arm().getMotor();
+                }
+
+                if (RobotParams.Preferences.useShooter)
+                {
+                    shooter = new Shooter().getShooter();
+                    shooterVelocity = new TrcDiscreteValue(
+                        Shooter.Params.SUBSYSTEM_NAME + ".motorVel",
+                        Shooter.Params.SHOOTER_MIN_VEL, Shooter.Params.SHOOTER_MAX_VEL,
+                        Shooter.Params.SHOOTER_MIN_VEL_INC, Shooter.Params.SHOOTER_MAX_VEL_INC,
+                        Shooter.Params.SHOOTER_DEF_VEL, Shooter.Params.SHOOTER_DEF_VEL_INC);
+                }
+
+                if (RobotParams.Preferences.useIntake)
+                {
+                    intake = new Intake().getIntake();
+                }
+
+                if (RobotParams.Preferences.useClaw)
+                {
+                    claw = new Claw().getClaw();
+                }
+
+                if (RobotParams.Preferences.useServoWrist)
+                {
+                    servoWrist = new ServoWrist().getServo();
+                }
+
+                if (RobotParams.Preferences.useDiffyServoWrist)
+                {
+                    diffyServoWrist = new DiffyServoWrist();
+                }
                 // Zero calibrate all subsystems only in Auto or if TeleOp is run standalone without prior Auto.
                 // There is no reason to zero calibrate again if Auto was run right before TeleOp.
                 if (runMode == TrcRobot.RunMode.AUTO_MODE || FtcAuto.autoChoices.alliance == null)

@@ -75,9 +75,20 @@ public class RobotParams
         public static final boolean useSparkfunOTOS             = false;
         // Subsystems
         public static final boolean useSubsystems               = false;
+        public static final boolean useElevator                 = false;
+        public static final boolean useArm                      = false;
+        public static final boolean useShooter                  = false;
+        public static final boolean useIntake                   = false;
+        public static final boolean useClaw                     = false;
+        public static final boolean useServoWrist               = false;
+        public static final boolean useDiffyServoWrist          = false;
         // Tuning
         public static final boolean tuneColorBlobVision         = false;
         public static final boolean tuneDriveBase               = false;
+        public static final boolean tuneElevator                = false;
+        public static final boolean tuneArm                     = false;
+        public static final boolean tuneShooterMotor1           = false;
+        public static final boolean tuneShooterMotor2           = false;
     }   //class Preferences
 
     /**

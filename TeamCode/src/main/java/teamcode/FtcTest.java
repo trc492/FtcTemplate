@@ -599,6 +599,50 @@ public class FtcTest extends FtcTeleOp
                             swerveDrive.setSteerAngle(0.0, false, true);
                         }
                     }
+                    else if (RobotParams.Preferences.tuneElevator)
+                    {
+                        if (pressed)
+                        {
+                            robot.elevator.setPositionPidParameters(
+                                Dashboard.Subsystem.pidCoeffs, Dashboard.Subsystem.ffCoeffs,
+                                Dashboard.Subsystem.pidTolerance, Dashboard.Subsystem.softwarePid,
+                                Dashboard.Subsystem.enableSquid);
+                            robot.elevator.presetPositionUp(null, Dashboard.Subsystem.powerLimit);
+                        }
+                    }
+                    else if (RobotParams.Preferences.tuneArm)
+                    {
+                        if (pressed)
+                        {
+                            robot.arm.setPositionPidParameters(
+                                Dashboard.Subsystem.pidCoeffs, Dashboard.Subsystem.ffCoeffs,
+                                Dashboard.Subsystem.pidTolerance, Dashboard.Subsystem.softwarePid,
+                                Dashboard.Subsystem.enableSquid);
+                            robot.arm.presetPositionUp(null, Dashboard.Subsystem.powerLimit);
+                        }
+                    }
+                    else if (RobotParams.Preferences.tuneShooterMotor1)
+                    {
+                        if (pressed)
+                        {
+                            robot.shooter.shooterMotor1.setPositionPidParameters(
+                                Dashboard.Subsystem.pidCoeffs, Dashboard.Subsystem.ffCoeffs,
+                                Dashboard.Subsystem.pidTolerance, Dashboard.Subsystem.softwarePid,
+                                Dashboard.Subsystem.enableSquid);
+                            robot.shooter.shooterMotor1.presetPositionUp(null, Dashboard.Subsystem.powerLimit);
+                        }
+                    }
+                    else if (RobotParams.Preferences.tuneShooterMotor2)
+                    {
+                        if (pressed)
+                        {
+                            robot.shooter.shooterMotor2.setPositionPidParameters(
+                                Dashboard.Subsystem.pidCoeffs, Dashboard.Subsystem.ffCoeffs,
+                                Dashboard.Subsystem.pidTolerance, Dashboard.Subsystem.softwarePid,
+                                Dashboard.Subsystem.enableSquid);
+                            robot.shooter.shooterMotor2.presetPositionUp(null, Dashboard.Subsystem.powerLimit);
+                        }
+                    }
                     passToTeleOp = false;
                 }
                 break;
@@ -614,6 +658,50 @@ public class FtcTest extends FtcTeleOp
                         {
                             FtcSwerveDrive swerveDrive = (FtcSwerveDrive) robot.robotDrive;
                             swerveDrive.setSteerAngle(180.0, false, true);
+                        }
+                    }
+                    else if (RobotParams.Preferences.tuneElevator)
+                    {
+                        if (pressed)
+                        {
+                            robot.elevator.setPositionPidParameters(
+                                Dashboard.Subsystem.pidCoeffs, Dashboard.Subsystem.ffCoeffs,
+                                Dashboard.Subsystem.pidTolerance, Dashboard.Subsystem.softwarePid,
+                                Dashboard.Subsystem.enableSquid);
+                            robot.elevator.presetPositionDown(null, Dashboard.Subsystem.powerLimit);
+                        }
+                    }
+                    else if (RobotParams.Preferences.tuneArm)
+                    {
+                        if (pressed)
+                        {
+                            robot.arm.setPositionPidParameters(
+                                Dashboard.Subsystem.pidCoeffs, Dashboard.Subsystem.ffCoeffs,
+                                Dashboard.Subsystem.pidTolerance, Dashboard.Subsystem.softwarePid,
+                                Dashboard.Subsystem.enableSquid);
+                            robot.arm.presetPositionDown(null, Dashboard.Subsystem.powerLimit);
+                        }
+                    }
+                    else if (RobotParams.Preferences.tuneShooterMotor1)
+                    {
+                        if (pressed)
+                        {
+                            robot.shooter.shooterMotor1.setPositionPidParameters(
+                                Dashboard.Subsystem.pidCoeffs, Dashboard.Subsystem.ffCoeffs,
+                                Dashboard.Subsystem.pidTolerance, Dashboard.Subsystem.softwarePid,
+                                Dashboard.Subsystem.enableSquid);
+                            robot.shooter.shooterMotor1.presetPositionDown(null, Dashboard.Subsystem.powerLimit);
+                        }
+                    }
+                    else if (RobotParams.Preferences.tuneShooterMotor2)
+                    {
+                        if (pressed)
+                        {
+                            robot.shooter.shooterMotor2.setPositionPidParameters(
+                                Dashboard.Subsystem.pidCoeffs, Dashboard.Subsystem.ffCoeffs,
+                                Dashboard.Subsystem.pidTolerance, Dashboard.Subsystem.softwarePid,
+                                Dashboard.Subsystem.enableSquid);
+                            robot.shooter.shooterMotor2.presetPositionDown(null, Dashboard.Subsystem.powerLimit);
                         }
                     }
                     passToTeleOp = false;
