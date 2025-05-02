@@ -49,7 +49,7 @@ public class RobotParams
         public static final boolean useLoopPerformanceMonitor   = true;
         public static final boolean useBatteryMonitor           = false;
         // Driver feedback
-        // Status Update: Status Update may affect robot loop time, don't do it when in competition.
+        // Status Update: Dashboard Update may affect robot loop time, don't do it when in competition.
         public static final boolean updateDashboard             = !inCompetition;
         public static final boolean showDriveBase               = false;
         public static final boolean showPidDrive                = false;

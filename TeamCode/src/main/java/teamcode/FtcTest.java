@@ -265,11 +265,6 @@ public class FtcTest extends FtcTeleOp
             testCommand.cancel();
         }
 
-        if (robot.robotDrive != null)
-        {
-            robot.robotDrive.cancel();
-        }
-
         super.stopMode(prevMode, nextMode);
     }   //stopMode
 

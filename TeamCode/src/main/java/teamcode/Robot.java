@@ -41,7 +41,6 @@ import trclib.robotcore.TrcEvent;
 import trclib.robotcore.TrcRobot;
 import trclib.sensor.TrcDigitalInput;
 import trclib.subsystem.TrcSubsystem;
-import trclib.timer.TrcTimer;
 
 /**
  * This class creates the robot object that consists of sensors, indicators, drive base and all the subsystems.
@@ -55,7 +54,6 @@ public class Robot
     public final FtcDashboard dashboard;
     public static FtcMatchInfo matchInfo = null;
     private static TrcPose2D endOfAutoRobotPose = null;
-    private static double nextStatusUpdateTime = 0.0;
     // Robot Drive.
     public RobotBase robotBase;
     public FtcRobotDrive.RobotInfo robotInfo;
@@ -82,7 +80,6 @@ public class Robot
         opMode = FtcOpMode.getInstance();
         globalTracer = TrcDbgTrace.getGlobalTracer();
         dashboard = FtcDashboard.getInstance();
-        nextStatusUpdateTime = TrcTimer.getCurrentTime();
         speak("Init starting");
         // Create and initialize Robot Base.
         robotBase = new RobotBase();
@@ -192,6 +189,8 @@ public class Robot
      */
     public void stopMode(TrcRobot.RunMode runMode)
     {
+        // Cancel all operations.
+        cancelAll();
         //
         // Print all performance counters if there are any.
         //

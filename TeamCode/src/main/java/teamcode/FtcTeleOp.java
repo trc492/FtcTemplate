@@ -67,14 +67,9 @@ public class FtcTeleOp extends FtcOpMode
     @Override
     public void robotInit()
     {
-        //
         // Create and initialize robot object.
-        //
         robot = new Robot(TrcRobot.getRunMode());
-
-        //
         // Open trace log.
-        //
         if (RobotParams.Preferences.useTraceLog)
         {
             String filePrefix = Robot.matchInfo != null?
@@ -82,9 +77,7 @@ public class FtcTeleOp extends FtcOpMode
                 "Unknown_TeleOp";
             TrcDbgTrace.openTraceLog(RobotParams.Robot.LOG_FOLDER_PATH, filePrefix);
         }
-        //
         // Create and initialize Gamepads.
-        //
         driverGamepad = new FtcGamepad("DriverGamepad", gamepad1);
         driverGamepad.setButtonEventHandler(this::driverButtonEvent);
         driverGamepad.setLeftStickInverted(false, true);
@@ -258,7 +251,7 @@ public class FtcTeleOp extends FtcOpMode
      *
      * @param orientation specifies the drive orientation (FIELD, ROBOT, INVERTED).
      */
-    public void setDriveOrientation(TrcDriveBase.DriveOrientation orientation)
+    private void setDriveOrientation(TrcDriveBase.DriveOrientation orientation)
     {
         if (robot.robotDrive != null)
         {
@@ -322,23 +315,17 @@ public class FtcTeleOp extends FtcOpMode
                 break;
 
             case B:
+                break;
+
             case X:
+                if (pressed)
+                {
+                    robot.globalTracer.traceInfo(moduleName, ">>>>> Turtle mode.");
+                    robot.turtle();
+                }
                 break;
 
             case Y:
-                if (pressed)
-                {
-                    if (driverAltFunc)
-                    {
-                        robot.globalTracer.traceInfo(moduleName, ">>>>> Cancel all.");
-                        robot.cancelAll();
-                    }
-                    else
-                    {
-                        robot.globalTracer.traceInfo(moduleName, ">>>>> Turtle mode.");
-                        robot.turtle();
-                    }
-                }
                 break;
 
             case LeftBumper:
@@ -347,15 +334,7 @@ public class FtcTeleOp extends FtcOpMode
                 break;
 
             case RightBumper:
-                if (driverAltFunc)
-                {
-                    if (!RobotParams.Preferences.updateDashboard)
-                    {
-                        // Toggle status update ON/OFF.
-                        statusUpdateOn = !statusUpdateOn;
-                    }
-                }
-                else
+                if (!driverAltFunc)
                 {
                     // Press and hold for slow drive.
                     if (pressed)
@@ -371,6 +350,14 @@ public class FtcTeleOp extends FtcOpMode
                         turnPowerScale = RobotParams.Robot.TURN_NORMAL_SCALE;
                     }
                 }
+                else if (pressed)
+                {
+                    if (!RobotParams.Preferences.updateDashboard)
+                    {
+                        // Toggle status update ON/OFF.
+                        statusUpdateOn = !statusUpdateOn;
+                    }
+                }
                 break;
 
             case DpadUp:
@@ -382,29 +369,40 @@ public class FtcTeleOp extends FtcOpMode
             case Back:
                 if (pressed)
                 {
-                    robot.globalTracer.traceInfo(moduleName, ">>>>> ZeroCalibrating.");
-                    robot.cancelAll();
-                    robot.zeroCalibrate(moduleName, null);
-                    if (robot.robotDrive != null && robot.robotDrive instanceof FtcSwerveDrive)
+                    if (!driverAltFunc)
                     {
-                        // Drive base is a Swerve Drive, align all steering wheels forward.
-                        robot.globalTracer.traceInfo(moduleName, ">>>>> Set SteerAngle to zero.");
-                        ((FtcSwerveDrive) robot.robotDrive).setSteerAngle(0.0, false, false);
+                        // Cancel all operations and zero calibrate all subsystems (arm, elevator and turret).
+                        robot.globalTracer.traceInfo(moduleName, ">>>>> ZeroCalibrating.");
+                        robot.cancelAll();
+                        robot.zeroCalibrate(moduleName, null);
+                    }
+                    else
+                    {
+                        // If drive base is SwerveDrive, set all wheels pointing forward.
+                        if (robot.robotDrive != null && robot.robotDrive instanceof FtcSwerveDrive)
+                        {
+                            // Drive base is a Swerve Drive, align all steering wheels forward.
+                            robot.globalTracer.traceInfo(moduleName, ">>>>> Set SteerAngle to zero.");
+                            ((FtcSwerveDrive) robot.robotDrive).setSteerAngle(0.0, false, false);
+                        }
                     }
                 }
                 break;
 
             case Start:
+                // Do AprilTag Vision re-localization.
                 if (robot.vision != null && robot.robotDrive != null)
                 {
                     boolean hasAprilTagVision = robot.vision.isAprilTagVisionEnabled();
-
+                    // If Webcam AprilTag vision is not enabled, check if we have Limelight since Limelight has
+                    // AprilTag pipeline as well.
                     if (!hasAprilTagVision && robot.vision.limelightVision != null)
                     {
                         hasAprilTagVision = true;
                         if (pressed)
                         {
                             // Webcam AprilTag vision is not enable, enable Limelight AprilTag pipeline instead.
+                            // Note: we assume pipeline 0 is the AprilTag pipeline.
                             savedLimelightPipeline = robot.vision.limelightVision.getPipeline();
                             robot.vision.setLimelightVisionEnabled(0, true);
                         }
@@ -475,7 +473,7 @@ public class FtcTeleOp extends FtcOpMode
             case Back:
                 if (pressed)
                 {
-                    // Zero calibrate all subsystems (arm, elevator and turret).
+                    // Cancel all operations and zero calibrate all subsystems (arm, elevator and turret).
                     robot.globalTracer.traceInfo(moduleName, ">>>>> ZeroCalibrating.");
                     robot.cancelAll();
                     robot.zeroCalibrate(moduleName, null);
