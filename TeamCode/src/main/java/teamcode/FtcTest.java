@@ -621,6 +621,17 @@ public class FtcTest extends FtcTeleOp
                             robot.arm.presetPositionUp(null, Dashboard.Subsystem.powerLimit);
                         }
                     }
+                    else if (RobotParams.Preferences.tuneTurret)
+                    {
+                        if (pressed)
+                        {
+                            robot.turret.setPositionPidParameters(
+                                Dashboard.Subsystem.pidCoeffs, Dashboard.Subsystem.ffCoeffs,
+                                Dashboard.Subsystem.pidTolerance, Dashboard.Subsystem.softwarePid,
+                                Dashboard.Subsystem.enableSquid);
+                            robot.turret.presetPositionUp(null, Dashboard.Subsystem.powerLimit);
+                        }
+                    }
                     else if (RobotParams.Preferences.tuneShooterMotor1)
                     {
                         if (pressed)
@@ -680,6 +691,17 @@ public class FtcTest extends FtcTeleOp
                                 Dashboard.Subsystem.pidTolerance, Dashboard.Subsystem.softwarePid,
                                 Dashboard.Subsystem.enableSquid);
                             robot.arm.presetPositionDown(null, Dashboard.Subsystem.powerLimit);
+                        }
+                    }
+                    else if (RobotParams.Preferences.tuneTurret)
+                    {
+                        if (pressed)
+                        {
+                            robot.turret.setPositionPidParameters(
+                                Dashboard.Subsystem.pidCoeffs, Dashboard.Subsystem.ffCoeffs,
+                                Dashboard.Subsystem.pidTolerance, Dashboard.Subsystem.softwarePid,
+                                Dashboard.Subsystem.enableSquid);
+                            robot.turret.presetPositionDown(null, Dashboard.Subsystem.powerLimit);
                         }
                     }
                     else if (RobotParams.Preferences.tuneShooterMotor1)

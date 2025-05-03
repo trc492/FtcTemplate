@@ -39,6 +39,7 @@ import teamcode.subsystems.RobotBase;
 import teamcode.subsystems.RumbleIndicator;
 import teamcode.subsystems.ServoWrist;
 import teamcode.subsystems.Shooter;
+import teamcode.subsystems.Turret;
 import teamcode.vision.Vision;
 import trclib.dataprocessor.TrcDiscreteValue;
 import trclib.motor.TrcMotor;
@@ -80,6 +81,7 @@ public class Robot
     // Subsystems.
     public TrcMotor elevator;
     public TrcMotor arm;
+    public TrcMotor turret;
     public TrcShooter shooter;
     public TrcDiscreteValue shooterVelocity;
     public TrcIntake intake;
@@ -142,6 +144,11 @@ public class Robot
                 if (RobotParams.Preferences.useArm)
                 {
                     arm = new Arm().getMotor();
+                }
+
+                if (RobotParams.Preferences.useTurret)
+                {
+                    turret = new Turret().getMotor();
                 }
 
                 if (RobotParams.Preferences.useShooter)
