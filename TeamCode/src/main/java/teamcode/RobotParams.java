@@ -98,6 +98,8 @@ public class RobotParams
      */
     public static class Robot
     {
+//        public static final String TEAM_FOLDER_PATH             =
+//            AppUtil.getDefContext().getExternalFilesDir(null).getPath() + "/FIRST/ftcTeam";
         public static final String TEAM_FOLDER_PATH             =
             Environment.getExternalStorageDirectory().getPath() + "/FIRST/ftcTeam";
         public static final String LOG_FOLDER_PATH              = TEAM_FOLDER_PATH + "/tracelogs";
