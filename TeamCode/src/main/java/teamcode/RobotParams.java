@@ -83,6 +83,7 @@ public class RobotParams
         public static final boolean useClaw                     = false;
         public static final boolean useServoWrist               = false;
         public static final boolean useDiffyServoWrist          = false;
+        public static final boolean useServoExtender            = false;
         // Tuning
         public static final boolean tuneColorBlobVision         = false;
         public static final boolean tuneDriveBase               = false;

@@ -37,6 +37,7 @@ import teamcode.subsystems.Intake;
 import teamcode.subsystems.LEDIndicator;
 import teamcode.subsystems.RobotBase;
 import teamcode.subsystems.RumbleIndicator;
+import teamcode.subsystems.ServoExtender;
 import teamcode.subsystems.ServoWrist;
 import teamcode.subsystems.Shooter;
 import teamcode.subsystems.Turret;
@@ -53,7 +54,6 @@ import trclib.subsystem.TrcIntake;
 import trclib.subsystem.TrcServoClaw;
 import trclib.subsystem.TrcShooter;
 import trclib.subsystem.TrcSubsystem;
-import trclib.timer.TrcTimer;
 
 /**
  * This class creates the robot object that consists of sensors, indicators, drive base and all the subsystems.
@@ -88,6 +88,7 @@ public class Robot
     public TrcServoClaw claw;
     public TrcServo servoWrist;
     public DiffyServoWrist diffyServoWrist;
+    public ServoExtender servoExtender;
     // Autotasks.
 
     /**
@@ -179,6 +180,11 @@ public class Robot
                 if (RobotParams.Preferences.useDiffyServoWrist)
                 {
                     diffyServoWrist = new DiffyServoWrist();
+                }
+
+                if (RobotParams.Preferences.useServoExtender)
+                {
+                    servoExtender = new ServoExtender();
                 }
                 // Zero calibrate all subsystems only in Auto or if TeleOp is run standalone without prior Auto.
                 // There is no reason to zero calibrate again if Auto was run right before TeleOp.

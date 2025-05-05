@@ -65,6 +65,7 @@ public class FtcTeleOp extends FtcOpMode
     private double prevWristRotatePower = 0.0;
     private boolean shooterOn = false;
     private double prevShooterVelocity = 0.0;
+    private boolean extenderExtended = false;
 
     //
     // Implements FtcOpMode abstract method.
@@ -586,6 +587,21 @@ public class FtcTeleOp extends FtcOpMode
                         else
                         {
                             robot.claw.cancel();
+                        }
+                    }
+                }
+                else if (robot.servoExtender != null)
+                {
+                    if (pressed)
+                    {
+                        extenderExtended = !extenderExtended;
+                        if (extenderExtended)
+                        {
+                            robot.servoExtender.extend();
+                        }
+                        else
+                        {
+                            robot.servoExtender.retract();
                         }
                     }
                 }
