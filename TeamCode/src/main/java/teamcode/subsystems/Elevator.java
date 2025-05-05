@@ -96,6 +96,7 @@ public class Elevator extends TrcSubsystem
         motor.setPositionPidParameters(
             Params.posPidCoeffs, Params.POS_PID_TOLERANCE, Params.SOFTWARE_PID_ENABLED);
         motor.setPositionPidPowerComp(this::getGravityComp);
+        motor.setSoftPositionLimits(Params.MIN_POS, Params.MAX_POS, false);
     }   //Elevator
 
     /**

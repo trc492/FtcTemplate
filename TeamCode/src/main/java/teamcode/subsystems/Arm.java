@@ -62,7 +62,6 @@ public class Arm extends TrcSubsystem
         public static final double POS_PRESET_TOLERANCE         = 10.0;
 
         public static final boolean SOFTWARE_PID_ENABLED        = true;
-        public static final boolean SQUID_ENABLED               = false;
         public static final TrcPidController.PidCoefficients posPidCoeffs =
             new TrcPidController.PidCoefficients(0.018, 0.1, 0.001, 0.0, 2.0);
         public static final double POS_PID_TOLERANCE            = 1.0;
@@ -91,10 +90,11 @@ public class Arm extends TrcSubsystem
             .setPositionPresets(Params.POS_PRESET_TOLERANCE, Params.posPresets);
         motor = new FtcMotorActuator(motorParams).getMotor();
         motor.setPositionPidParameters(
-            Params.posPidCoeffs, null, Params.POS_PID_TOLERANCE, Params.SOFTWARE_PID_ENABLED, Params.SQUID_ENABLED);
+            Params.posPidCoeffs, Params.POS_PID_TOLERANCE, Params.SOFTWARE_PID_ENABLED);
         motor.setPositionPidPowerComp(this::getGravityComp);
         motor.setStallProtection(
             Params.STALL_MIN_POWER, Params.STALL_TOLERANCE, Params.STALL_TIMEOUT, Params.STALL_RESET_TIMEOUT);
+        motor.setSoftPositionLimits(Params.MIN_POS, Params.MAX_POS, false);
     }   //Arm
 
     /**
