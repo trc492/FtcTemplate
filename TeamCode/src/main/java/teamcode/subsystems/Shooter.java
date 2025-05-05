@@ -32,13 +32,15 @@ import trclib.subsystem.TrcShooter;
 import trclib.subsystem.TrcSubsystem;
 
 /**
- * This class implements an Shooter Subsystem. The shooter subsystem consists of one or two shooter motors. For
+ * This class implements an Shooter Subsystem. This implementation consists of one or two shooter motors. For
  * two-motor shooter, the two motors can be arranged to spin in the same direction (2-stage shooting) or in opposite
  * directions. For opposite spinning motor arrangement, one can spin the motors at different speed to create back spin
  * when shooting the object. In the two-motor configuration, because the two motors may not be identical (even if they
  * are the same model), the subsystem allows you to tune different PID coefficients for each motor. The shooter
  * subsystem also supports optionally mounting on a pan and tilt platform. This allows for aiming the shooter at
  * the shooting target.
+ * There are many possible implementations by setting different parameters.
+ * Please refer to the TrcLib documentation (<a href="https://trc492.github.io">...</a>) for details.
  */
 public class Shooter extends TrcSubsystem
 {

@@ -30,11 +30,13 @@ import trclib.robotcore.TrcEvent;
 import trclib.subsystem.TrcSubsystem;
 
 /**
- * This class implements a Turret Subsystem. The Turret subsystem consists of a motor with built-in encoder. It has
+ * This class implements a Turret Subsystem. This implementation consists of a motor with built-in encoder. It has
  * a lower limit switch for zero calibrating the built-in relative encoder. Since Turret is circular in nature, it
  * is recommended to implement a hard stop to prevent the Turret from overrunning the upper limit causing the wiring
  * harness to be twisted. Even though we do implement soft limits on the Turret, hard stop would prevent folks from
  * spinning the turret round and round twisting the wiring harness when the robot is off.
+ * There are many possible implementations by setting different parameters.
+ * Please refer to the TrcLib documentation (<a href="https://trc492.github.io">...</a>) for details.
  */
 public class Turret extends TrcSubsystem
 {

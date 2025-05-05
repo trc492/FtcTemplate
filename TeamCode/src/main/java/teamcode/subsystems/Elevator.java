@@ -30,9 +30,11 @@ import trclib.robotcore.TrcEvent;
 import trclib.subsystem.TrcSubsystem;
 
 /**
- * This class implements an Elevator Subsystem. The Elevator subsystem consists of a motor with built-in encoder and
+ * This class implements an Elevator Subsystem. This implementation consists of two motors with built-in encoders and
  * a lower limit switch for zero calibrating the relative encoder. It supports gravity compensation. In the case of
  * an elevator, gravity compensation power is the constant power required to hold the elevator at any position.
+ * There are many possible implementations by setting different parameters.
+ * Please refer to the TrcLib documentation (<a href="https://trc492.github.io">...</a>) for details.
  */
 public class Elevator extends TrcSubsystem
 {
@@ -41,9 +43,15 @@ public class Elevator extends TrcSubsystem
         public static final String SUBSYSTEM_NAME               = "Elevator";
         public static final boolean NEED_ZERO_CAL               = true;
 
-        public static final String MOTOR_NAME                   = SUBSYSTEM_NAME + ".motor";
-        public static final FtcMotorActuator.MotorType MOTOR_TYPE= FtcMotorActuator.MotorType.DcMotor;
-        public static final boolean MOTOR_INVERTED              = true;
+        public static final String PRIMARY_MOTOR_NAME           = SUBSYSTEM_NAME + ".primary";
+        public static final FtcMotorActuator.MotorType PRIMARY_MOTOR_TYPE =
+            FtcMotorActuator.MotorType.DcMotor;
+        public static final boolean PRIMARY_MOTOR_INVERTED      = true;
+
+        public static final String FOLLOWER_MOTOR_NAME          = SUBSYSTEM_NAME + ".follower";
+        public static final FtcMotorActuator.MotorType FOLLOWER_MOTOR_TYPE =
+            FtcMotorActuator.MotorType.DcMotor;
+        public static final boolean FOLLOWER_MOTOR_INVERTED     = true;
 
         public static final String LOWER_LIMITSW_NAME           = SUBSYSTEM_NAME + ".lowerLimitSw";
         public static final boolean LOWER_LIMITSW_INVERTED      = false;
@@ -79,7 +87,8 @@ public class Elevator extends TrcSubsystem
 
         dashboard = FtcDashboard.getInstance();
         FtcMotorActuator.Params motorParams = new FtcMotorActuator.Params()
-            .setPrimaryMotor(Params.MOTOR_NAME, Params.MOTOR_TYPE, Params.MOTOR_INVERTED)
+            .setPrimaryMotor(Params.PRIMARY_MOTOR_NAME, Params.PRIMARY_MOTOR_TYPE, Params.PRIMARY_MOTOR_INVERTED)
+            .setFollowerMotor(Params.FOLLOWER_MOTOR_NAME, Params.FOLLOWER_MOTOR_TYPE, Params.FOLLOWER_MOTOR_INVERTED)
             .setLowerLimitSwitch(Params.LOWER_LIMITSW_NAME, Params.LOWER_LIMITSW_INVERTED)
             .setPositionScaleAndOffset(Params.INCHES_PER_COUNT, Params.POS_OFFSET)
             .setPositionPresets(Params.POS_PRESET_TOLERANCE, Params.posPresets);

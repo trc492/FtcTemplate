@@ -29,9 +29,11 @@ import trclib.robotcore.TrcEvent;
 import trclib.subsystem.TrcSubsystem;
 
 /**
- * This class creates the Servo Wrist subsystem. The Servo Wrist subsystem is a 1-DOF system that consists of a servo.
+ * This class creates the Servo Wrist subsystem. This implementation is a 1-DOF system that consists of a servo.
  * It allows the wrist to tilt up and down. Regular servos have a limited * range of movement. Therefore, it limits
  * the tilting range of the wrist.
+ * There are many possible implementations by setting different parameters.
+ * Please refer to the TrcLib documentation (<a href="https://trc492.github.io">...</a>) for details.
  */
 public class ServoWrist extends TrcSubsystem
 {
@@ -50,7 +52,6 @@ public class ServoWrist extends TrcSubsystem
 
         public static final double POS_PRESET_TOLERANCE         = 1.0;      // in degrees
         public static final double[] tiltPosPresets             = {-110, -90.0, -45.0, 0.0, 45.0, 90.0, 110};
-        public static final double[] rotatePosPresets           = {-90.0, -45.0, 0.0, 45.0, 90.0};
     }   //class Params
 
     private final FtcDashboard dashboard;

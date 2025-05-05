@@ -34,9 +34,11 @@ import trclib.subsystem.TrcServoClaw;
 import trclib.subsystem.TrcSubsystem;
 
 /**
- * This class implements a Claw Subsystem. The Claw subsystem consists of two servos and a sensor to detect the
+ * This class implements a Claw Subsystem. This implementation consists of two servos and a sensor to detect the
  * presence of an object and can auto grab it. The sensor can be either a digital sensor such as touch sensor or beam
  * break sensor) or an analog sensor such as a distance sensor.
+ * There are many possible implementations by setting different parameters.
+ * Please refer to the TrcLib documentation (<a href="https://trc492.github.io">...</a>) for details.
  */
 public class Claw extends TrcSubsystem
 {

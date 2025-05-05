@@ -30,9 +30,11 @@ import trclib.robotcore.TrcEvent;
 import trclib.subsystem.TrcSubsystem;
 
 /**
- * This class implements an Arm Subsystem. The Arm subsystem consists of a motor with built-in encoder. It does not
+ * This class implements an Arm Subsystem. This implementation consists of a motor with built-in encoder. It does not
  * have any limit switches, so it is using motor stall detection to zero calibrate the built-in relative encoder. It
  * supports gravity compensation by computing the power required to hold the arm at its current angle.
+ * There are many possible implementations by setting different parameters.
+ * Please refer to the TrcLib documentation (<a href="https://trc492.github.io">...</a>) for details.
  */
 public class Arm extends TrcSubsystem
 {

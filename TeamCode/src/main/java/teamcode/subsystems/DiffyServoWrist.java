@@ -29,12 +29,14 @@ import trclib.subsystem.TrcDifferentialServoWrist;
 import trclib.subsystem.TrcSubsystem;
 
 /**
- * This class creates the Differential Servo Wrist subsystem. The Differential Servo Wrist subsystem is a 2-DOF
- * system that consists of two servos. When the two servos rotate in the same direction, the wrist will tilt up and
- * down. When the two servos rotate in opposite direction, the wrist will rotate. Regular servos have a limited
- * range of movement. Because of this, the tilt and rotation of the wrist will limit each other's range of motion.
- * For example, if the wrist is tilted to one extreme end, the wrist cannot rotate. If the wrist is in the middle
- * tilt position, it will have maximum rotation range and vice versa.
+ * This class creates the Differential Servo Wrist subsystem. This implementation is a 2-DOF system that consists of
+ * two servos. When the two servos rotate in the same direction, the wrist will tilt up and down. When the two servos
+ * rotate in opposite direction, the wrist will rotate. Regular servos have a limited range of movement. Because of
+ * this, the tilt and rotation of the wrist will limit each other's range of motion. For example, if the wrist is
+ * tilted to one extreme end, the wrist cannot rotate. If the wrist is in the middle tilt position, it will have
+ * maximum rotation range and vice versa.
+ * There are many possible implementations by setting different parameters.
+ * Please refer to the TrcLib documentation (<a href="https://trc492.github.io">...</a>) for details.
  */
 public class DiffyServoWrist extends TrcSubsystem
 {
