@@ -29,7 +29,8 @@ import java.util.Locale;
 import ftclib.drivebase.FtcSwerveDrive;
 import ftclib.driverio.FtcGamepad;
 import ftclib.robotcore.FtcOpMode;
-import teamcode.subsystems.Arm;
+import teamcode.subsystems.CrServoArm;
+import teamcode.subsystems.DcMotorArm;
 import teamcode.subsystems.Elevator;
 import teamcode.subsystems.Intake;
 import teamcode.subsystems.RumbleIndicator;
@@ -268,7 +269,7 @@ public class FtcTeleOp extends FtcOpMode
                         prevElevatorPower = elevatorPower;
                     }
                 }
-                else if (robot.arm != null)
+                else if (robot.dcMotorArm != null)
                 {
                     double armPower = operatorGamepad.getLeftStickY(true);
                     if (armPower != prevArmPower)
@@ -276,11 +277,30 @@ public class FtcTeleOp extends FtcOpMode
                         if (operatorAltFunc)
                         {
                             // Manual override.
-                            robot.arm.setPower(armPower);
+                            robot.dcMotorArm.setPower(armPower);
                         }
                         else
                         {
-                            robot.arm.setPidPower(armPower, Arm.Params.MIN_POS, Arm.Params.MAX_POS, true);
+                            robot.dcMotorArm.setPidPower(
+                                armPower, DcMotorArm.Params.MIN_POS, DcMotorArm.Params.MAX_POS, true);
+                        }
+                        prevArmPower = armPower;
+                    }
+                }
+                else if (robot.crServoArm != null)
+                {
+                    double armPower = operatorGamepad.getLeftStickY(true);
+                    if (armPower != prevArmPower)
+                    {
+                        if (operatorAltFunc)
+                        {
+                            // Manual override.
+                            robot.crServoArm.setPower(armPower);
+                        }
+                        else
+                        {
+                            robot.crServoArm.setPidPower(
+                                armPower, CrServoArm.Params.MIN_POS, CrServoArm.Params.MAX_POS, true);
                         }
                         prevArmPower = armPower;
                     }
@@ -626,11 +646,18 @@ public class FtcTeleOp extends FtcOpMode
                         robot.elevator.presetPositionUp(null, Elevator.Params.POWER_LIMIT);
                     }
                 }
-                else if (robot.arm != null)
+                else if (robot.dcMotorArm != null)
                 {
                     if (pressed)
                     {
-                        robot.arm.presetPositionUp(null, Arm.Params.POWER_LIMIT);
+                        robot.dcMotorArm.presetPositionUp(null, DcMotorArm.Params.POWER_LIMIT);
+                    }
+                }
+                else if (robot.crServoArm != null)
+                {
+                    if (pressed)
+                    {
+                        robot.crServoArm.presetPositionUp(null, CrServoArm.Params.POWER_LIMIT);
                     }
                 }
                 else if (robot.shooter != null)
@@ -664,11 +691,18 @@ public class FtcTeleOp extends FtcOpMode
                         robot.elevator.presetPositionDown(null, Elevator.Params.POWER_LIMIT);
                     }
                 }
-                else if (robot.arm != null)
+                else if (robot.dcMotorArm != null)
                 {
                     if (pressed)
                     {
-                        robot.arm.presetPositionDown(null, Arm.Params.POWER_LIMIT);
+                        robot.dcMotorArm.presetPositionDown(null, DcMotorArm.Params.POWER_LIMIT);
+                    }
+                }
+                else if (robot.crServoArm != null)
+                {
+                    if (pressed)
+                    {
+                        robot.crServoArm.presetPositionDown(null, CrServoArm.Params.POWER_LIMIT);
                     }
                 }
                 else if (robot.shooter != null)

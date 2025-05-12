@@ -76,7 +76,8 @@ public class RobotParams
         // Subsystems
         public static final boolean useSubsystems               = false;
         public static final boolean useElevator                 = false;
-        public static final boolean useArm                      = false;
+        public static final boolean useDcMotorArm               = false;
+        public static final boolean useCrServoArm               = false;
         public static final boolean useTurret                   = false;
         public static final boolean useShooter                  = false;
         public static final boolean useIntake                   = false;
@@ -88,7 +89,8 @@ public class RobotParams
         public static final boolean tuneColorBlobVision         = false;
         public static final boolean tuneDriveBase               = false;
         public static final boolean tuneElevator                = false;
-        public static final boolean tuneArm                     = false;
+        public static final boolean tuneDcMotorArm              = false;
+        public static final boolean tuneCrServoArm              = false;
         public static final boolean tuneTurret                  = false;
         public static final boolean tuneShooterMotor1           = false;
         public static final boolean tuneShooterMotor2           = false;

@@ -29,7 +29,8 @@ import ftclib.driverio.FtcDashboard;
 import ftclib.driverio.FtcMatchInfo;
 import ftclib.robotcore.FtcOpMode;
 import ftclib.sensor.FtcRobotBattery;
-import teamcode.subsystems.Arm;
+import teamcode.subsystems.CrServoArm;
+import teamcode.subsystems.DcMotorArm;
 import teamcode.subsystems.Claw;
 import teamcode.subsystems.DiffyServoWrist;
 import teamcode.subsystems.Elevator;
@@ -80,7 +81,8 @@ public class Robot
     public FtcRobotBattery battery;
     // Subsystems.
     public TrcMotor elevator;
-    public TrcMotor arm;
+    public TrcMotor dcMotorArm;
+    public TrcMotor crServoArm;
     public TrcMotor turret;
     public TrcShooter shooter;
     public TrcDiscreteValue shooterVelocity;
@@ -142,9 +144,14 @@ public class Robot
                     elevator = new Elevator().getMotor();
                 }
 
-                if (RobotParams.Preferences.useArm)
+                if (RobotParams.Preferences.useDcMotorArm)
                 {
-                    arm = new Arm().getMotor();
+                    dcMotorArm = new DcMotorArm().getMotor();
+                }
+
+                if (RobotParams.Preferences.useCrServoArm)
+                {
+                    crServoArm = new CrServoArm().getMotor();
                 }
 
                 if (RobotParams.Preferences.useTurret)

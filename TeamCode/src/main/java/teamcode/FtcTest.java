@@ -610,15 +610,26 @@ public class FtcTest extends FtcTeleOp
                             robot.elevator.presetPositionUp(null, Dashboard.Subsystem.powerLimit);
                         }
                     }
-                    else if (RobotParams.Preferences.tuneArm)
+                    else if (RobotParams.Preferences.tuneDcMotorArm)
                     {
                         if (pressed)
                         {
-                            robot.arm.setPositionPidParameters(
+                            robot.dcMotorArm.setPositionPidParameters(
                                 Dashboard.Subsystem.pidCoeffs, Dashboard.Subsystem.ffCoeffs,
                                 Dashboard.Subsystem.pidTolerance, Dashboard.Subsystem.softwarePid,
                                 Dashboard.Subsystem.enableSquid);
-                            robot.arm.presetPositionUp(null, Dashboard.Subsystem.powerLimit);
+                            robot.dcMotorArm.presetPositionUp(null, Dashboard.Subsystem.powerLimit);
+                        }
+                    }
+                    else if (RobotParams.Preferences.tuneCrServoArm)
+                    {
+                        if (pressed)
+                        {
+                            robot.crServoArm.setPositionPidParameters(
+                                Dashboard.Subsystem.pidCoeffs, Dashboard.Subsystem.ffCoeffs,
+                                Dashboard.Subsystem.pidTolerance, Dashboard.Subsystem.softwarePid,
+                                Dashboard.Subsystem.enableSquid);
+                            robot.crServoArm.presetPositionUp(null, Dashboard.Subsystem.powerLimit);
                         }
                     }
                     else if (RobotParams.Preferences.tuneTurret)
@@ -682,15 +693,26 @@ public class FtcTest extends FtcTeleOp
                             robot.elevator.presetPositionDown(null, Dashboard.Subsystem.powerLimit);
                         }
                     }
-                    else if (RobotParams.Preferences.tuneArm)
+                    else if (RobotParams.Preferences.tuneDcMotorArm)
                     {
                         if (pressed)
                         {
-                            robot.arm.setPositionPidParameters(
+                            robot.dcMotorArm.setPositionPidParameters(
                                 Dashboard.Subsystem.pidCoeffs, Dashboard.Subsystem.ffCoeffs,
                                 Dashboard.Subsystem.pidTolerance, Dashboard.Subsystem.softwarePid,
                                 Dashboard.Subsystem.enableSquid);
-                            robot.arm.presetPositionDown(null, Dashboard.Subsystem.powerLimit);
+                            robot.dcMotorArm.presetPositionDown(null, Dashboard.Subsystem.powerLimit);
+                        }
+                    }
+                    else if (RobotParams.Preferences.tuneCrServoArm)
+                    {
+                        if (pressed)
+                        {
+                            robot.crServoArm.setPositionPidParameters(
+                                Dashboard.Subsystem.pidCoeffs, Dashboard.Subsystem.ffCoeffs,
+                                Dashboard.Subsystem.pidTolerance, Dashboard.Subsystem.softwarePid,
+                                Dashboard.Subsystem.enableSquid);
+                            robot.crServoArm.presetPositionDown(null, Dashboard.Subsystem.powerLimit);
                         }
                     }
                     else if (RobotParams.Preferences.tuneTurret)

@@ -30,17 +30,17 @@ import trclib.robotcore.TrcEvent;
 import trclib.subsystem.TrcSubsystem;
 
 /**
- * This class implements an Arm Subsystem. This implementation consists of a motor with built-in encoder. It does not
- * have any limit switches, so it is using motor stall detection to zero calibrate the built-in relative encoder. It
- * supports gravity compensation by computing the power required to hold the arm at its current angle.
+ * This class implements a DcMotorArm Subsystem. This implementation consists of a motor with built-in encoder. It
+ * does not have any limit switches, so it is using motor stall detection to zero calibrate the built-in relative
+ * encoder. It supports gravity compensation by computing the power required to hold the arm at its current angle.
  * There are many possible implementations by setting different parameters.
  * Please refer to the TrcLib documentation (<a href="https://trc492.github.io">...</a>) for details.
  */
-public class Arm extends TrcSubsystem
+public class DcMotorArm extends TrcSubsystem
 {
     public static final class Params
     {
-        public static final String SUBSYSTEM_NAME               = "Arm";
+        public static final String SUBSYSTEM_NAME               = "DcMotorArm";
         public static final boolean NEED_ZERO_CAL               = true;
 
         public static final String MOTOR_NAME                   = SUBSYSTEM_NAME + ".motor";
@@ -79,7 +79,7 @@ public class Arm extends TrcSubsystem
     /**
      * Constructor: Creates an instance of the object.
      */
-    public Arm()
+    public DcMotorArm()
     {
         super(Params.SUBSYSTEM_NAME, Params.NEED_ZERO_CAL);
 
@@ -95,10 +95,10 @@ public class Arm extends TrcSubsystem
         motor.setStallProtection(
             Params.STALL_MIN_POWER, Params.STALL_TOLERANCE, Params.STALL_TIMEOUT, Params.STALL_RESET_TIMEOUT);
         motor.setSoftPositionLimits(Params.MIN_POS, Params.MAX_POS, false);
-    }   //Arm
+    }   //DcMotorArm
 
     /**
-     * This method returns the created Arm motor.
+     * This method returns the created DcMotorArm motor.
      *
      * @return created arm motor.
      */
@@ -167,4 +167,4 @@ public class Arm extends TrcSubsystem
         return lineNum;
     }   //updateStatus
 
-}   //class Arm
+}   //class DcMotorArm
