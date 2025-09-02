@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Titan Robotics Club (http://www.titanrobotics.com)
+ * Copyright (c) 2025 Titan Robotics Club (http://www.titanrobotics.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package teamcode.tasks;
+package teamcode.autotasks;
 
 import androidx.annotation.NonNull;
 
@@ -79,7 +79,9 @@ public class TaskAuto extends TrcAutoTask<TaskAuto.State>
     public void autoAssist(String owner, TrcEvent completionEvent)
     {
         TaskParams taskParams = new TaskParams();
-        tracer.traceInfo(moduleName, "owner=" + owner + ", taskParams=(" + taskParams + ", event=" + completionEvent);
+        tracer.traceInfo(
+            moduleName,
+            "autoAssist(owner=" + owner + ", event=" + completionEvent + ", taskParams=(" + taskParams + "))");
         startAutoTask(owner, State.START, taskParams, completionEvent);
     }   //autoAssist
 
@@ -88,8 +90,8 @@ public class TaskAuto extends TrcAutoTask<TaskAuto.State>
     //
 
     /**
-     * This method is called by the super class to acquire ownership of all subsystems involved in the auto-assist
-     * operation. This is typically done before starting an auto-assist operation.
+     * This method is called to acquire ownership of all subsystems involved in the auto task operation. This is
+     * typically called before starting an auto task operation.
      *
      * @param owner specifies the owner to acquire the subsystem ownerships.
      * @return true if acquired all subsystems ownership, false otherwise. It releases all ownership if any acquire
@@ -100,13 +102,14 @@ public class TaskAuto extends TrcAutoTask<TaskAuto.State>
     {
         // Call each subsystem.acquireExclusiveAccess(owner) and return true only if all acquires returned true.
         // For example:
-        // return subsystem1.acquireExclusiveAccess(owner) && subsystem2.acquireExclusiveAccess(owner) ...
-        return robot.robotDrive.driveBase.acquireExclusiveAccess(owner);
+        // return owner == null ||
+        //        subsystem1.acquireExclusiveAccess(owner) && subsystem2.acquireExclusiveAccess(owner);
+        return owner == null || robot.robotDrive.driveBase.acquireExclusiveAccess(owner);
     }   //acquireSubsystemsOwnership
 
     /**
-     * This method is called by the super class to release ownership of all subsystems involved in the auto-assist
-     * operation. This is typically done if the auto-assist operation is completed or canceled.
+     * This method is called to release ownership of all subsystems involved in the auto task operation. This is
+     * typically called if the auto task operation is completed or canceled.
      *
      * @param owner specifies the owner that acquired the subsystem ownerships.
      */
@@ -119,13 +122,14 @@ public class TaskAuto extends TrcAutoTask<TaskAuto.State>
             tracer.traceInfo(
                 moduleName,
                 "Releasing subsystem ownership on behalf of " + owner +
-                ", robotDrive=" + ownershipMgr.getOwner(robot.robotDrive.driveBase));
+                "\n\trobotDrive=" + ownershipMgr.getOwner(robot.robotDrive.driveBase));
             robot.robotDrive.driveBase.releaseExclusiveAccess(owner);
         }
     }   //releaseSubsystemsOwnership
 
     /**
-     * This method is called by the super class to stop all the subsystems.
+     * This method is called to stop all the subsystems. This is typically called if the auto task operation is
+     * completed or canceled.
      *
      * @param owner specifies the owner that acquired the subsystem ownerships.
      */

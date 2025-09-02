@@ -35,6 +35,12 @@ import trclib.driverio.TrcRevBlinkin;
  */
 public class LEDIndicator
 {
+    public enum LEDType
+    {
+        GobildaLEDIndicator,
+        RevBlinkin
+    }   //enum LEDType
+
     // LED pattern names.
     public static final String RED_BLOB = "RedBlob";
     public static final String BLUE_BLOB = "BlueBlob";
@@ -51,10 +57,11 @@ public class LEDIndicator
      * Constructor: Create an instance of the object.
      *
      * @param indicatorName specifies the indicator hardware name.
+     * @param ledType specifies the LED type.
      */
-    public LEDIndicator(String indicatorName)
+    public LEDIndicator(String indicatorName, LEDType ledType)
     {
-        if (RobotParams.Preferences.useGobildaLED)
+        if (ledType == LEDType.GobildaLEDIndicator)
         {
             // LED Patterns are sorted in decreasing priority order.
             final TrcGobildaIndicatorLight.Pattern[] ledPatternPriorities = {
@@ -72,7 +79,7 @@ public class LEDIndicator
             indicator = new FtcGobildaIndicatorLight(indicatorName);
             ((FtcGobildaIndicatorLight) indicator).setPatternPriorities(ledPatternPriorities);
         }
-        else if (RobotParams.Preferences.useBlinkinLED)
+        else if (ledType == LEDType.RevBlinkin)
         {
             // LED Patterns are sorted in decreasing priority order.
             final TrcRevBlinkin.Pattern[] ledPatternPriorities = {

@@ -61,7 +61,8 @@ public class Robot
     // Vision subsystems.
     public Vision vision;
     // Sensors and indicators.
-    public LEDIndicator ledIndicator;
+    public LEDIndicator ledIndicator1;
+    public LEDIndicator ledIndicator2;
     public RumbleIndicator driverRumble;
     public RumbleIndicator operatorRumble;
     public FtcRobotBattery battery;
@@ -99,15 +100,11 @@ public class Robot
         if (RobotParams.Preferences.robotType != RobotBase.RobotType.VisionOnly)
         {
             // Create and initialize sensors and indicators.
-            if (robotInfo.indicatorName != null)
-            {
-                ledIndicator = new LEDIndicator(robotInfo.indicatorName);
-            }
-
-            if (RobotParams.Preferences.useBatteryMonitor)
-            {
-                battery = new FtcRobotBattery();
-            }
+            ledIndicator1 = robotInfo.indicator1Name != null?
+                new LEDIndicator(robotInfo.indicator1Name, robotInfo.indicator1Type): null;
+            ledIndicator2 = robotInfo.indicator2Name != null?
+                new LEDIndicator(robotInfo.indicator2Name, robotInfo.indicator2Type): null;
+            battery = RobotParams.Preferences.useBatteryMonitor? new FtcRobotBattery(): null;
             //
             // Create and initialize other subsystems.
             //
@@ -115,13 +112,14 @@ public class Robot
             {
                 // Create subsystems.
 
+                // Create autotasks.
+
                 // Zero calibrate all subsystems only in Auto or if TeleOp is run standalone without prior Auto.
                 // There is no reason to zero calibrate again if Auto was run right before TeleOp.
                 if (runMode == TrcRobot.RunMode.AUTO_MODE || FtcAuto.autoChoices.alliance == null)
                 {
                     zeroCalibrate(null, null);
                 }
-                // Create autotasks.
             }
         }
 

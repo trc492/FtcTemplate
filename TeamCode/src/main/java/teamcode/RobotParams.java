@@ -55,8 +55,6 @@ public class RobotParams
         public static final boolean showPidDrive                = false;
         public static final boolean showVision                  = false;
         public static final boolean showSubsystems              = true;
-        public static final boolean useBlinkinLED               = false;
-        public static final boolean useGobildaLED               = false;
         public static final boolean useRumble                   = false;
         // Vision
         public static final boolean useVision                   = false;
