@@ -22,9 +22,9 @@
 
 package teamcode.subsystems;
 
+import ftclib.drivebase.FtcRobotDrive;
 import ftclib.driverio.FtcGobildaIndicatorLight;
 import ftclib.driverio.FtcRevBlinkin;
-import teamcode.RobotParams;
 import trclib.drivebase.TrcDriveBase;
 import trclib.driverio.TrcGobildaIndicatorLight;
 import trclib.driverio.TrcPriorityIndicator;
@@ -35,12 +35,6 @@ import trclib.driverio.TrcRevBlinkin;
  */
 public class LEDIndicator
 {
-    public enum LEDType
-    {
-        GobildaLEDIndicator,
-        RevBlinkin
-    }   //enum LEDType
-
     // LED pattern names.
     public static final String RED_BLOB = "RedBlob";
     public static final String BLUE_BLOB = "BlueBlob";
@@ -59,9 +53,9 @@ public class LEDIndicator
      * @param indicatorName specifies the indicator hardware name.
      * @param ledType specifies the LED type.
      */
-    public LEDIndicator(String indicatorName, LEDType ledType)
+    public LEDIndicator(String indicatorName, FtcRobotDrive.LEDType ledType)
     {
-        if (ledType == LEDType.GobildaLEDIndicator)
+        if (ledType == FtcRobotDrive.LEDType.GobildaLEDIndicator)
         {
             // LED Patterns are sorted in decreasing priority order.
             final TrcGobildaIndicatorLight.Pattern[] ledPatternPriorities = {
@@ -79,7 +73,7 @@ public class LEDIndicator
             indicator = new FtcGobildaIndicatorLight(indicatorName);
             ((FtcGobildaIndicatorLight) indicator).setPatternPriorities(ledPatternPriorities);
         }
-        else if (ledType == LEDType.RevBlinkin)
+        else if (ledType == FtcRobotDrive.LEDType.RevBlinkin)
         {
             // LED Patterns are sorted in decreasing priority order.
             final TrcRevBlinkin.Pattern[] ledPatternPriorities = {
