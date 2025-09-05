@@ -31,8 +31,6 @@ import trclib.subsystem.TrcSubsystem;
 /**
  * This class creates the Servo Extender subsystem. This implementation is a linear extender driven by two servos
  * to either extend or retract the extender.
- * There are many possible implementations by setting different parameters.
- * Please refer to the TrcLib documentation (<a href="https://trc492.github.io">...</a>) for details.
  */
 public class ServoExtender extends TrcSubsystem
 {
@@ -43,15 +41,16 @@ public class ServoExtender extends TrcSubsystem
 
         public static final String PRIMARY_SERVO_NAME           = Params.SUBSYSTEM_NAME + ".primary";
         public static final boolean PRIMARY_SERVO_INVERTED      = false;
+
         public static final String FOLLOWER_SERVO_NAME          = Params.SUBSYSTEM_NAME + ".follower";
         public static final boolean FOLLOWER_SERVO_INVERTED     = false;
 
-        public static final double POS_RETRACT                  = 0.1;
-        public static final double POS_EXTEND                   = 0.8;
+        public static double POS_RETRACT                        = 0.1;
+        public static double POS_EXTEND                         = 0.8;
     }   //class Params
 
     private final FtcDashboard dashboard;
-    public final TrcServo servoExtender;
+    public final TrcServo servo;
 
     /**
      * Constructor: Creates an instance of the object.
@@ -65,7 +64,7 @@ public class ServoExtender extends TrcSubsystem
             .setPrimaryServo(Params.PRIMARY_SERVO_NAME, Params.PRIMARY_SERVO_INVERTED)
             .setFollowerServo(Params.FOLLOWER_SERVO_NAME, Params.FOLLOWER_SERVO_INVERTED);
 
-        servoExtender = new FtcServoActuator(extenderParams).getServo();
+        servo = new FtcServoActuator(extenderParams).getServo();
     }   //ServoExtender
 
     /**
@@ -75,7 +74,7 @@ public class ServoExtender extends TrcSubsystem
      */
     public boolean isExtended()
     {
-        return servoExtender.getPosition() == Params.POS_EXTEND;
+        return servo.getPosition() == Params.POS_EXTEND;
     }   //isExtended
 
     /**
@@ -88,7 +87,7 @@ public class ServoExtender extends TrcSubsystem
      */
     public void extend(String owner, double delay, TrcEvent completionEvent, double timeout)
     {
-        servoExtender.setPosition(owner, delay, Params.POS_EXTEND, completionEvent, timeout);
+        servo.setPosition(owner, delay, Params.POS_EXTEND, completionEvent, timeout);
     }   //extend
 
     /**
@@ -100,7 +99,7 @@ public class ServoExtender extends TrcSubsystem
      */
     public void extend(double delay, TrcEvent completionEvent, double timeout)
     {
-        servoExtender.setPosition(null, delay, Params.POS_EXTEND, completionEvent, timeout);
+        servo.setPosition(null, delay, Params.POS_EXTEND, completionEvent, timeout);
     }   //extend
 
     /**
@@ -111,7 +110,7 @@ public class ServoExtender extends TrcSubsystem
      */
     public void extend(TrcEvent completionEvent, double timeout)
     {
-        servoExtender.setPosition(null, 0.0, Params.POS_EXTEND, completionEvent, timeout);
+        servo.setPosition(null, 0.0, Params.POS_EXTEND, completionEvent, timeout);
     }   //extend
 
     /**
@@ -119,7 +118,7 @@ public class ServoExtender extends TrcSubsystem
      */
     public void extend()
     {
-        servoExtender.setPosition(null, 0.0, Params.POS_EXTEND, null, 0.0);
+        servo.setPosition(null, 0.0, Params.POS_EXTEND, null, 0.0);
     }   //extend
 
     /**
@@ -132,7 +131,7 @@ public class ServoExtender extends TrcSubsystem
      */
     public void retract(String owner, double delay, TrcEvent completionEvent, double timeout)
     {
-        servoExtender.setPosition(owner, delay, Params.POS_RETRACT, completionEvent, timeout);
+        servo.setPosition(owner, delay, Params.POS_RETRACT, completionEvent, timeout);
     }   //retract
 
     /**
@@ -144,7 +143,7 @@ public class ServoExtender extends TrcSubsystem
      */
     public void retract(double delay, TrcEvent completionEvent, double timeout)
     {
-        servoExtender.setPosition(null, delay, Params.POS_RETRACT, completionEvent, timeout);
+        servo.setPosition(null, delay, Params.POS_RETRACT, completionEvent, timeout);
     }   //retract
 
     /**
@@ -155,7 +154,7 @@ public class ServoExtender extends TrcSubsystem
      */
     public void retract(TrcEvent completionEvent, double timeout)
     {
-        servoExtender.setPosition(null, 0.0, Params.POS_RETRACT, completionEvent, timeout);
+        servo.setPosition(null, 0.0, Params.POS_RETRACT, completionEvent, timeout);
     }   //retract
 
     /**
@@ -163,7 +162,7 @@ public class ServoExtender extends TrcSubsystem
      */
     public void retract()
     {
-        servoExtender.setPosition(null, 0.0, Params.POS_RETRACT, null, 0.0);
+        servo.setPosition(null, 0.0, Params.POS_RETRACT, null, 0.0);
     }   //retract
 
     //
@@ -176,7 +175,7 @@ public class ServoExtender extends TrcSubsystem
     @Override
     public void cancel()
     {
-        servoExtender.cancel();
+        servo.cancel();
     }   //cancel
 
     /**
@@ -197,7 +196,7 @@ public class ServoExtender extends TrcSubsystem
     @Override
     public void resetState()
     {
-        servoExtender.setPosition(Params.POS_RETRACT);
+        servo.setPosition(Params.POS_RETRACT);
     }   //resetState
 
     /**
@@ -210,8 +209,22 @@ public class ServoExtender extends TrcSubsystem
     public int updateStatus(int lineNum)
     {
         dashboard.displayPrintf(
-            lineNum++, "%s: pos=%.3f, extended=%s", Params.SUBSYSTEM_NAME, servoExtender.getPosition(), isExtended());
+            lineNum++, "%s: pos=%.3f, extended=%s", Params.SUBSYSTEM_NAME, servo.getPosition(), isExtended());
         return lineNum;
     }   //updateStatus
+
+    /**
+     * This method is called to prep the subsystem for tuning.
+     *
+     * @param tuneParams specifies tuning parameters.
+     *        tuneParam0 - retract position
+     *        tuneParam1 - extend position
+     */
+    @Override
+    public void prepSubsystemForTuning(double... tuneParams)
+    {
+        Params.POS_RETRACT = tuneParams[0];
+        Params.POS_EXTEND = tuneParams[1];
+    }   //prepSubsystemForTuning
 
 }   //class ServoExtender

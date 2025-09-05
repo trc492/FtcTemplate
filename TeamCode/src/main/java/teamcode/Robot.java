@@ -29,9 +29,12 @@ import ftclib.driverio.FtcDashboard;
 import ftclib.driverio.FtcMatchInfo;
 import ftclib.robotcore.FtcOpMode;
 import ftclib.sensor.FtcRobotBattery;
+import teamcode.autotasks.TaskAutoPickup;
+import teamcode.autotasks.TaskAutoShoot;
 import teamcode.subsystems.CrServoArm;
-import teamcode.subsystems.DcMotorArm;
-import teamcode.subsystems.Claw;
+import teamcode.subsystems.Latch;
+import teamcode.subsystems.MotorArm;
+import teamcode.subsystems.ServoClaw;
 import teamcode.subsystems.DiffyServoWrist;
 import teamcode.subsystems.Elevator;
 import teamcode.subsystems.Intake;
@@ -43,7 +46,6 @@ import teamcode.subsystems.ServoWrist;
 import teamcode.subsystems.Shooter;
 import teamcode.subsystems.Turret;
 import teamcode.vision.Vision;
-import trclib.dataprocessor.TrcDiscreteValue;
 import trclib.motor.TrcMotor;
 import trclib.motor.TrcServo;
 import trclib.pathdrive.TrcPose2D;
@@ -51,7 +53,7 @@ import trclib.robotcore.TrcDbgTrace;
 import trclib.robotcore.TrcEvent;
 import trclib.robotcore.TrcRobot;
 import trclib.sensor.TrcDigitalInput;
-import trclib.subsystem.TrcIntake;
+import trclib.subsystem.TrcRollerIntake;
 import trclib.subsystem.TrcServoClaw;
 import trclib.subsystem.TrcShooter;
 import trclib.subsystem.TrcSubsystem;
@@ -81,18 +83,21 @@ public class Robot
     public RumbleIndicator operatorRumble;
     public FtcRobotBattery battery;
     // Subsystems.
-    public TrcMotor elevator;
-    public TrcMotor dcMotorArm;
+    public TrcMotor motorArm;
     public TrcMotor crServoArm;
+    public TrcMotor elevator;
     public TrcMotor turret;
+    public TrcRollerIntake intake;
+    public Shooter shooterSubsystem;
     public TrcShooter shooter;
-    public TrcDiscreteValue shooterVelocity;
-    public TrcIntake intake;
-    public TrcServoClaw claw;
+    public DiffyServoWrist diffyWrist;
     public TrcServo servoWrist;
-    public DiffyServoWrist diffyServoWrist;
     public ServoExtender servoExtender;
+    public TrcServoClaw claw;
+    public TrcServo latch;
     // Autotasks.
+    public TaskAutoShoot autoShootTask;
+    public TaskAutoPickup autoPickupTask;
 
     /**
      * Constructor: Create an instance of the object.
@@ -136,14 +141,9 @@ public class Robot
             if (RobotParams.Preferences.useSubsystems)
             {
                 // Create subsystems.
-                if (RobotParams.Preferences.useElevator)
+                if (RobotParams.Preferences.useMotorArm)
                 {
-                    elevator = new Elevator().getMotor();
-                }
-
-                if (RobotParams.Preferences.useDcMotorArm)
-                {
-                    dcMotorArm = new DcMotorArm().getMotor();
+                    motorArm = new MotorArm().getMotor();
                 }
 
                 if (RobotParams.Preferences.useCrServoArm)
@@ -151,19 +151,14 @@ public class Robot
                     crServoArm = new CrServoArm().getMotor();
                 }
 
+                if (RobotParams.Preferences.useElevator)
+                {
+                    elevator = new Elevator().getMotor();
+                }
+
                 if (RobotParams.Preferences.useTurret)
                 {
                     turret = new Turret().getMotor();
-                }
-
-                if (RobotParams.Preferences.useShooter)
-                {
-                    shooter = new Shooter().getShooter();
-                    shooterVelocity = new TrcDiscreteValue(
-                        Shooter.Params.SUBSYSTEM_NAME + ".motorVel",
-                        Shooter.Params.SHOOTER_MIN_VEL, Shooter.Params.SHOOTER_MAX_VEL,
-                        Shooter.Params.SHOOTER_MIN_VEL_INC, Shooter.Params.SHOOTER_MAX_VEL_INC,
-                        Shooter.Params.SHOOTER_DEF_VEL, Shooter.Params.SHOOTER_DEF_VEL_INC);
                 }
 
                 if (RobotParams.Preferences.useIntake)
@@ -171,9 +166,16 @@ public class Robot
                     intake = new Intake().getIntake();
                 }
 
-                if (RobotParams.Preferences.useClaw)
+                if (RobotParams.Preferences.useShooter)
                 {
-                    claw = new Claw().getClaw();
+                    // Note: Since shooter depends on Intake, Intake subsystem must instantiate before shooter.
+                    shooterSubsystem = new Shooter(intake);
+                    shooter = shooterSubsystem.getShooter();
+                }
+
+                if (RobotParams.Preferences.useDiffyWrist)
+                {
+                    diffyWrist = new DiffyServoWrist();
                 }
 
                 if (RobotParams.Preferences.useServoWrist)
@@ -181,17 +183,38 @@ public class Robot
                     servoWrist = new ServoWrist().getServo();
                 }
 
-                // Create autotasks.
-
-                if (RobotParams.Preferences.useDiffyServoWrist)
-                {
-                    diffyServoWrist = new DiffyServoWrist();
-                }
-
                 if (RobotParams.Preferences.useServoExtender)
                 {
                     servoExtender = new ServoExtender();
                 }
+
+                if (RobotParams.Preferences.useClaw)
+                {
+                    claw = new ServoClaw().getClaw();
+                }
+
+                if (RobotParams.Preferences.useLatch)
+                {
+                    latch = new Latch().getServo();
+                }
+
+                // Create autotasks.
+                if (RobotParams.Preferences.useAutoShoot)
+                {
+                    if (shooter != null)
+                    {
+                        autoShootTask = new TaskAutoShoot(this);
+                    }
+                }
+
+                if (RobotParams.Preferences.useAutoPickup)
+                {
+                    if (intake != null)
+                    {
+                        autoPickupTask = new TaskAutoPickup(this);
+                    }
+                }
+
                 // Zero calibrate all subsystems only in Auto or if TeleOp is run standalone without prior Auto.
                 // There is no reason to zero calibrate again if Auto was run right before TeleOp.
                 if (runMode == TrcRobot.RunMode.AUTO_MODE || FtcAuto.autoChoices.alliance == null)

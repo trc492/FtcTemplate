@@ -24,6 +24,7 @@ package teamcode.subsystems;
 
 import ftclib.driverio.FtcDashboard;
 import ftclib.motor.FtcMotorActuator;
+import ftclib.motor.FtcMotorActuator.MotorType;
 import trclib.controller.TrcPidController;
 import trclib.motor.TrcMotor;
 import trclib.robotcore.TrcEvent;
@@ -35,8 +36,6 @@ import trclib.subsystem.TrcSubsystem;
  * is recommended to implement a hard stop to prevent the Turret from overrunning the upper limit causing the wiring
  * harness to be twisted. Even though we do implement soft limits on the Turret, hard stop would prevent folks from
  * spinning the turret round and round twisting the wiring harness when the robot is off.
- * There are many possible implementations by setting different parameters.
- * Please refer to the TrcLib documentation (<a href="https://trc492.github.io">...</a>) for details.
  */
 public class Turret extends TrcSubsystem
 {
@@ -46,11 +45,11 @@ public class Turret extends TrcSubsystem
         public static final boolean NEED_ZERO_CAL               = true;
 
         public static final String MOTOR_NAME                   = SUBSYSTEM_NAME + ".motor";
-        public static final FtcMotorActuator.MotorType MOTOR_TYPE= FtcMotorActuator.MotorType.DcMotor;
+        public static final MotorType MOTOR_TYPE                = MotorType.DcMotor;
         public static final boolean MOTOR_INVERTED              = true;
 
-        public static final String LOWER_LIMITSW_NAME           = SUBSYSTEM_NAME + ".lowerLimitSw";
-        public static final boolean LOWER_LIMITSW_INVERTED      = false;
+        public static final String LOWER_LIMIT_SWITCH_NAME      = SUBSYSTEM_NAME + ".lowerLimit";
+        public static final boolean LOWER_LIMIT_SWITCH_INVERTED = false;
 
         public static final double ENCODER_PPR                  = 288.0;
         public static final double GEAR_RATIO                   = 100.0/60.0;
@@ -62,14 +61,14 @@ public class Turret extends TrcSubsystem
         public static final double MIN_POS                      = POS_OFFSET;
         public static final double MAX_POS                      = 325.0;
         public static final double BACK                         = 0.0;
-        public static final double RIGHT                        = 90.0;
+        public static final double LEFT                         = 90.0;
         public static final double FRONT                        = 180.0;
-        public static final double LEFT                         = 270.0;
+        public static final double RIGHT                        = 270.0;
         public static final double TURTLE_POS                   = FRONT;
         public static final double TURTLE_DELAY                 = 0.0;
 
         // Preset positions.
-        public static final double[] posPresets                 = new double[] {BACK, RIGHT, FRONT, LEFT};
+        public static final double[] posPresets                 = new double[] {BACK, LEFT, FRONT, RIGHT};
         public static final double POS_PRESET_TOLERANCE         = 1.0;
 
         public static final boolean SOFTWARE_PID_ENABLED        = true;
@@ -91,7 +90,7 @@ public class Turret extends TrcSubsystem
         dashboard = FtcDashboard.getInstance();
         FtcMotorActuator.Params motorParams = new FtcMotorActuator.Params()
             .setPrimaryMotor(Params.MOTOR_NAME, Params.MOTOR_TYPE, Params.MOTOR_INVERTED)
-            .setLowerLimitSwitch(Params.LOWER_LIMITSW_NAME, Params.LOWER_LIMITSW_INVERTED)
+            .setLowerLimitSwitch(Params.LOWER_LIMIT_SWITCH_NAME, Params.LOWER_LIMIT_SWITCH_INVERTED)
             .setPositionScaleAndOffset(Params.DEG_PER_COUNT, Params.POS_OFFSET)
             .setPositionPresets(Params.POS_PRESET_TOLERANCE, Params.posPresets);
         motor = new FtcMotorActuator(motorParams).getMotor();
@@ -103,9 +102,9 @@ public class Turret extends TrcSubsystem
     }   //Turret
 
     /**
-     * This method returns the created Turret motor.
+     * This method returns the created motor.
      *
-     * @return created turret motor.
+     * @return created motor.
      */
     public TrcMotor getMotor()
     {
@@ -161,5 +160,25 @@ public class Turret extends TrcSubsystem
             motor.isLowerLimitSwitchActive());
         return lineNum;
     }   //updateStatus
+
+    /**
+     * This method is called to prep the subsystem for tuning.
+     *
+     * @param tuneParams specifies tuning parameters.
+     *        tuneParam0 - Kp
+     *        tuneParam1 - Ki
+     *        tuneParam2 - Kd
+     *        tuneParam3 - Kf
+     *        tuneParam4 - iZone
+     *        tuneParam5 - PidTolerance
+     *        tuneParam6 - GravityCompPower
+     */
+    @Override
+    public void prepSubsystemForTuning(double... tuneParams)
+    {
+        motor.setPositionPidParameters(
+            tuneParams[0], tuneParams[1], tuneParams[2], tuneParams[3], tuneParams[4], tuneParams[5],
+            Params.SOFTWARE_PID_ENABLED);
+    }   //prepSubsystemForTuning
 
 }   //class Turret

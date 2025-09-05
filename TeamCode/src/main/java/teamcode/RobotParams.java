@@ -73,16 +73,20 @@ public class RobotParams
         public static final boolean useSparkfunOTOS             = false;
         // Subsystems
         public static final boolean useSubsystems               = false;
-        public static final boolean useElevator                 = false;
-        public static final boolean useDcMotorArm               = false;
+        public static final boolean useMotorArm                 = false;
         public static final boolean useCrServoArm               = false;
+        public static final boolean useElevator                 = false;
         public static final boolean useTurret                   = false;
-        public static final boolean useShooter                  = false;
         public static final boolean useIntake                   = false;
-        public static final boolean useClaw                     = false;
+        public static final boolean useShooter                  = false;
+        public static final boolean useDiffyWrist               = false;
         public static final boolean useServoWrist               = false;
-        public static final boolean useDiffyServoWrist          = false;
         public static final boolean useServoExtender            = false;
+        public static final boolean useClaw                     = false;
+        public static final boolean useLatch                    = false;
+        // Auto Tasks
+        public static final boolean useAutoShoot                = false;
+        public static final boolean useAutoPickup               = false;
         // Tuning
         public static final boolean tuneColorBlobVision         = false;
         public static final boolean tuneDriveBase               = false;
@@ -137,6 +141,8 @@ public class RobotParams
         public static final double TELEOP_PERIOD                    = 120.0;    // 2 minutes teleop period
         public static final double PARKING_TIME                     = 10.0;
         public static final double ENDGAME_DEADLINE                 = TELEOP_PERIOD - PARKING_TIME;
+
+        public static final TrcPose2D BLUE_PICKUP_RING_POSE         = new TrcPose2D(-60.0, 100.0, 0.0);
     }   //class Game
 
     /**

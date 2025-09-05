@@ -35,8 +35,6 @@ import trclib.subsystem.TrcSubsystem;
  * this, the tilt and rotation of the wrist will limit each other's range of motion. For example, if the wrist is
  * tilted to one extreme end, the wrist cannot rotate. If the wrist is in the middle tilt position, it will have
  * maximum rotation range and vice versa.
- * There are many possible implementations by setting different parameters.
- * Please refer to the TrcLib documentation (<a href="https://trc492.github.io">...</a>) for details.
  */
 public class DiffyServoWrist extends TrcSubsystem
 {
@@ -284,5 +282,23 @@ public class DiffyServoWrist extends TrcSubsystem
             diffyWrist.getRotatePower(), diffyWrist.getRotatePosition());
         return lineNum;
     }   //updateStatus
+
+    /**
+     * This method is called to prep the subsystem for tuning.
+     *
+     * @param tuneParams specifies tuning parameters.
+     *        tuneParam0 - Kp
+     *        tuneParam1 - Ki
+     *        tuneParam2 - Kd
+     *        tuneParam3 - Kf
+     *        tuneParam4 - iZone
+     *        tuneParam5 - PidTolerance
+     *        tuneParam6 - GravityCompPower
+     */
+    @Override
+    public void prepSubsystemForTuning(double... tuneParams)
+    {
+        // DiffyWirst doesn't support tuning.
+    }   //prepSubsystemForTuning
 
 }   //class DiffyServoWrist

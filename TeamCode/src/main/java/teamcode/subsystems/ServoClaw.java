@@ -38,12 +38,15 @@ import trclib.subsystem.TrcSubsystem;
  * presence of an object and can auto grab it. The sensor can be either a digital sensor such as touch sensor or beam
  * break sensor) or an analog sensor such as a distance sensor.
  */
-public class Claw extends TrcSubsystem
+public class ServoClaw extends TrcSubsystem
 {
     public static final class Params
     {
-        public static final String SUBSYSTEM_NAME               = "Claw";
+        public static final String SUBSYSTEM_NAME               = "ServoClaw";
         public static final boolean NEED_ZERO_CAL               = false;
+
+        public static final boolean USE_ANALOG_SENSOR           = true;
+        public static final boolean USE_DIGITAL_SENSOR          = false;
 
         public static final String PRIMARY_SERVO_NAME           = SUBSYSTEM_NAME + ".leftClaw";
         public static final boolean PRIMARY_SERVO_INVERTED      = false;
@@ -56,13 +59,11 @@ public class Claw extends TrcSubsystem
         public static final double CLOSE_POS                    = 0.55;
         public static final double CLOSE_TIME                   = 0.5;
 
-        public static final boolean USE_ANALOG_SENSOR           = true;
         public static final String ANALOG_SENSOR_NAME           = SUBSYSTEM_NAME + ".sensor";
         public static final double LOWER_TRIGGER_THRESHOLD      = 2.0;
         public static final double UPPER_TRIGGER_THRESHOLD      = 3.0;
         public static final double TRIGGER_SETTLING_TIME        = 0.1;
 
-        public static final boolean USE_DIGITAL_SENSOR          = false;
         public static final String DIGITAL_SENSOR_NAME          = SUBSYSTEM_NAME + ".sensor";
         public static final boolean DIGITAL_TRIGGER_INVERTED    = false;
     }   //class Params
@@ -74,7 +75,7 @@ public class Claw extends TrcSubsystem
     /**
      * Constructor: Creates an instance of the object.
      */
-    public Claw()
+    public ServoClaw()
     {
         super(Params.SUBSYSTEM_NAME, Params.NEED_ZERO_CAL);
 
@@ -107,7 +108,7 @@ public class Claw extends TrcSubsystem
 
         claw = new FtcServoClaw(Params.SUBSYSTEM_NAME, clawParams).getClaw();
         claw.open();
-    }   //Claw
+    }   //ServoClaw
 
     /**
      * This method returns the created Servo Claw object.
@@ -122,7 +123,7 @@ public class Claw extends TrcSubsystem
     /**
      * This method returns the current sensor value if it has one.
      *
-     * @return sensor value if there is a sensor, 0 if there is none.
+     * @return sensor value if there is a sensor, 0.0 if there is none.
      */
     private double getSensorData()
     {
@@ -167,7 +168,7 @@ public class Claw extends TrcSubsystem
     @Override
     public void resetState()
     {
-        claw.open();
+        // Don't move claw during turtle.
     }   //resetState
 
     /**
@@ -180,9 +181,9 @@ public class Claw extends TrcSubsystem
     public int updateStatus(int lineNum)
     {
         dashboard.displayPrintf(
-            lineNum++, "%s: pos=%s, hasObject=%s, sensor=%s, autoActive=%s",
-            Params.SUBSYSTEM_NAME, claw.isClosed()? "closed": "open", claw.hasObject(),
-            analogSensor != null? claw.getSensorValue(): claw.getTriggerState(), claw.isAutoActive());
+            lineNum++, "%s: pos=%s, closed=%s, hasObject=%s, sensorState=%s, sensorValue=%.3f, autoActive=%s",
+            Params.SUBSYSTEM_NAME, claw.getPosition(), claw.isClosed(), claw.hasObject(), claw.getTriggerState(),
+            claw.getSensorValue(), claw.isAutoActive());
         return lineNum;
     }   //updateStatus
 
@@ -194,7 +195,7 @@ public class Claw extends TrcSubsystem
     @Override
     public void prepSubsystemForTuning(double... tuneParams)
     {
-        claw.setLogicalPosRange(tuneParams[0], tuneParams[1]);
+        claw.setOpenClosePositions(tuneParams[0], tuneParams[1]);
     }   //prepSubsystemForTuning
 
-}   //class Claw
+}   //class ServoClaw

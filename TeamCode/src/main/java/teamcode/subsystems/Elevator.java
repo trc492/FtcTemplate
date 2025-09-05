@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Titan Robotics Club (http://www.titanrobotics.com)
+ * Copyright (c) 2025 Titan Robotics Club (http://www.titanrobotics.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,17 +24,18 @@ package teamcode.subsystems;
 
 import ftclib.driverio.FtcDashboard;
 import ftclib.motor.FtcMotorActuator;
+import ftclib.motor.FtcMotorActuator.MotorType;
 import trclib.controller.TrcPidController;
 import trclib.motor.TrcMotor;
 import trclib.robotcore.TrcEvent;
 import trclib.subsystem.TrcSubsystem;
 
 /**
- * This class implements an Elevator Subsystem. This implementation consists of two motors with built-in encoders and
- * a lower limit switch for zero calibrating the relative encoder. It supports gravity compensation. In the case of
- * an elevator, gravity compensation power is the constant power required to hold the elevator at any position.
- * There are many possible implementations by setting different parameters.
- * Please refer to the TrcLib documentation (<a href="https://trc492.github.io">...</a>) for details.
+ * This class implements an Elevator Subsystem. This implementation consists of one or two motors with built-in
+ * encoders and optional limit switches for zero calibrating the relative encoder. If there is no lower limit
+ * switch, it will use motor stall detection to zero calibrate the built-in relative encoder. It supports gravity
+ * compensation. In the case of an elevator, gravity compensation power is the constant power required to hold the
+ * elevator at any position.
  */
 public class Elevator extends TrcSubsystem
 {
@@ -42,27 +43,31 @@ public class Elevator extends TrcSubsystem
     {
         public static final String SUBSYSTEM_NAME               = "Elevator";
         public static final boolean NEED_ZERO_CAL               = true;
+        public static final boolean HAS_TWO_MOTORS              = false;
+        public static final boolean HAS_LOWER_LIMIT_SWITCH      = false;
+        public static final boolean HAS_UPPER_LIMIT_SWITCH      = false;
 
         public static final String PRIMARY_MOTOR_NAME           = SUBSYSTEM_NAME + ".primary";
-        public static final FtcMotorActuator.MotorType PRIMARY_MOTOR_TYPE =
-            FtcMotorActuator.MotorType.DcMotor;
+        public static final MotorType PRIMARY_MOTOR_TYPE        = MotorType.DcMotor;
         public static final boolean PRIMARY_MOTOR_INVERTED      = true;
 
         public static final String FOLLOWER_MOTOR_NAME          = SUBSYSTEM_NAME + ".follower";
-        public static final FtcMotorActuator.MotorType FOLLOWER_MOTOR_TYPE =
-            FtcMotorActuator.MotorType.DcMotor;
+        public static final MotorType FOLLOWER_MOTOR_TYPE       = MotorType.DcMotor;
         public static final boolean FOLLOWER_MOTOR_INVERTED     = true;
 
-        public static final String LOWER_LIMITSW_NAME           = SUBSYSTEM_NAME + ".lowerLimitSw";
-        public static final boolean LOWER_LIMITSW_INVERTED      = false;
+        public static final String LOWER_LIMIT_SWITCH_NAME      = SUBSYSTEM_NAME + ".lowerLimit";
+        public static final boolean LOWER_LIMIT_SWITCH_INVERTED = false;
 
-        public static final double INCHES_PER_COUNT             = 18.25/4941.0;
-        public static final double POS_OFFSET                   = 10.875;
+        public static final String UPPER_LIMIT_SWITCH_NAME      = SUBSYSTEM_NAME + ".lowerLimit";
+        public static final boolean UPPER_LIMIT_SWITCH_INVERTED = false;
+
+        public static final double INCHES_PER_COUNT             = (29.875 - 10.8125) / 5250.0;
+        public static final double POS_OFFSET                   = 10.8125;
         public static final double POWER_LIMIT                  = 1.0;
         public static final double ZERO_CAL_POWER               = -0.25;
 
         public static final double MIN_POS                      = POS_OFFSET;
-        public static final double MAX_POS                      = 30.25;
+        public static final double MAX_POS                      = 30.0;
         public static final double TURTLE_POS                   = MIN_POS;
         public static final double TURTLE_DELAY                 = 0.0;
         public static final double[] posPresets                 = {MIN_POS, 15.0, 20.0, 25.0, 30.0};
@@ -73,10 +78,20 @@ public class Elevator extends TrcSubsystem
             new TrcPidController.PidCoefficients(1.0, 0.0, 0.0, 0.0, 0.0);
         public static final double POS_PID_TOLERANCE            = 0.1;
         public static final double GRAVITY_COMP_POWER           = 0.0;
+
+        public static final double STALL_MIN_POWER              = Math.abs(ZERO_CAL_POWER);
+        public static final double STALL_TOLERANCE              = 0.1;
+        public static final double STALL_TIMEOUT                = 0.1;
+        public static final double STALL_RESET_TIMEOUT          = 0.0;
     }   //class Params
+
+    private static final String DBKEY_POWER                     = Params.SUBSYSTEM_NAME + "/Power";
+    private static final String DBKEY_CURRENT                   = Params.SUBSYSTEM_NAME + "/Current";
+    private static final String DBKEY_POSITION                  = Params.SUBSYSTEM_NAME + "/Position";
 
     private final FtcDashboard dashboard;
     private final TrcMotor motor;
+    private Double tuneGravityCompPower = null;
 
     /**
      * Constructor: Creates an instance of the object.
@@ -88,15 +103,40 @@ public class Elevator extends TrcSubsystem
         dashboard = FtcDashboard.getInstance();
         FtcMotorActuator.Params motorParams = new FtcMotorActuator.Params()
             .setPrimaryMotor(Params.PRIMARY_MOTOR_NAME, Params.PRIMARY_MOTOR_TYPE, Params.PRIMARY_MOTOR_INVERTED)
-            .setFollowerMotor(Params.FOLLOWER_MOTOR_NAME, Params.FOLLOWER_MOTOR_TYPE, Params.FOLLOWER_MOTOR_INVERTED)
-            .setLowerLimitSwitch(Params.LOWER_LIMITSW_NAME, Params.LOWER_LIMITSW_INVERTED)
             .setPositionScaleAndOffset(Params.INCHES_PER_COUNT, Params.POS_OFFSET)
             .setPositionPresets(Params.POS_PRESET_TOLERANCE, Params.posPresets);
+
+        if (Params.HAS_TWO_MOTORS)
+        {
+            motorParams.setFollowerMotor(
+                Params.FOLLOWER_MOTOR_NAME, Params.FOLLOWER_MOTOR_TYPE, Params.FOLLOWER_MOTOR_INVERTED);
+        }
+
+        if (Params.HAS_LOWER_LIMIT_SWITCH)
+        {
+            motorParams.setLowerLimitSwitch(
+                Params.LOWER_LIMIT_SWITCH_NAME, Params.LOWER_LIMIT_SWITCH_INVERTED);
+        }
+
+        if (Params.HAS_UPPER_LIMIT_SWITCH)
+        {
+            motorParams.setUpperLimitSwitch(
+                Params.UPPER_LIMIT_SWITCH_NAME, Params.UPPER_LIMIT_SWITCH_INVERTED);
+        }
+
         motor = new FtcMotorActuator(motorParams).getMotor();
         motor.setPositionPidParameters(
             Params.posPidCoeffs, Params.POS_PID_TOLERANCE, Params.SOFTWARE_PID_ENABLED);
         motor.setPositionPidPowerComp(this::getGravityComp);
-        motor.setSoftPositionLimits(Params.MIN_POS, Params.MAX_POS, false);
+
+        if (!Params.HAS_LOWER_LIMIT_SWITCH)
+        {
+            // There is no lower limit switch, enable stall detection for zero calibration and soft limits for
+            // protection.
+            motor.setStallProtection(
+                Params.STALL_MIN_POWER, Params.STALL_TOLERANCE, Params.STALL_TIMEOUT, Params.STALL_RESET_TIMEOUT);
+            motor.setSoftPositionLimits(Params.MIN_POS, Params.MAX_POS, false);
+        }
     }   //Elevator
 
     /**
@@ -115,10 +155,10 @@ public class Elevator extends TrcSubsystem
      * @param currPower specifies the current applied PID power (not used).
      * @return calculated compensation power.
      */
-     private double getGravityComp(double currPower)
-     {
-         return Params.GRAVITY_COMP_POWER;
-     }  //getGravityComp
+    private double getGravityComp(double currPower)
+    {
+        return tuneGravityCompPower != null? tuneGravityCompPower: Params.GRAVITY_COMP_POWER;
+    }   //getGravityComp
 
     //
     // Implements TrcSubsystem abstract methods.
@@ -164,10 +204,31 @@ public class Elevator extends TrcSubsystem
     public int updateStatus(int lineNum)
     {
         dashboard.displayPrintf(
-            lineNum++, "%s: power=%.3f, current=%.3f, pos=%.3f/%.3f, lowerLimit=%s",
+            lineNum++, "%s: power=%.3f, current=%.3f, pos=%.3f/%.3f, LimitSw=%s/%s",
             Params.SUBSYSTEM_NAME, motor.getPower(), motor.getCurrent(), motor.getPosition(), motor.getPidTarget(),
-            motor.isLowerLimitSwitchActive());
+            motor.isLowerLimitSwitchActive(), motor.isUpperLimitSwitchActive());
         return lineNum;
     }   //updateStatus
+
+    /**
+     * This method is called to prep the subsystem for tuning.
+     *
+     * @param tuneParams specifies tuning parameters.
+     *        tuneParam0 - Kp
+     *        tuneParam1 - Ki
+     *        tuneParam2 - Kd
+     *        tuneParam3 - Kf
+     *        tuneParam4 - iZone
+     *        tuneParam5 - PidTolerance
+     *        tuneParam6 - GravityCompPower
+     */
+    @Override
+    public void prepSubsystemForTuning(double... tuneParams)
+    {
+        motor.setPositionPidParameters(
+            tuneParams[0], tuneParams[1], tuneParams[2], tuneParams[3], tuneParams[4], tuneParams[5],
+            Params.SOFTWARE_PID_ENABLED);
+        tuneGravityCompPower = tuneParams[6];
+    }   //prepSubsystemForTuning
 
 }   //class Elevator

@@ -24,6 +24,7 @@ package teamcode.subsystems;
 
 import ftclib.driverio.FtcDashboard;
 import ftclib.motor.FtcMotorActuator;
+import ftclib.motor.FtcMotorActuator.MotorType;
 import trclib.controller.TrcPidController;
 import trclib.motor.TrcMotor;
 import trclib.robotcore.TrcEvent;
@@ -35,8 +36,6 @@ import trclib.subsystem.TrcSubsystem;
  * optional. If using limit switches, they are for movement range protection. If not using limit switches, software
  * limit must be set. It supports gravity compensation by computing the power required to hold the arm at its current
  * angle.
- * There are many possible implementations by setting different parameters.
- * Please refer to the TrcLib documentation (<a href="https://trc492.github.io">...</a>) for details.
  */
 public class CrServoArm extends TrcSubsystem
 {
@@ -46,26 +45,23 @@ public class CrServoArm extends TrcSubsystem
         public static final boolean NEED_ZERO_CAL               = false;
 
         public static final String PRIMARY_MOTOR_NAME           = SUBSYSTEM_NAME + ".primary";
-        public static final FtcMotorActuator.MotorType PRIMARY_MOTOR_TYPE =
-            FtcMotorActuator.MotorType.CRServo;
+        public static final MotorType PRIMARY_MOTOR_TYPE        = MotorType.CRServo;
         public static final boolean PRIMARY_MOTOR_INVERTED      = false;
 
         public static final String FOLLOWER_MOTOR_NAME          = SUBSYSTEM_NAME + ".follower";
-        public static final FtcMotorActuator.MotorType FOLLOWER_MOTOR_TYPE =
-            FtcMotorActuator.MotorType.CRServo;
+        public static final MotorType FOLLOWER_MOTOR_TYPE       = MotorType.CRServo;
         public static final boolean FOLLOWER_MOTOR_INVERTED     = true;
-
-        public static final double POWER_LIMIT                  = 0.25;
 
         public static final String ABSENC_NAME                  = SUBSYSTEM_NAME + ".enc";
         public static final boolean ABSENC_INVERTED             = true;
         public static final double ABSENC_ZERO_OFFSET           = 0.949697;
 
-        public static final double POS_OFFSET                   = 27.0;
         public static final double POS_DEG_SCALE                = 360.0;
+        public static final double POS_OFFSET                   = 27.0;
+        public static final double POWER_LIMIT                  = 0.25;
+
         public static final double MIN_POS                      = 27.3;
         public static final double MAX_POS                      = 300.0;
-
         public static final double TURTLE_POS                   = MIN_POS;
         public static final double TURTLE_DELAY                 = 0.0;
         public static final double[] posPresets                 = {
@@ -81,6 +77,7 @@ public class CrServoArm extends TrcSubsystem
 
     private final FtcDashboard dashboard;
     private final TrcMotor motor;
+    private Double tuneGravityCompPower = null;
 
     /**
      * Constructor: Creates an instance of the object.
@@ -121,7 +118,8 @@ public class CrServoArm extends TrcSubsystem
      */
     private double getGravityComp(double currPower)
     {
-        return Params.GRAVITY_COMP_MAX_POWER*Math.sin(Math.toRadians(motor.getPosition()));
+        double gravityCompPower = tuneGravityCompPower != null? tuneGravityCompPower: Params.GRAVITY_COMP_MAX_POWER;
+        return gravityCompPower * Math.sin(Math.toRadians(motor.getPosition()));
     }   //getGravityComp
 
     //
@@ -168,9 +166,30 @@ public class CrServoArm extends TrcSubsystem
     public int updateStatus(int lineNum)
     {
         dashboard.displayPrintf(
-            lineNum++, "%s: power=%.3f, current=%.3f, pos=%.3f/%.3f",
-            Params.SUBSYSTEM_NAME, motor.getPower(), motor.getCurrent(), motor.getPosition(), motor.getPidTarget());
+            lineNum++, "%s: power=%.3f, pos=%.3f/%.3f",
+            Params.SUBSYSTEM_NAME, motor.getPower(), motor.getPosition(), motor.getPidTarget());
         return lineNum;
     }   //updateStatus
+
+    /**
+     * This method is called to prep the subsystem for tuning.
+     *
+     * @param tuneParams specifies tuning parameters.
+     *        tuneParam0 - Kp
+     *        tuneParam1 - Ki
+     *        tuneParam2 - Kd
+     *        tuneParam3 - Kf
+     *        tuneParam4 - iZone
+     *        tuneParam5 - PidTolerance
+     *        tuneParam6 - GravityCompPower
+     */
+    @Override
+    public void prepSubsystemForTuning(double... tuneParams)
+    {
+        motor.setPositionPidParameters(
+            tuneParams[0], tuneParams[1], tuneParams[2], tuneParams[3], tuneParams[4], tuneParams[5],
+            MotorArm.Params.SOFTWARE_PID_ENABLED);
+        tuneGravityCompPower = tuneParams[6];
+    }   //prepSubsystemForTuning
 
 }   //class CrServoArm

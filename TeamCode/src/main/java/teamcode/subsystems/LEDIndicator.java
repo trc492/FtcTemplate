@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Titan Robotics Club (http://www.titanrobotics.com)
+ * Copyright (c) 2025 Titan Robotics Club (http://www.titanrobotics.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -38,7 +38,7 @@ public class LEDIndicator
     // LED pattern names.
     public static final String RED_BLOB = "RedBlob";
     public static final String BLUE_BLOB = "BlueBlob";
-    public static final String NO_BLOB = "NoBlob";
+    public static final String FOUND_NOTHING = "FoundNothing";
     public static final String APRIL_TAG = "AprilTag";
     public static final String DRIVE_ORIENTATION_FIELD = "FieldMode";
     public static final String DRIVE_ORIENTATION_ROBOT = "RobotMode";
@@ -62,7 +62,7 @@ public class LEDIndicator
                 // Highest priority.
                 new TrcGobildaIndicatorLight.Pattern(RED_BLOB, TrcGobildaIndicatorLight.Color.Red),
                 new TrcGobildaIndicatorLight.Pattern(BLUE_BLOB, TrcGobildaIndicatorLight.Color.Blue),
-                new TrcGobildaIndicatorLight.Pattern(NO_BLOB, TrcGobildaIndicatorLight.Color.Cyan),
+                new TrcGobildaIndicatorLight.Pattern(FOUND_NOTHING, TrcGobildaIndicatorLight.Color.Cyan),
                 new TrcGobildaIndicatorLight.Pattern(APRIL_TAG, TrcGobildaIndicatorLight.Color.Green),
                 new TrcGobildaIndicatorLight.Pattern(DRIVE_ORIENTATION_FIELD, TrcGobildaIndicatorLight.Color.Violet),
                 new TrcGobildaIndicatorLight.Pattern(DRIVE_ORIENTATION_ROBOT, TrcGobildaIndicatorLight.Color.White),
@@ -80,7 +80,7 @@ public class LEDIndicator
                 // Highest priority.
                 new TrcRevBlinkin.Pattern(RED_BLOB, TrcRevBlinkin.RevLedPattern.SolidRed),
                 new TrcRevBlinkin.Pattern(BLUE_BLOB, TrcRevBlinkin.RevLedPattern.SolidBlue),
-                new TrcRevBlinkin.Pattern(NO_BLOB, TrcRevBlinkin.RevLedPattern.SolidAqua),
+                new TrcRevBlinkin.Pattern(FOUND_NOTHING, TrcRevBlinkin.RevLedPattern.SolidAqua),
                 new TrcRevBlinkin.Pattern(APRIL_TAG, TrcRevBlinkin.RevLedPattern.SolidGreen),
                 new TrcRevBlinkin.Pattern(DRIVE_ORIENTATION_FIELD, TrcRevBlinkin.RevLedPattern.SolidViolet),
                 new TrcRevBlinkin.Pattern(DRIVE_ORIENTATION_ROBOT, TrcRevBlinkin.RevLedPattern.SolidWhite),

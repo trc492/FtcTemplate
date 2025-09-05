@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Titan Robotics Club (http://www.titanrobotics.com)
+ * Copyright (c) 2025 Titan Robotics Club (http://www.titanrobotics.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,6 +33,7 @@ import ftclib.driverio.FtcMatchInfo;
 import ftclib.driverio.FtcMenu;
 import ftclib.driverio.FtcValueMenu;
 import ftclib.robotcore.FtcOpMode;
+import teamcode.autocommands.CmdAutoStartPosLeft;
 import trclib.command.CmdPidDrive;
 import trclib.command.CmdTimedDrive;
 import trclib.pathdrive.TrcPose2D;
@@ -62,6 +63,7 @@ public class FtcAuto extends FtcOpMode
 
     public enum AutoStrategy
     {
+        STARTLEFT_AUTO,
         PID_DRIVE,
         TIMED_DRIVE,
         DO_NOTHING
@@ -76,6 +78,8 @@ public class FtcAuto extends FtcOpMode
         public Alliance alliance = null;
         public StartPos startPos = null;
         public AutoStrategy strategy = null;
+        public boolean useVision = false;
+        public boolean scorePreload = false;
         public double xTarget = 0.0;
         public double yTarget = 0.0;
         public double turnTarget = 0.0;
@@ -92,12 +96,15 @@ public class FtcAuto extends FtcOpMode
                 "alliance=\"%s\" " +
                 "startPos=\"%s\" " +
                 "strategy=\"%s\" " +
+                "useVision=\"%s\" " +
+                "scorePreload=\"%s\" " +
                 "xTarget=%.1f " +
                 "yTarget=%.1f " +
                 "turnTarget=%.0f " +
                 "driveTime=%.0f " +
                 "drivePower=%.1f",
-                delay, alliance, startPos, strategy, xTarget, yTarget, turnTarget, driveTime, drivePower);
+                delay, alliance, startPos, strategy, useVision, scorePreload, xTarget, yTarget, turnTarget, driveTime,
+                drivePower);
         }   //toString
 
     }   //class AutoChoices
@@ -140,6 +147,13 @@ public class FtcAuto extends FtcOpMode
         //
         switch (autoChoices.strategy)
         {
+            case STARTLEFT_AUTO:
+                if (robot.robotDrive != null)
+                {
+                    autoCommand = new CmdAutoStartPosLeft(robot, autoChoices);
+                }
+                break;
+
             case PID_DRIVE:
                 if (robot.robotDrive != null)
                 {
@@ -252,7 +266,7 @@ public class FtcAuto extends FtcOpMode
     public void stopMode(TrcRobot.RunMode prevMode, TrcRobot.RunMode nextMode)
     {
         //
-        // Opmode is about to stop, cancel autonomous command in progress if any.
+        // OpMode is about to stop, cancel autonomous command in progress if any.
         //
         if (autoCommand != null)
         {
@@ -316,6 +330,8 @@ public class FtcAuto extends FtcOpMode
         FtcChoiceMenu<Alliance> allianceMenu = new FtcChoiceMenu<>("Alliance:", delayMenu);
         FtcChoiceMenu<StartPos> startPosMenu = new FtcChoiceMenu<>("Start Position:", allianceMenu);
         FtcChoiceMenu<AutoStrategy> strategyMenu = new FtcChoiceMenu<>("Auto Strategies:", startPosMenu);
+        FtcChoiceMenu<Boolean> useVisionMenu = new FtcChoiceMenu<>("Use Vision:", strategyMenu);
+        FtcChoiceMenu<Boolean> scorePreloadMenu = new FtcChoiceMenu<>("Score Preload:", useVisionMenu);
 
         FtcValueMenu xTargetMenu = new FtcValueMenu(
             "xTarget:", strategyMenu, -12.0, 12.0, 0.5, 4.0, " %.1f ft");
@@ -343,9 +359,16 @@ public class FtcAuto extends FtcOpMode
         startPosMenu.addChoice("Start Position Left", StartPos.LEFT, true, strategyMenu);
         startPosMenu.addChoice("Start Position Right", StartPos.RIGHT, false, strategyMenu);
 
+        strategyMenu.addChoice("Start Pos Left Auto", AutoStrategy.STARTLEFT_AUTO, false, useVisionMenu);
         strategyMenu.addChoice("PID Drive", AutoStrategy.PID_DRIVE, false, xTargetMenu);
         strategyMenu.addChoice("Timed Drive", AutoStrategy.TIMED_DRIVE, false, driveTimeMenu);
         strategyMenu.addChoice("Do nothing", AutoStrategy.DO_NOTHING, true);
+
+        useVisionMenu.addChoice("Yes", true, true, scorePreloadMenu);
+        useVisionMenu.addChoice("No", false, false, scorePreloadMenu);
+
+        scorePreloadMenu.addChoice("Yes", true, true);
+        scorePreloadMenu.addChoice("No", false, false);
         //
         // Traverse menus.
         //
@@ -357,6 +380,8 @@ public class FtcAuto extends FtcOpMode
         autoChoices.alliance = allianceMenu.getCurrentChoiceObject();
         autoChoices.startPos = startPosMenu.getCurrentChoiceObject();
         autoChoices.strategy = strategyMenu.getCurrentChoiceObject();
+        autoChoices.useVision = useVisionMenu.getCurrentChoiceObject();
+        autoChoices.scorePreload = scorePreloadMenu.getCurrentChoiceObject();
         autoChoices.xTarget = xTargetMenu.getCurrentValue();
         autoChoices.yTarget = yTargetMenu.getCurrentValue();
         autoChoices.turnTarget = turnTargetMenu.getCurrentValue();

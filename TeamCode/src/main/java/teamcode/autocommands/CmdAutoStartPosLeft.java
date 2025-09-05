@@ -24,6 +24,8 @@ package teamcode.autocommands;
 
 import teamcode.FtcAuto;
 import teamcode.Robot;
+import teamcode.RobotParams;
+import trclib.pathdrive.TrcPose2D;
 import trclib.robotcore.TrcEvent;
 import trclib.robotcore.TrcRobot;
 import trclib.robotcore.TrcStateMachine;
@@ -32,13 +34,18 @@ import trclib.timer.TrcTimer;
 /**
  * This class implements an autonomous strategy.
  */
-public class CmdAuto implements TrcRobot.RobotCommand
+public class CmdAutoStartPosLeft implements TrcRobot.RobotCommand
 {
-    private static final String moduleName = CmdAuto.class.getSimpleName();
+    private static final String moduleName = CmdAutoStartPosLeft.class.getSimpleName();
 
     private enum State
     {
         START,
+        SCORE_PRELOAD,
+        GOTO_RING_POS,
+        PICKUP_RING,
+        GOTO_START_POS,
+        SCORE_RING,
         DONE
     }   //enum State
 
@@ -48,13 +55,15 @@ public class CmdAuto implements TrcRobot.RobotCommand
     private final TrcEvent event;
     private final TrcStateMachine<State> sm;
 
+    private TrcPose2D startPose = null;
+
     /**
      * Constructor: Create an instance of the object.
      *
      * @param robot specifies the robot object for providing access to various global objects.
      * @param autoChoices specifies the autoChoices object.
      */
-    public CmdAuto(Robot robot, FtcAuto.AutoChoices autoChoices)
+    public CmdAutoStartPosLeft(Robot robot, FtcAuto.AutoChoices autoChoices)
     {
         this.robot = robot;
         this.autoChoices = autoChoices;
@@ -63,7 +72,7 @@ public class CmdAuto implements TrcRobot.RobotCommand
         event = new TrcEvent(moduleName);
         sm = new TrcStateMachine<>(moduleName);
         sm.start(State.START);
-    }   //CmdAuto
+    }   //CmdAutoStartPosLeft
 
     //
     // Implements the TrcRobot.RobotCommand interface.
@@ -92,6 +101,14 @@ public class CmdAuto implements TrcRobot.RobotCommand
 
     /**
      * This method must be called periodically by the caller to drive the command sequence forward.
+     * The hypothetical autonomous is described as follows:
+     * - The robot starts at the location where an AprilTag is right in front of it.
+     * - The robot is preloaded with one ring and it will shoot the ring into the goal right above the ArpilTag.
+     * - The robot will then go to a location where there is a second ring on the ground.
+     * - The robot will pick up the ring on the ground.
+     * - The robot will go back to the location where it scored the preloaded ring.
+     * - The robot will shoot the picked up ring into the goal.
+     * - Done.
      *
      * @param elapsedTime specifies the elapsed time in seconds since the start of the robot mode.
      * @return true if the command sequence is completed, false otherwise.
@@ -114,17 +131,54 @@ public class CmdAuto implements TrcRobot.RobotCommand
                 case START:
                     // Set robot location according to auto choices.
                     robot.setRobotStartPosition(autoChoices);
+                    startPose = robot.robotDrive.driveBase.getFieldPosition();
+                    // Retrieve auto choice options.
                     // Do delay if necessary.
                     if (autoChoices.delay > 0.0)
                     {
                         robot.globalTracer.traceInfo(moduleName, "***** Do delay " + autoChoices.delay + "s.");
                         timer.set(autoChoices.delay, event);
-                        sm.waitForSingleEvent(event, State.DONE);
+                        sm.waitForSingleEvent(event, State.SCORE_PRELOAD);
                     }
                     else
                     {
-                        sm.setState(State.DONE);
+                        sm.setState(State.SCORE_PRELOAD);
                     }
+                    break;
+
+                case SCORE_PRELOAD:
+                    if (autoChoices.scorePreload)
+                    {
+                        robot.autoShootTask.autoShoot(null, event, autoChoices.useVision, (int[]) null);
+                        sm.waitForSingleEvent(event, State.GOTO_RING_POS);
+                    }
+                    else
+                    {
+                        sm.setState(State.GOTO_RING_POS);
+                    }
+                    break;
+
+                case GOTO_RING_POS:
+                    robot.robotDrive.purePursuitDrive.start(
+                        null, event, 0.0, false,
+                        robot.adjustPoseByAlliance(RobotParams.Game.BLUE_PICKUP_RING_POSE, autoChoices.alliance));
+                    sm.waitForSingleEvent(event, State.PICKUP_RING);
+                    break;
+
+                case PICKUP_RING:
+                    robot.autoPickupTask.autoPickup(null, event, autoChoices.useVision);
+                    sm.waitForSingleEvent(event, State.GOTO_START_POS);
+                    break;
+
+                case GOTO_START_POS:
+                    robot.robotDrive.purePursuitDrive.start(
+                        null, event, 0.0, false, startPose);
+                    sm.waitForSingleEvent(event, State.SCORE_RING);
+                    break;
+
+                case SCORE_RING:
+                    robot.autoShootTask.autoShoot(null, event, autoChoices.useVision, (int[]) null);
+                    sm.waitForSingleEvent(event, State.DONE);
                     break;
 
                 case DONE:
@@ -141,4 +195,4 @@ public class CmdAuto implements TrcRobot.RobotCommand
         return !sm.isEnabled();
     }   //cmdPeriodic
 
-}   //class CmdAuto
+}   //class CmdAutoStartPosLeft

@@ -31,15 +31,15 @@ import trclib.robotcore.TrcEvent;
 import trclib.subsystem.TrcSubsystem;
 
 /**
- * This class implements a DcMotorArm Subsystem. This implementation consists of a motor with built-in encoder. It
- * does not have any limit switches, so it is using motor stall detection to zero calibrate the built-in relative
- * encoder. It supports gravity compensation by computing the power required to hold the arm at its current angle.
+ * This class implements an Arm Subsystem. This implementation consists of a motor with built-in encoder. It does
+ * not have any limit switches, so it is using motor stall detection to zero calibrate the built-in relative encoder.
+ * It supports gravity compensation by computing the power required to hold the arm at its current angle.
  */
-public class DcMotorArm extends TrcSubsystem
+public class MotorArm extends TrcSubsystem
 {
     public static final class Params
     {
-        public static final String SUBSYSTEM_NAME               = "DcMotorArm";
+        public static final String SUBSYSTEM_NAME               = "MotorArm";
         public static final boolean NEED_ZERO_CAL               = true;
 
         public static final String MOTOR_NAME                   = SUBSYSTEM_NAME + ".motor";
@@ -57,7 +57,7 @@ public class DcMotorArm extends TrcSubsystem
         public static final double TURTLE_POS                   = MIN_POS;
         public static final double TURTLE_DELAY                 = 0.0;
         public static final double[] posPresets                 =
-            {MIN_POS, 60.0, 90.0, 120.0, 150.0, 180.0, 210.0, 240.0, 270.0};
+            {MIN_POS, 60.0, 90.0, 120.0, 150.0, 180.0, 210.0, 240.0, MAX_POS};
         public static final double POS_PRESET_TOLERANCE         = 10.0;
 
         public static final boolean SOFTWARE_PID_ENABLED        = true;
@@ -79,7 +79,7 @@ public class DcMotorArm extends TrcSubsystem
     /**
      * Constructor: Creates an instance of the object.
      */
-    public DcMotorArm()
+    public MotorArm()
     {
         super(Params.SUBSYSTEM_NAME, Params.NEED_ZERO_CAL);
 
@@ -89,16 +89,15 @@ public class DcMotorArm extends TrcSubsystem
             .setPositionScaleAndOffset(Params.DEG_PER_COUNT, Params.POS_OFFSET)
             .setPositionPresets(Params.POS_PRESET_TOLERANCE, Params.posPresets);
         motor = new FtcMotorActuator(motorParams).getMotor();
-        motor.setPositionPidParameters(
-            Params.posPidCoeffs, Params.POS_PID_TOLERANCE, Params.SOFTWARE_PID_ENABLED);
+        motor.setPositionPidParameters(Params.posPidCoeffs, Params.POS_PID_TOLERANCE, Params.SOFTWARE_PID_ENABLED);
         motor.setPositionPidPowerComp(this::getGravityComp);
         motor.setStallProtection(
             Params.STALL_MIN_POWER, Params.STALL_TOLERANCE, Params.STALL_TIMEOUT, Params.STALL_RESET_TIMEOUT);
         motor.setSoftPositionLimits(Params.MIN_POS, Params.MAX_POS, false);
-    }   //DcMotorArm
+    }   //MotorArm
 
     /**
-     * This method returns the created DcMotorArm motor.
+     * This method returns the created arm motor.
      *
      * @return created arm motor.
      */
@@ -189,4 +188,4 @@ public class DcMotorArm extends TrcSubsystem
         tuneGravityCompPower = tuneParams[6];
     }   //prepSubsystemForTuning
 
-}   //class DcMotorArm
+}   //class MotorArm

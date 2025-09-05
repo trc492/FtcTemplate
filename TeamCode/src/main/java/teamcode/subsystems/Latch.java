@@ -29,57 +29,59 @@ import trclib.robotcore.TrcEvent;
 import trclib.subsystem.TrcSubsystem;
 
 /**
- * This class creates the Servo Wrist subsystem. This implementation is a 1-DOF system that consists of a servo.
- * It allows the wrist to tilt up and down. Angular servos have a limited range of movement. Therefore, it limits
- * the tilting range of the wrist.
+ * This class implements a Servo Latch Subsystem. The Latch subsystem is just a simple servo that moves between
+ * two positions: latched and unlatched. It also supports analog control that allows using a joystick to speed
+ * control the latch for tuning purpose.
  */
-public class ServoWrist extends TrcSubsystem
+public class Latch extends TrcSubsystem
 {
-    public static class Params
+    public static final class Params
     {
-        public static final String SUBSYSTEM_NAME               = "ServoWrist";
+        public static final String SUBSYSTEM_NAME               = "Latch";
         public static final boolean NEED_ZERO_CAL               = false;
 
-        public static final String SERVO_NAME                   = Params.SUBSYSTEM_NAME + ".servo";
-        public static final boolean SERVO_INVERTED              = false;
+        public static final String SERVO_NAME                   = SUBSYSTEM_NAME + ".servo";
+        public static final boolean SERVO_INVERTED              = true;
 
-        public static final double LOGICAL_MIN_POS              = 0.1;
-        public static final double LOGICAL_MAX_POS              = 0.8;
-        public static final double PHYSICAL_MIN_POS             = -90.0;    // in degrees
-        public static final double PHYSICAL_MAX_POS             = 90.0;     // in degrees
-
-        public static final double POS_PRESET_TOLERANCE         = 1.0;      // in degrees
-        public static final double[] tiltPosPresets             = {-110, -90.0, -45.0, 0.0, 45.0, 90.0, 110};
+        public static final double PHYSICAL_MIN_POS             = 0.0;
+        public static final double PHYSICAL_MAX_POS             = 90.0;
+        public static final double LOGICAL_MIN_POS              = 0.17;
+        public static final double LOGICAL_MAX_POS              = 0.57;
+        public static final double MAX_STEP_RATE                = 420.0;
+        public static final double[] posPresets                 = {PHYSICAL_MIN_POS, 30.0, 60.0, PHYSICAL_MAX_POS};
+        public static final double POS_PRESET_TOLERANCE         = 1.0;
     }   //class Params
 
     private final FtcDashboard dashboard;
-    public final TrcServo servo;
+    private final TrcServo latch;
 
     /**
      * Constructor: Creates an instance of the object.
      */
-    public ServoWrist()
+    public Latch()
     {
         super(Params.SUBSYSTEM_NAME, Params.NEED_ZERO_CAL);
 
         dashboard = FtcDashboard.getInstance();
-        FtcServoActuator.Params wristParams = new FtcServoActuator.Params()
+        FtcServoActuator.Params latchParams = new FtcServoActuator.Params()
             .setPrimaryServo(Params.SERVO_NAME, Params.SERVO_INVERTED)
-            .setLogicalPosRange(Params.LOGICAL_MIN_POS, Params.LOGICAL_MAX_POS)
             .setPhysicalPosRange(Params.PHYSICAL_MIN_POS, Params.PHYSICAL_MAX_POS)
-            .setPositionPresets(Params.POS_PRESET_TOLERANCE, Params.tiltPosPresets);
+            .setLogicalPosRange(Params.LOGICAL_MIN_POS, Params.LOGICAL_MAX_POS)
+            .setMaxStepRate(Params.MAX_STEP_RATE)
+            .setPositionPresets(Params.POS_PRESET_TOLERANCE, Params.posPresets);
 
-        servo = new FtcServoActuator(wristParams).getServo();
-    }   //ServoWrist
+        latch = new FtcServoActuator(latchParams).getServo();
+        latch.setPosition(Params.PHYSICAL_MIN_POS);
+    }   //Latch
 
     /**
-     * This method returns the created servo.
+     * This method returns the created TrcServo.
      *
      * @return created servo.
      */
     public TrcServo getServo()
     {
-        return servo;
+        return latch;
     }   //getServo
 
     //
@@ -92,7 +94,7 @@ public class ServoWrist extends TrcSubsystem
     @Override
     public void cancel()
     {
-        servo.cancel();
+        latch.cancel();
     }   //cancel
 
     /**
@@ -104,7 +106,7 @@ public class ServoWrist extends TrcSubsystem
     @Override
     public void zeroCalibrate(String owner, TrcEvent event)
     {
-        // No zero calibration needed.
+        // Servos don't need zero calibration.
     }   //zeroCalibrate
 
     /**
@@ -113,7 +115,7 @@ public class ServoWrist extends TrcSubsystem
     @Override
     public void resetState()
     {
-        servo.setPosition(-90.0);
+        latch.setPosition(Params.PHYSICAL_MAX_POS);
     }   //resetState
 
     /**
@@ -126,7 +128,8 @@ public class ServoWrist extends TrcSubsystem
     public int updateStatus(int lineNum)
     {
         dashboard.displayPrintf(
-            lineNum++, "%s: pos=%.3f/%.3f", Params.SUBSYSTEM_NAME, servo.getPosition(), servo.getLogicalPosition());
+            lineNum++, "%s: phyPos=%.3f, logPos=%.3f",
+            Params.SUBSYSTEM_NAME, latch.getPosition(), latch.getLogicalPosition());
         return lineNum;
     }   //updateStatus
 
@@ -140,7 +143,7 @@ public class ServoWrist extends TrcSubsystem
     @Override
     public void prepSubsystemForTuning(double... tuneParams)
     {
-        servo.setLogicalPosRange(tuneParams[0], tuneParams[1]);
+        latch.setLogicalPosRange(tuneParams[0], tuneParams[1]);
     }   //prepSubsystemForTuning
 
-}   //class ServoWrist
+}   //class Latch
