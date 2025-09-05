@@ -1,267 +1,3 @@
-## Welcome!
-This repository contains the official FTC SDK from https://github.com/FIRST-Tech-Challenge/FtcRobotController. It 
-has the addition of our Titan Robotics Framework Library (TrcLib) and its dependencies. These are added as git 
-submodules so that they can be independently managed without the need of changing the FTC SDK (except for minor 
-gradle changes to tie in our Framework Library dependencies). Therefore, you can pick up the latest changes of 
-our Framework Library without affecting the FTC SDK. It serves as a clean repository template for the start of a new season. This template also contains basic team code that implements a mecanum drive base with teleop control. It allows you to run a simple mecanum robot in TeleOp almost right out of the box. In addition, it includes autonomous infrastructure code that uses our FtcChoiceMenu for selecting autonomous strategies and other autonomous choice opotions. This allows you to write only one autonomous opmode to handle many permutations of autonomous. For example, one autonomous opmode can handle both red and blue alliances. The template also provides a rich set of Tests for diagnosing robot hardware and/or for tuning.
-
-## Getting Started
-To use this repository template, you can clone or fork this template repository to your own github repositories. There are many ways to do it but I am going to describe one way which is using GitHub Desktop. If you are more familiar with other similar tools, feel free to use it instead.
-* On a web browser, enter the URL https://github.com/trc492/FtcTemplate.
-* Then, click the "Fork" button near the upper right corner of the web page and answer the question on where you want to fork this repository to your GitHub repositories.
-* Once the fork is done. Clone your GitHub repository to your computer using your favorite GitHub tool such as GitHub Desktop.
-* On GitHub Desktop, click File->Clone repository..., select the repository you just forked and type in the path on the computer where you want to clone the repository to.
-
-Congratulations! You just clone our template repository. Now you can fire up Android Studio and import this gradle project. Once that is done, you can now go to TeamCode and browse around the provided template code or sample code. You can compile the code and check if you have any issues with the cloned template. Or you can jump right in and start modifying/customizing the code.
-
-### TeleOp Driving a Mecanum Robot Right Out Of The Box
-Since this template already contains basic code for a mecanum robot base, it takes very few modifications to make it work with your mecanum robot.
-* In RobotParams.java, update the string constants HWNAME_xxDRIVE_MOTOR corresponding to the hardware names of the four driving wheel motors in your robot config.
-* Compile the code and deploy it to the robot.
-* Place your robot on a stand so that the wheels can be free running without the robot running away from you. When looking down on the robot, the mecanum wheel rollers should form an X. If not, switch the mecanum wheels around until they form an X. On the Driver Station, activate your robot configuration. Select a TeleOp Opmode on the Driver Station called FtcTest. Press the init button to initialize the opmode. Press the D-pad down button on your driver gamepad until the "Test" shown on the Driver Station is on "Drive motors test". Press the D-pad right button to select the test. Then press the "Play" button on the Driver Station to start the opmode. This test will run each of the four driving wheels one after the other for 5 seconds each in the sequence of Left Front, Right Front, Left Back and Right Back. Note the rotation direction of each wheel and make sure they would have run the robot in the forward direction if the robot were placed on the ground. If any of the wheels are rotating in the wrong direction, correct them in RobotParams.java. Change xxDRIVE_INVERTED from true to false or vice versa to reverse the corresponding driving wheels until the test shows all four wheels rotating in the correct direction.
-
-That's it. Your robot is now ready to be driven in TeleOp mode. The default drive mode is "Arcade Mode". It means the left stick on the driver gamepad controls the X and Y direction of the robot. The X-axis of the right stick controls the rotation. If you prefer, you can change the drive mode to "Holonomic Mode". In this mode, the Y-axis of the left stick controls the Y direction of the robot. The X-axis of the right stick controls the X direction, the left trigger controls turning left and the right trigger controls turning right. To change to this mode, change ROBOT_DRIVE_MODE in RobotParams.java to DriveMode.HOLONOMIC_MODE.
-
-In addition, there are a few more buttons on the driver gamepad that modify how the robot is driven. Click the right bumper on the driver gamepad will toggle between Robot and Field Oriented driving modes. Our library also supports Inverted driving mode allowing the robot to switch the front and back end. This is useful for a robot that has an end effector such as an intake at the back so that the drivers can drive the robot around as if the intake is in front. Press and hold the left bumper allows you to drive the robot at slow speed. This is useful for delicate movement of the robot.
-
-### Making Drive Base Odometry Work
-Our library supports both drive wheel motor odometry (using drive wheel motor encoders) and passive wheel odometry (aka dead-wheel odometry or odo pods). To select which odometry to use, change RobotParams.Preferences.useExternalOdometry to true to use passive wheel odometry or false to use drive wheel motor odometry. When using odo pods, you need to provide the odo pod placement info relative to the robot's center of rotation (*_ODWHEEL_*_OFFSET in RobotParams). To determine the robot's center of rotation, draw a rectangle with each drive wheel being the corners of the rectangle. The center of rotation is the center point of this rectangle. It is very important to provide accurate distance offsets of each odo pod wheel to the robot's center of rotation because this affects the accuracy of the odometry calculation. We recommend measuring the offset distances from the CAD model if possible. Measuring the offset distances by hand introduces error in the odometry calculation that causes odometry drift and therefore not recommended. Our library uses ENU (East-North-Up) coordinate system for the robot which means robot's center of rotation on the ground is the origin with X-axis pointing to robot right, Y-axis pointing to robot forward and Z-axis pointing up. Therefore the left odo pod will have a negative x-offset from robot's center of rotation and the right odo pod will have a positive x-offset from robot's center of rotation and so on. Even though our library supports 2 to 4 odo pods, the template code assumes you are using 3 odo pods, 2 pointing forward parallel to the driving wheels (parallel odo pods), typically one on the left and one on the right (Y-axis) and one pointing sideway (X-axis), the perpendicular odo pod. Our library uses gyro (IMU) to keep track of the robot heading. In theory, it could use the odo pods to calculate the robot's heading but gyro is much more accurate than using odo pods. The picture below shows a typical arrangement of three odo pods on an 18-inch by 18-inch robot. The left parallel odo wheel has the location at (-7.5, 1.5), right parallel odo wheel at (7.5, 1.5) and the perpendicular odo wheel at (0, -6). All units are in inches.
-
-**Odo Wheel Layout**
-![image name](/ReadMeAttachments/OdoWheelLayout.png)
-
-The next step is to determine the odometry scales (X and Y). This is applicable for both drive wheel motor odometry and odo pods. Generally, encoders give you values in the unit of counts (or ticks). To be more useful, we would like the odometry values to be in real world units such as inches or meters. Our library will scale the odometry to the unit of your choice. There are two ways to determine the odometry scales, one is to calculate it by providing info such as odo wheel diameter, encoder CPR (Count-Per-Revolution) etc. See RobotParams.ODO_WHEEL_* and RobotParams.*POS_INCHES_PER_COUNT. Another way is to calibrate the scales empiracally. This can be done by first setting the X and Y scales to 1 so that the reported units are unscaled and therefore in the unit of encoder counts. Then, reset all the encoders and manually drive the robot in either the X or Y direction for a distance when calibrating X or Y scales. Measure the distance traveled. Then scale = distanceTraveled / unscaledCount. To minimize calibration error, drive a longer distance (at least 6 to 8 feet). Then update the *_INCHES_PER_COUNT variables with the calculated scale. Repeat the calibration again to check if the reading is within some tolerance of the actual measurement. If not, calculate the new scale by newScale = oldScale * actualValue / reportedValue. Repeat this process until the reported value is within some tolerance of the actual measurement. Once you have the odometry scales calibrated, you should be able to drive the robot around and odometry will keep track of the robot location on the field relative to its start location.
-
-### Creating Subsystems
-Once the drive base is fully functional, the next step is to create subsystems for the robot such as Elevator, Arm, Intake, Grabber etc. It is a good practice to create subsystems as separate Java classes that encapsulate all hardware related to those subsystems. To create a subsystem, follow the steps below:
-1. Create a Java class in the subsystems folder (e.g. Slide.java).
-   ```
-   public class Slide
-   {
-       private final TrcMotor slideMotor;
-
-       /**
-        * Constructor: Creates an instance of the object.
-        */
-       public Slide()
-       {
-           FtcMotorActuator.Params slideParams = new FtcMotorActuator.Params()
-               .setMotorInverted(RobotParams.SLIDE_MOTOR_INVERTED)
-               .setLowerLimitSwitch(
-                   RobotParams.SLIDE_HAS_LOWER_LIMIT_SWITCH,
-                   RobotParams.SLIDE_LOWER_LIMIT_INVERTED)
-               .setUpperLimitSwitch(
-                   RobotParams.SLIDE_HAS_UPPER_LIMIT_SWITCH,
-                   RobotParams.SLIDE_UPPER_LIMIT_INVERTED)
-               .setVoltageCompensationEnabled(RobotParams.SLIDE_VOLTAGE_COMP_ENABLED)
-               .setPositionScaleAndOffset(RobotParams.SLIDE_INCHES_PER_COUNT, RobotParams.SLIDE_OFFSET)
-               .setPositionPresets(RobotParams.SLIDE_PRESET_TOLERANCE, RobotParams.SLIDE_PRESETS);
-           slideMotor = new FtcMotorActuator(RobotParams.HWNAME_SLIDE, slideParams).getActuator();
-           //
-           // Delete or comment out the following three statements if you want to use motor native PID control
-           // (aka RUN_TO_POSITION) instead of software PID control.
-           //
-           slideMotor.setSoftwarePidEnabled(true);
-           slideMotor.setPositionPidParameters(
-               RobotParams.SLIDE_KP, RobotParams.SLIDE_KI, RobotParams.SLIDE_KD, RobotParams.SLIDE_KF,
-               RobotParams.SLIDE_IZONE, RobotParams.SLIDE_TOLERANCE);
-           slideMotor.setStallDetectionEnabled(
-               RobotParams.SLIDE_STALL_DETECTION_DELAY, RobotParams.SLIDE_STALL_DETECTION_TIMEOUT,
-               RobotParams.SLIDE_STALL_ERR_RATE_THRESHOLD);
-           //
-           // If you are using motor native PID control, you need to set PID tolerance.
-           //
-           slideMotor.setPositionPidTolerance(RobotParams.SLIDE_TOLERANCE);
-           //
-           // Stall protection will detect motor stall and cut power to protect it. This is also required if
-           // you want to enable zero calibration by motor stall (e.g. don't have lower limit switch).
-           // A motor is considered stalled if:
-           // - the power applied to the motor is above or equal to stallMinPower.
-           // - the motor has not moved or movement stayed within stallTolerance for at least stallTimeout.
-           // Note: By definition, holding target position doing software PID control is stalling. If you decide to enable
-           //       stall protection while holding target, please make sure to set a stallMinPower much greater than the
-           //       power necessary to hold position against gravity, for example. However, if you want to zero calibrate
-           //       on motor stall, you want to make sure calPower is at least stallMinPower.
-           //
-           slideMotor.setStallProtection(
-               RobotParams.SLIDE_STALL_MIN_POWER, RobotParams.SLIDE_STALL_TOLERANCE,
-               RobotParams.SLIDE_STALL_TIMEOUT, RobotParams.SLIDE_STALL_RESET_TIMEOUT);
-       }
-
-       public TrcMotor getSlideMotor()
-       {
-           return slideMotor;
-       }
-   }
-   ```
-2. In Robot.java, add a public class variable in the Subsystem section.
-   ```
-   public TrcMotor slide;
-   ```
-3. In the constructor of Robot.java, under the Subsystem section, add code to create and initialize the subsystem.
-   ```
-   if (RobotParams.Preferences.useSlide)
-   {
-       slide = new Slide().getSlideMotor();
-   }
-   ```
-4. In RobotParams.java, add a Preferences that can turn the subsystem ON or OFF. This is very useful when developing code for an unfinished robot where some subsystems may or may not exist yet.
-   ```
-   public static boolean useSlide = true;
-   ```
-5. In RobotParams.java, add a HWNAME for the subsystem. This will become either the name or name prefix for the hardware in the robot configuration (e.g. slide.motor, slide.lowerLimitSw etc).
-   ```
-   public static final String HWNAME_SLIDE = "slide";
-   ```
-6. At the end of RobotParams.java, under the Subsystem section, add constants that characterize the subsystem.
-   ```
-   public static final boolean SLIDE_MOTOR_INVERTED = false;
-   public static final boolean SLIDE_HAS_LOWER_LIMIT_SWITCH = true;
-   public static final boolean SLIDE_LOWER_LIMIT_INVERTED = false;
-   public static final boolean SLIDE_HAS_UPPER_LIMIT_SWITCH = false;
-   public static final boolean SLIDE_UPPER_LIMIT_INVERTED = false;
-   public static final boolean SLIDE_VOLTAGE_COMP_ENABLED = true;
-   public static final double SLIDE_ENCODER_PPR = GOBILDA_5203_312_ENCODER_PPR;
-   public static final double SLIDE_PULLEY_DIAMETER = 1.405;
-   public static final double SLIDE_PULLEY_CIRCUMFERENCE = Math.PI*SLIDE_PULLEY_DIAMETER;
-   public static final double SLIDE_INCHES_PER_COUNT = SLIDE_PULLEY_CIRCUMFERENCE/SLIDE_ENCODER_PPR;
-   public static final double SLIDE_POWER_LIMIT = 1.0;
-   public static final double SLIDE_OFFSET = 0.0;
-   public static final double SLIDE_MIN_POS = SLIDE_OFFSET;
-   public static final double SLIDE_MAX_POS = 24.0;
-   public static final double SLIDE_POS_1 = 6.0;
-   public static final double SLIDE_POS_2 = 12.0;
-   public static final double SLIDE_POS_3 = 18.0;
-   // Power settings.
-   public static final double SLIDE_CAL_POWER = -0.25;
-   // Preset positions.
-   public static final double SLIDE_PRESET_TOLERANCE = 0.5;
-   public static final double[] SLIDE_PRESETS = new double[] {
-       SLIDE_MIN_POS, SLIDE_POS_1, SLIDE_POS_2, SLIDE_POS_3, SLIDE_MAX_POS
-   };
-   // PID Actuator parameters.
-   public static final double SLIDE_KP = 0.6;
-   public static final double SLIDE_KI = 0.0;
-   public static final double SLIDE_KD = 0.025;
-   public static final double SLIDE_KF = 0.0;
-   public static final double SLIDE_TOLERANCE = 0.5;
-   public static final double SLIDE_IZONE = 10.0;
-   public static final double SLIDE_STALL_DETECTION_DELAY = 0.5;
-   public static final double SLIDE_STALL_DETECTION_TIMEOUT = 0.2;
-   public static final double SLIDE_STALL_ERR_RATE_THRESHOLD = 5.0;
-   public static final double SLIDE_STALL_MIN_POWER = Math.abs(SLIDE_CAL_POWER);
-   public static final double SLIDE_STALL_TOLERANCE = 0.1;
-   public static final double SLIDE_STALL_TIMEOUT = 0.2;
-   public static final double SLIDE_STALL_RESET_TIMEOUT = 0.0;
-   ```
-7. In Robot.java, add code to the method updateStatus to display the status of the subsystem on the Driver Station. This is very useful for debugging. For example, if the subsystem is not working, you can look at the subsystem status to figure out if the problem is in the code, wiring or hardware.
-   ```
-   if (slide != null)
-   {
-       dashboard.displayPrintf(
-           lineNum++,
-           "Slide: power=" + slide.getPower() +
-           ", pos=" + slide.getPosition() + "/" + slide.getPidTarget() +
-           ", lowerLimit=" + slide.isLowerLimitSwitchActive());
-   }
-   ```
-8. In FtcTeleOp.java, add a private class variable slidePrevPower and add code to the method periodic to read analog controls on the gamepad for controlling the subsystem.
-   ```
-   private double slidePrevPower = 0.0;
-   ...
-   if (robot.slide != null)
-   {
-       double slidePower = operatorGamepad.getLeftStickY(true) * RobotParams.SLIDE_POWER_LIMIT;
-       if (slidePower != slidePrevPower)
-       {
-           if (manualOverride)
-           {
-               // Not using PID control.
-               robot.slide.setPower(slidePower);
-           }
-           else
-           {
-               // Using PID control.
-               robot.slide.setPidPower(
-                   slidePower, RobotParams.SLIDE_MIN_POS, RobotParams.SLIDE_MAX_POS, true);
-           }
-           slidePrevPower = slidePower;
-       }
-   }
-   ```
-9. In FtcTeleOp.java, add code to the method operatorButtonEvent to read button controls on the gamepad for controlling the subsystem. The following example shows how you would control the slide to extend or retract to the next preset position by using the DPad on the operator gamepad as well as using the BACK button to zero calibrate the slide.
-   ```
-   case FtcGamepad.GAMEPAD_DPAD_UP:
-       if (pressed && robot.slide != null)
-       {
-           robot.globalTracer.traceInfo(moduleName, ">>>>> Extending slide to next position.");
-           robot.slide.presetPositionUp(null, RobotParams.SLIDE_POWER_LIMIT);
-       }
-       break;
-
-   case FtcGamepad.GAMEPAD_DPAD_DOWN:
-       if (pressed && robot.slide != null)
-       {
-           robot.globalTracer.traceInfo(moduleName, ">>>>> Retracting slide to the next position.");
-           robot.slide.presetPositionDown(null, RobotParams.SLIDE_POWER_LIMIT);
-       }
-       break;
-
-   case FtcGamepad.GAMEPAD_BACK:
-       if (pressed && robot.slide != null)
-       {
-           robot.globalTracer.traceInfo(moduleName, ">>>>> ZeroCalibrate.");
-           robot.slide.zeroCalibrate(RobotParams.SLIDE_CAL_POWER);
-       }
-       break;
-   ```
-Once the subsystem is created and tied in to TeleOp, you should be able to operate the subsystem in TeleOp mode and check out the subsystem status on the Driver Station.
-
-## TRC Framework Library Features
-Our Framework Library provides numerous features. We will list some of them here:
-- FtcOpMode: Our own opmode that extends LinearOpMode but providing interface similar to OpMode where you put your code in some sort of loop method. FtcOpMode is a cooperative multi-tasking scheduler. As an advanced feature, our Framework Library also supports multi-threaded true multi-tasking. But for rookie teams who don't want to tackle the gotchas of true multi-tasking, cooperative multi-tasking is the way to go. This allows your autonomous to operate multiple subsystems at the same time instead of doing things sequentially. This is especially important since FTC autonomous period lasts only 30 seconds. In order to perform the maximum number of tasks in the autonomous period, your code would want to perform multiple tasks that have no dependencies on each other and perform them simultaneously. The Framework Library enables that in a trivial manor.
-- State machine: The state machine infrastructure is the core of multi-tasking. Each task should use a state machine to keep track of their states. This allows FtcOpMode to switch between tasks and be able to maintain the state of each task when they are resumed from suspended state.
-- Task syncrhonization: Some tasks have dependencies on each other. For example, autonomous may want to finish driving the robot to the specified location before dumping the game element to the proper spot. This requires task synchronization. The Framework Library provides a number of task synchronization features such as Events (TrcEvent) and Callbacks (TrcEvent.Callback). Event allows an operation to signal it when the operation is completed so that the task waiting for it can resume. Callback allows a method to be called to perform additional work without the use of a state machine after the operation is completed, for example.
-- Timers: The Timer Manager (TrcTimer) manages multiple simultaneous timers. When a timer expires, you have the option of signaling an event or doing an event callback. For example, if you want to spin a motor for 3 seconds and turn it off afterwards, you can arm a timer that expires in 3 seconds and do an event callback to turn the motor off. This type of operation is sometimes called "fire and forget".
-- Advanced multi-tasking: In addition to cooperative multi-task, our Framework Library also supports multi-threaded tasks. The Library provides a number of standard threads (i.e. main robot thread and IO thread). The main robot thread runs the FtcOpMode where the scheduler is performing cooperative multi-tasking on the main robot thread. The IO thread handles all input tasks such as reading sensors and odometry and output tasks such as motor and actuator tasks including PID control and pathing. If there is a special need that either requires high frequency processing and cannot afford any latency or a task that takes extra long time to run and thus blocking the thread unnecessarily long, the Library enables you to create STANDALONE tasks that have their own thread. All these tasks/threads are mananged by the Task Manager (TrcTaskMgr). Although everything provided and maintained by the Library are thread-safe, user must still be cautious when writing multi-threading code. Care must be taken to ensure you don't fall into the trap of two common multi-threaded programming woes: shared resource contention and task synchronization. If you don't understand these, it's better not to do multi-threaded multi-tasking and stick only with cooperative multi-tasking. Even with cooperative multi-tasking, you still need to apply some simple disciplines: do not block the main robot thread (i.e. no busy wait loop and sleep statements in your task code). Just start an operation and get out. Do not wait for it to complete. Most of the operations supported by the Framework Library are asynchronous. For a subsystem to support asynchronous operation, it must provide a way to start the operation without blocking and a way to signal/notify the completion of the operation. Calling them will start the operation and the control is returned back to your code immediately. Your state machine should take care waiting for an operation to complete. That's why it's called "cooperative multi-tasking". You must be good citizens for it to work properly.
-- Inputs: The Framework Library supports many different input devices such as gamepad controllers, sensors and driver station dashboard.
-  - Gamepad controller: The Framework Library monitor all buttons on the gamepad for state changes. Any button presses or releases will result in an event callback to your button event handler. This simplifies your TeleOp code tremendously.
-  - Sensors: The Framework Library supports many type of sensors whether they are digital sensors, analog sensors, I2C sensors or even Android built-in sensors, the Library provides access to them. Popular sensors include ultronic sensor, color sensor, distance sensor such as Lidar, gyro, accelerometer, touch sensor, IR seeker and Pixy camera etc. It also supports many underlying communication protocols (e.g. I2C, Serial, SPI etc) so that you can write custom sensor driver code to communicate with sensors that the Library does not have built-in support.
-  - Driver station dashboard: The Framework Library provides easy access to the driver station as an input device. It allows you to create Choice Menus (FtcChoiceMenu) or Value Menus (FtcValueMenus) where you can ask the user to provide information before the competition match is started. Information such as whether you are on the RED or BLUE Alliance; which starting position your robot is in; whether your robot should delay starting the autonomous routine to let your alliance partner to go first to avoid potential collision or whether your robot should perform or skip a certain autonomous tasks. The Choice and Value menus form a decision tree that allow the user to select choices or enter values using the gamepad buttons.
-- Data Filters and Processors: In the real world, sensors have noises. In some applications, noises are bad for robot control. The Framework Library provides a number of popular data filters (e.g. IIR, Kalman and Spurious filters etc) that will clean up noises on sensor readings. It also provides some data converters such as data integrator. For example, some simple gyro sensors only give you rotational rate but not heading. You must integrate the rotational rate over time to calculate heading. In this situation, the Library provides the data integrator. In some other sensors such as some gyros or compasses, they give you non-contiguous readings when passing through some point such as the REV IMU gyro goes from 179 degrees to -180, or compass goes from 359 degrees back to zero. This non-contiguous values may cause havoc in control algorithms. In this case, the Library provides a converter that can monitor the sensor crossing such points and convert the values into a contiguous scale.
-- Outputs: The Framework Library supports many types of output devices such as motors, servo, complex actuators, lights and sound.
-  - Motors: Motor is the most fundamental output device on a robot. It provides movements for the robot. FTC SDK provides some basic motor classes (e.g. DcMotor, DcMotorEx). The Framework Library adds a lot more features on top of that in different layers of complexity. For example, it provides FtcDcMotor extending TrcMotor that added support for a digital input sensor to reset the motor encoder automatically (limit switches). This is useful for using the motor in a complex actuator such as an arm or elevator when you may need to zero calibrate the zero position of the actuator using a lower limit switch. It also added support to provide velocity mode control and motor odometry. On top of the fundamental motor features, it also provided PID Controlled functionality. It can support either native motor close-loop control (position and velocity PID control) or software PID control in case some motors do not support native close-loop control (e.g. continuous servos). TrcMotor added support for lower and upper limit switches, motor stall protection for safety, multiple motors with synchronization (motor followers), zero position calibration and gravity compensation. These advanced features made it trivial to implement complex subsystems such as a swing arm or elevator. The built-in PIDF controller allows the arm or elevator to be controlled by an analog joystick to speed up or slow down the arm/elevator movement. It understands the arm/elevator position approaching the lower/upper position limits and will automatically slow down its movement. It also provides stall protection. If the PID Actuator got stuck and the motor is stalled, it can cut motor power to prevent it from burning out. It also allows a reset timeout so that the stall condition can be cleared after a certain period assuming the stall condition is caused by human temporarily. This allows the subsystem to resume its function and provides time for the motor to cool down. In addition, it also supports voltage compensation. It understands battery voltage drop and can compensate the power level sent to the motor.
-  - Servos: With the limited number of motors allowed by FTC, servo motors become the secondary important actuator on a robot. The Framework Library provides the basic support of a servo over the FTC SDK (TrcServo). It supports translation between logical servo positions (between the value of 0 and 1) to physical positions such as 0 to 180 degrees. Just like motors, it also allows you to invert the direction of the servo movement. In addition, it also provides features to support multiple servos (followers), continuous servo with optional encoder, lower and upper limit switches. Most importantly, it allows speed controlling a servo motor so you can control a servo by an analog joystick.
-  - Light: The Framework Library supports many ways to control lights, usually LEDs. They could be a single LED with just one color, a single RGB LED or a RGB LED strip that is pixel addressable. The LED lights can be controlled by digital output ports or most likely the REV Blinkin LED controller. This is not only for asethetics to make our robot look pretty, it also serves a very practical purpose: providing feedback to drivers on robot status. For example, it can tell you whether robot vision detected the target by changing the LED color on different target positions. The Library not only allows you to lit up LEDs in different colors or different color patterns, it also provides a complex priority scheme in controlling the LEDs. Imagine the robot has many subsystems that want to tell you something. Vision may want to tell you whether it sees the target, intake may want to tell you whether it has taken in a game piece. All these events will cause LED contention (i.e. different subsystems fighting to change the color of the LEDs to show their status). The Library provides a priority scheme (TrcPriorityIndicator) that defines what color pattern has priority over the others so that important events can override lower priority events to show their status. The Library also provides support for LED Matrix Panel. Although it is not really practical for FTC, it is more an FRC feature because of power requirement and also requires custom electronics that FTC may not allow.
-  - Sound: The Framework Library supports sound. It used to support sound on the Robot Controller when it was an Android Phone. With the introduction of REV Robot Controller Hub, it no longer provides sound capability. The sound support now gets redirected to the Driver Station. Sound support includes playing a tone or providing text to speech. Sound is an important output device. Just like light, it provides feedback to the drivers on important robot status. For example, if one of the motors is stalled, the Library can cut power to the motor to prevent it from burning out. Sound support can generate a beep to warn the driver about it.
-- Drive Base: Our Framework Library provided support for 3 different types of drive bases: Simple Differential Drive Base (TrcSimpleDriveBase), Mecanum Drive Base (TrcMecanumDriveBase) and Swerve Drive Base (TrcSwerveDriveBase). All drive bases have built-in kinematics, odometry and localization support. It means the library can use sensors such as wheel encoders and gyro to keep track of the absolute field location of the robot. It can combine the sensor readings to control the movement of the robot by applying kinematic calculations. It even supports passive-wheel odometry (aka dead-wheel odometry) where it supports 2 to 4 passive omniwheels with encoders to keep track of the absolute field location of the robot. All odometry data can be scaled to real world unit such as inches instead of encoder counts. All drive bases support many advanced features such as stall detection that detects if the drive base is stalled because it runs into an obstacle. This allows the possibility of writing advanced code such as running into the field wall to relocalize the robot location. Running into the field wall causes the drive base to stall which can signal an event to stop the drive base and reset the robot location to a known position. All drive bases provide support for different drive strategies such as tankDrive, arcadeDrive and curveDrive. It also provides support for holonomicDrive for drive bases that have this capability such as Mecanum and Swerve Drive Bases. For holonomic capable drive bases, it also supports field oriented driving where the robot can go in any direction independent of the robot's heading. It also supports Gyro-Assist driving where it uses the gyro to keep the robot driving straight. If the robot has a weight distribution problem or one of the wheels has more friction than the others, the robot won't drive straight. The robot may curve to the left or right. By enabling Gyro-Assist driving, it will use the gyro to maintain a straight heading.
-  - Simple Differential Drive Base supports drive bases with 2 to 6 motors. It has left and right sides. Each side can have 1 to 3 motors. Simple Drive Base can only run straight and cannot strafe like Mecanum Drive Bases (i.e. no holonomicDrive support, only differential drive).
-  - Mecanum Drive Base has 4 mecanum wheels. Each wheel has its own motor. It is capable of holonomic drive (i.e. strafing).
-  - Swerve Drive Base has 4 swerve wheel modules. Each swerve module consists of a drive motor and a steering motor. The steering motor can be a DC motor or a continuous servo motor. Each swerve module on a Swerve Drive Base can be independently steer so that it can run in any direction with the robot heading pointing to a totally different direction.
-- Exclusive Subsystem: A robot consists of many subsystems (e.g. drive base, elevator, shooter, intake, vision etc). Most of the subsystems can be operated by human operator in TeleOp mode. However, some subsystems can also be used in auto-assist operations. For example, on the press of a button, the vision-assisted shooter may stop the drive base, acquire a camera image for vision processing, calculate the trajectory for shooting a target, spin the shooter up to shooting speed, pan and tilt the shooter to the correct angles aiming at the target and shoot. The auto-assist operation involves several subsystems while these subsystems can also be operated by human control. Without coordination, human control and auto-assist may fight each other for the control of these subsystems. For example, while auto-assist is tilting the shooter for aiming the target, the tilting mechanism is also controlled by a joystick which is at neutral position. It means teleop code is constantly sending zero power to the tilter while auto-assist is trying to move the tilter. This causes jerky movement of the tilter. With Exclusive Subsystem support, one can declare the tilter as an Exclusive Subsystem. Before auto-assist starts an operation with the Exclusive Subsystem, it must acquire exclusive ownership of the subsystem. Once ownership is acquired, nobody else except the owner can operate the subsystem. This prevents teleop control from interfering with the auto-assist operation. When the auto-assist operation is done, the exclusive ownership of the subsystems will be released so that telop control can be resumed.
-- PIDF Control: Aside from supporting motor native close-loop control, our framework library also supports software PIDF control. Our software PIDF controller has a lot of extra features such as iZone in addition to P.I.D.F. It also understands target tolerance, stalling due to steady state error. It understands absolute versus relative target setpoint. It supports options to disallow oscillation (i.e. if the controller overshoots, it will just stop even though it exceeded tolerance). It also supports setting close-loop ramp rate and stall detection for aborting close-loop control hang (i.e. steady state error exceeding tolerance causing close-loop control to wait forever). It also allows setting close-loop control maximum power limits.
-- Motor Odometry: Motor odometry keeps track of motor position as well as velocity in real world units (e.g. inches) instead of encoder counts. If the motor does not support native velocity report, our library will calculate the velocity for you. Motor odometry is highly optimized for performance. We support Lynx Bulk Caching mode that guarantee reading motor odometry only once in a robot loop. Our code has built-in performance monitors for debugging performance issues.
-- Drive Base Odometry: Our drive base odometry supports both drive motor odometry as well as passive wheel odometry (Passive Odometry Pods). With drive wheel odometry, it reads either drive motor odometry or passive wheel odometry as well as gyro heading to calculate the absolute field location of the drive base.
-- Pathing Following: Our library supports Pure Pursuit Drive path following. In addition to the ability of following a pre-planned path, it also allows dynamically generated path. This is very useful for working with vision system that detects target location and can dynamically create a path navigating the robot to the detected target.
-- Vision: In every season, the game play usually involves navigating the robot to a certain location marked by objects detectable by vision or the robot is shooting game elements at a target recognizable by vision. Computer vision can have different complexity, ranging from simple color blob detection to full blown neural network machine learning object recognition. Therefore, it is generally computational intensive and could take hundreds of milliseconds to process an image frame. Fortunately, there are industrial vision libraries that take care of the heavy lifting for us. Libraries such as Tensor Flow, AprilTag and OpenCV. Our Framework Library includes support for all these industrial libraries. Some industrial libraries support asynchronous processing of image frames and some do not. For those that don't, they could block our main robot thread for hundreds of milliseconds. But with our Framework Library, we wrap these industrial libraries with easy to use interfaces and provide asynchronous support thus freeing our main robot thread to take care of other tasks. This encapsulation makes it extremely easy to writing vision code.
-- Util:
-  - Trace logging: In addition of providing information output to the dashboard on the driver station, the Framework Library also provides trace logging mainly for debugging purpose. It is a super important tool allowing post-mortem analysis of the robot performance of a match either for debugging or for performance tuning. Information written to the trace log has different levels that can be adjusted to reduce clutter. The levels are: VERBOSE, DEBUG, INFO, WARNING, ERROR and FATAL. For example, in regular competition match log, we will only turn up to the INFO level at the most. But for debugging, we may turn up to DEBUG or even VERBOSE to see everything.
-
-## Getting Help
-### User Documentation and Tutorials
-We are not very good at creating documentation and tutorials but we want to get better at this. Our Framework Library code has JavaDoc all over. Therefore, you can get information on what each class does and their methods. We have also added sample code to the template project. Several teams have been using our Framework Library and we welcome opportunities of collaboration in creating tutorial materials. Feel free to suggest what tutorial you want to see.
-
-### Javadoc Reference Material
-The Javadoc reference documentation for the TRC Robotics Framework Library can be found [here](https://trc492.github.io/FtcJavaDoc/). We have also created some class material for learning our Robotics Framework [here](https://github.com/trc492/TrcAdvancedProgrammingClass/tree/main/FtcLessons).
-
-### Online User Forum
-For technical questions regarding our Framework Library, please post questions on the FTC Forums [here](https://ftcforum.firstinspires.org/forum/ftc-technology/android-studio).
-
-### TRC Sample OpModes
-In addition, we provide a large selection of sample OpModes (sample robot code) that show you how to use various features of our library. You can find them in a separate GitHub repository [here](https://github.com/trc492/TrcFtcSamples).
-
-# FTC SDK Release Information
-
 ## NOTICE
 
 This repository contains the public FTC SDK for the INTO THE DEEP (2024-2025) competition season.
@@ -323,6 +59,54 @@ The readme.md file located in the [/TeamCode/src/main/java/org/firstinspires/ftc
 
 # Release Information
 
+## Version 10.3 (20250625-090416)
+
+### Breaking Changes
+* The behavior of setGlobalErrorMsg() is changed.  Note that this is an SDK internal method that is not 
+  meant to be used by team software or third party libraries.  Teams or libraries using this method should
+  find another means to communicate failure.  The design intent of setGlobalErrorMsg() is to report an 
+  error and force the user to restart the robot, which in certain circumstances when used inappropriately
+  could cause a robot to continue running while Driver Station controls are disabled.  To prevent this,
+  processing of a call to setGlobalErrorMsg() is deferred until the robot is in a known safe state.  This may
+  mean that a call to setGlobalErrorMsg() that does not also result in stopping a running OpMode will appear
+  as though nothing happened until the robot is stopped, at which point, if clearGlobalErrorMsg() has not 
+  been called the message will appear on the Driver Station and a restart will be required.
+  Addresses issue [1381](https://github.com/FIRST-Tech-Challenge/FtcRobotController/issues/1381)
+* Fixes getLatestResult in Limelight3A so if the Limelight hasn't provided data yet, it still returns an LLResult but valid will be false
+  * If you previously used to check and see if this was `null` to see if the Limelight had been contacted, you now need to use `isValid()` on the result.  That is because now it always returns an LLResult even before it talks to the Limelight, but if it doesn't have valid data, the `isValid()` will be `false`.
+* Changed all omni samples to use front_left_drive, front_right_drive, back_left_drive, back_right_drive
+  * This is only breaking for you if you copy one of the changed samples to your own project and expect to use the same robot configuration as before.
+
+### Known Issues
+* The redesigned OnBotJava new file workflow allows the user to use a lowercase letter as the first character of a filename.
+  This is a regression from 10.2 which required the first character to be uppercase.  Software will build, but if the user tries
+  to rename the file, the rename will fail.
+
+### Enhancements
+* Improved the OBJ new file creation flow workflow. The new flow allows you to easily use samples, craft new custom OpModes and make new Java classes.
+* Added support for gamepad edge detection.
+  * A new sample program `ConceptGamepadEdgeDetection` demonstrates its use.
+* Adds a blackboard member to the Opmode that maintains state between opmodes (but not between robot resets).  See the ConceptBlackboard sample for how to use it.
+* Updated PredominantColorProcessor to also return the predominant color in RGB, HSV and YCrCb color spaces.  Updated ConceptVisionColorSensor sample OpMode to display the getAnalysis() result in all three color spaces.
+* Adds support for the GoBilda Pinpoint 
+  * Also adds `SensorGoBildaPinpoint` sample to show how to use it
+* Added `getArcLength()` and `getCircularity()` to ColorBlobLocatorProcessor.Blob.  Added BY_ARC_LENGTH and BY_CIRCULARITY as additional BlobCriteria.
+* Added `filterByCriteria()` and `sortByCriteria()` to ColorBlobLocatorProcessor.Util.
+  * The filter and sort methods for specific criteria have been deprecated.
+  * The updated sample program `ConceptVisionColorLocator` provides more details on the new syntax.
+* Add Help menu item and Help page that is available when connected to the robot controller via Program and Manage. The Help page has links to team resources such as [FTC Documentation](https://ftc-docs.firstinspires.org/), [FTC Discussion Forums](https://ftc-community.firstinspires.org), [Java FTC SDK API Documentation](https://javadoc.io/doc/org.firstinspires.ftc), and [FTC Game Information](https://ftc.game/).
+* Self inspection changes:
+  * List both the Driver Station Name and Robot Controller Name when inspecting the Driver Station.
+  * Report if the team number portion of the device names do not match.
+  * -rc is no longer valid as part of a Robot Controller name, must be -RC.
+  * Use Robot Controller Name or Driver Station Name labels on the inspection screens instead of WIFI Access Point or WIFI Direct Name.
+
+### Bug Fixes
+* Fixes issue [1478](https://github.com/FIRST-Tech-Challenge/FtcRobotController/issues/1478) in AnnotatedHooksClassFilter that ignored exceptions if they occur in one of the SDK app hooks.
+* Fix initialize in distance sensor (Rev 2m) to prevent bad data in first call to getDistance.
+* Fixes issue [1470](https://github.com/FIRST-Tech-Challenge/FtcRobotController/issues/1470) Scaling a servo range is now irrespective of reverse() being called.  For example, if you set the scale range to [0.0, 0.5] and the servo is reversed, it will be from 0.5 to 0.0, NOT 1.0 to 0.5.
+* Fixes issue [1232](https://github.com/FIRST-Tech-Challenge/FtcRobotController/issues/1232), a rare race condition where using the log rapidly along with other telemetry could cause a crash.
+
 ## Version 10.2 (20250121-174034)
 
 ### Enhancements
@@ -339,14 +123,14 @@ The readme.md file located in the [/TeamCode/src/main/java/org/firstinspires/ftc
 
 ### Breaking Changes
 
-* Support for Android Studio Ladybug.  Requires Android Studio Ladybug.
+* Support for Android Studio Ladybug.  Requires Android Studio Ladybug.  
 
 ### Known Issues
 
 * Android Studio Ladybug's bundled JDK is version 21.  JDK 21 has deprecated support for Java 1.8, and Ladybug will warn on this deprecation.
-  OnBotJava only supports Java 1.8, therefore, in order to ensure that software developed using Android Studio will
+  OnBotJava only supports Java 1.8, therefore, in order to ensure that software developed using Android Studio will 
   run within the OnBotJava environment, the targetCompatibility and sourceCompatibility versions for the SDK have been left at VERSION_1_8.
-  FIRST has decided that until it can devote the resources to migrating OnBotJava to a newer version of Java, the deprecation is the
+  FIRST has decided that until it can devote the resources to migrating OnBotJava to a newer version of Java, the deprecation is the 
   lesser of two non-optimal situations.
 
 ### Enhancements
@@ -473,7 +257,7 @@ The readme.md file located in the [/TeamCode/src/main/java/org/firstinspires/ftc
     * VisionPortal.Builder.setAutoStartStreamOnBuild
     * VisionPortal.Builder.setShowStatsOverlay
     * AprilTagProcessor.Builder.setSuppressCalibrationWarnings
-    * CameraStreamServer.setSourceâ€‹
+    * CameraStreamServer.setSource​
 
 ### Bug Fixes
 * Fixes a problem where OnBotJava does not apply font size settings to the editor.
