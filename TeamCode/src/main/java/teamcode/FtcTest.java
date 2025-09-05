@@ -513,8 +513,22 @@ public class FtcTest extends FtcTeleOp
                 break;
 
             case DpadUp:
-                if (testChoices.test == Test.TUNE_COLORBLOB_VISION &&
-                    robot.vision != null && robot.vision.rawColorBlobVision != null)
+                if (testChoices.test == Test.SUBSYSTEMS_TEST)
+                {
+                    if (RobotParams.Preferences.tuneDriveBase)
+                    {
+                        // If we are moving swerve steering, make sure TeleOp doesn't interfere.
+                        teleOpControlEnabled = !pressed;
+                        if (pressed && robot.robotDrive != null && robot.robotDrive instanceof FtcSwerveDrive)
+                        {
+                            FtcSwerveDrive swerveDrive = (FtcSwerveDrive) robot.robotDrive;
+                            swerveDrive.setSteerAngle(0.0, false, true);
+                        }
+                    }
+                    passToTeleOp = false;
+                }
+                else if (testChoices.test == Test.TUNE_COLORBLOB_VISION &&
+                         robot.vision != null && robot.vision.rawColorBlobVision != null)
                 {
                     if (pressed)
                     {
@@ -532,20 +546,6 @@ public class FtcTest extends FtcTeleOp
                                             Vision.LimelightParams.NUM_PIPELINES;
                         robot.vision.limelightVision.setPipeline(pipelineIndex);
                         robot.globalTracer.traceInfo(moduleName, "Switch Limelight pipeline to " + pipelineIndex);
-                    }
-                    passToTeleOp = false;
-                }
-                else if (testChoices.test == Test.SUBSYSTEMS_TEST)
-                {
-                    if (RobotParams.Preferences.tuneDriveBase)
-                    {
-                        // If we are moving swerve steering, make sure TeleOp doesn't interfere.
-                        teleOpControlEnabled = !pressed;
-                        if (pressed && robot.robotDrive != null && robot.robotDrive instanceof FtcSwerveDrive)
-                        {
-                            FtcSwerveDrive swerveDrive = (FtcSwerveDrive) robot.robotDrive;
-                            swerveDrive.setSteerAngle(0.0, false, true);
-                        }
                     }
                     passToTeleOp = false;
                 }
