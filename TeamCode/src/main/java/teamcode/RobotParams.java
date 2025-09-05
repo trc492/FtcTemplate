@@ -90,12 +90,6 @@ public class RobotParams
         // Tuning
         public static final boolean tuneColorBlobVision         = false;
         public static final boolean tuneDriveBase               = false;
-        public static final boolean tuneElevator                = false;
-        public static final boolean tuneDcMotorArm              = false;
-        public static final boolean tuneCrServoArm              = false;
-        public static final boolean tuneTurret                  = false;
-        public static final boolean tuneShooterMotor1           = false;
-        public static final boolean tuneShooterMotor2           = false;
     }   //class Preferences
 
     /**
