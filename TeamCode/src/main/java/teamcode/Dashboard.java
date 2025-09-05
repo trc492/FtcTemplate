@@ -102,15 +102,9 @@ public class Dashboard
     @Config
     public static class Subsystem
     {
-        public static TrcPidController.PidCoefficients pidCoeffs =
-            new TrcPidController.PidCoefficients(0.0, 0.0, 0.0, 0.0, 0.0);
-        public static TrcPidController.FFCoefficients ffCoeffs =
-            new TrcPidController.FFCoefficients(0.0, 0.0, 0.0);
-        public static double pidTolerance = 1.0;
-        public static boolean softwarePid = true;
-        public static boolean enableSquid = true;
-        public static double powerLimit = 1.0;
-        public static double maxGarvityCompPower = 0.0;
+        public static String subsystemName = null;
+        // 7 doubles: Kp, Ki, Kd, Kf, iZone, PIDTolerance, GravityCompPower
+        public static double[] tuneParams = new double[7];
     }   //class Subsystem
 
 }   //class Dashboard
