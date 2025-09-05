@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Titan Robotics Club (http://www.titanrobotics.com)
+ * Copyright (c) 2025 Titan Robotics Club (http://www.titanrobotics.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,7 +34,7 @@ import trclib.timer.TrcTimer;
  */
 public class CmdAuto implements TrcRobot.RobotCommand
 {
-    private final String moduleName = getClass().getSimpleName();
+    private static final String moduleName = CmdAuto.class.getSimpleName();
 
     private enum State
     {
@@ -114,6 +114,7 @@ public class CmdAuto implements TrcRobot.RobotCommand
                 case START:
                     // Set robot location according to auto choices.
                     robot.setRobotStartPosition(autoChoices);
+                    // Do delay if necessary.
                     if (autoChoices.delay > 0.0)
                     {
                         robot.globalTracer.traceInfo(moduleName, "***** Do delay " + autoChoices.delay + "s.");
@@ -132,7 +133,6 @@ public class CmdAuto implements TrcRobot.RobotCommand
                     cancel();
                     break;
             }
-
             robot.globalTracer.tracePostStateInfo(
                 sm.toString(), state, robot.robotDrive.driveBase, robot.robotDrive.pidDrive,
                 robot.robotDrive.purePursuitDrive, null);

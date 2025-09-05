@@ -366,9 +366,9 @@ public class FtcTeleOp extends FtcOpMode
             robot.globalTracer.traceInfo(moduleName, "driveOrientation=" + orientation);
             robot.robotDrive.driveBase.setDriveOrientation(
                 orientation, orientation == TrcDriveBase.DriveOrientation.FIELD);
-            if (robot.ledIndicator != null)
+            if (robot.ledIndicator1 != null)
             {
-                robot.ledIndicator.setDriveOrientation(orientation);
+                robot.ledIndicator1.setDriveOrientation(orientation);
             }
         }
     }   //setDriveOrientation

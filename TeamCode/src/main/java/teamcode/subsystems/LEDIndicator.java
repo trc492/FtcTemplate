@@ -22,9 +22,9 @@
 
 package teamcode.subsystems;
 
+import ftclib.drivebase.FtcRobotDrive;
 import ftclib.driverio.FtcGobildaIndicatorLight;
 import ftclib.driverio.FtcRevBlinkin;
-import teamcode.RobotParams;
 import trclib.drivebase.TrcDriveBase;
 import trclib.driverio.TrcGobildaIndicatorLight;
 import trclib.driverio.TrcPriorityIndicator;
@@ -51,10 +51,11 @@ public class LEDIndicator
      * Constructor: Create an instance of the object.
      *
      * @param indicatorName specifies the indicator hardware name.
+     * @param ledType specifies the LED type.
      */
-    public LEDIndicator(String indicatorName)
+    public LEDIndicator(String indicatorName, FtcRobotDrive.LEDType ledType)
     {
-        if (RobotParams.Preferences.useGobildaLED)
+        if (ledType == FtcRobotDrive.LEDType.GobildaLEDIndicator)
         {
             // LED Patterns are sorted in decreasing priority order.
             final TrcGobildaIndicatorLight.Pattern[] ledPatternPriorities = {
@@ -72,7 +73,7 @@ public class LEDIndicator
             indicator = new FtcGobildaIndicatorLight(indicatorName);
             ((FtcGobildaIndicatorLight) indicator).setPatternPriorities(ledPatternPriorities);
         }
-        else if (RobotParams.Preferences.useBlinkinLED)
+        else if (ledType == FtcRobotDrive.LEDType.RevBlinkin)
         {
             // LED Patterns are sorted in decreasing priority order.
             final TrcRevBlinkin.Pattern[] ledPatternPriorities = {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Titan Robotics Club (http://www.titanrobotics.com)
+ * Copyright (c) 2025 Titan Robotics Club (http://www.titanrobotics.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,6 +24,7 @@ package teamcode.subsystems;
 
 import ftclib.driverio.FtcDashboard;
 import ftclib.motor.FtcMotorActuator;
+import ftclib.motor.FtcMotorActuator.MotorType;
 import trclib.controller.TrcPidController;
 import trclib.motor.TrcMotor;
 import trclib.robotcore.TrcEvent;
@@ -33,8 +34,6 @@ import trclib.subsystem.TrcSubsystem;
  * This class implements a DcMotorArm Subsystem. This implementation consists of a motor with built-in encoder. It
  * does not have any limit switches, so it is using motor stall detection to zero calibrate the built-in relative
  * encoder. It supports gravity compensation by computing the power required to hold the arm at its current angle.
- * There are many possible implementations by setting different parameters.
- * Please refer to the TrcLib documentation (<a href="https://trc492.github.io">...</a>) for details.
  */
 public class DcMotorArm extends TrcSubsystem
 {
@@ -44,28 +43,28 @@ public class DcMotorArm extends TrcSubsystem
         public static final boolean NEED_ZERO_CAL               = true;
 
         public static final String MOTOR_NAME                   = SUBSYSTEM_NAME + ".motor";
-        public static final FtcMotorActuator.MotorType MOTOR_TYPE= FtcMotorActuator.MotorType.DcMotor;
+        public static final MotorType MOTOR_TYPE                = MotorType.DcMotor;
         public static final boolean MOTOR_INVERTED              = true;
 
         public static final double GOBILDA312_CPR               = (((1.0 + (46.0/17.0))) * (1.0 + (46.0/11.0))) * 28.0;
         public static final double DEG_PER_COUNT                = 360.0 / GOBILDA312_CPR;
         public static final double POS_OFFSET                   = 39.0;
-        public static final double POWER_LIMIT                  = 0.5;
-        public static final double ZERO_CAL_POWER               = -0.25;
+        public static final double POWER_LIMIT                  = 0.25;
+        public static final double ZERO_CAL_POWER               = -0.2;
 
         public static final double MIN_POS                      = POS_OFFSET;
         public static final double MAX_POS                      = 270.0;
         public static final double TURTLE_POS                   = MIN_POS;
         public static final double TURTLE_DELAY                 = 0.0;
-        public static final double[] posPresets                 = {
-            MIN_POS, 60.0, 90.0, 120.0, 150.0, 180.0, 210.0, 240.0, 270.0};
+        public static final double[] posPresets                 =
+            {MIN_POS, 60.0, 90.0, 120.0, 150.0, 180.0, 210.0, 240.0, 270.0};
         public static final double POS_PRESET_TOLERANCE         = 10.0;
 
         public static final boolean SOFTWARE_PID_ENABLED        = true;
         public static final TrcPidController.PidCoefficients posPidCoeffs =
-            new TrcPidController.PidCoefficients(0.018, 0.1, 0.001, 0.0, 2.0);
+            new TrcPidController.PidCoefficients(0.018, 0.0, 0.001, 0.0, 0.0);
         public static final double POS_PID_TOLERANCE            = 1.0;
-        public static final double GRAVITY_COMP_MAX_POWER       = 0.158;
+        public static final double GRAVITY_COMP_MAX_POWER       = 0.161;
         // Since we don't have lower limit switch, must enable Stall Protection to do zero calibration by stalling.
         public static final double STALL_MIN_POWER              = Math.abs(ZERO_CAL_POWER);
         public static final double STALL_TOLERANCE              = 0.1;
@@ -75,6 +74,7 @@ public class DcMotorArm extends TrcSubsystem
 
     private final FtcDashboard dashboard;
     private final TrcMotor motor;
+    private Double tuneGravityCompPower = null;
 
     /**
      * Constructor: Creates an instance of the object.
@@ -115,7 +115,8 @@ public class DcMotorArm extends TrcSubsystem
      */
     private double getGravityComp(double currPower)
     {
-        return Params.GRAVITY_COMP_MAX_POWER * Math.sin(Math.toRadians(motor.getPosition()));
+        double gravityCompPower = tuneGravityCompPower != null? tuneGravityCompPower: Params.GRAVITY_COMP_MAX_POWER;
+        return gravityCompPower * Math.sin(Math.toRadians(motor.getPosition()));
     }   //getGravityComp
 
     //
@@ -166,5 +167,26 @@ public class DcMotorArm extends TrcSubsystem
             Params.SUBSYSTEM_NAME, motor.getPower(), motor.getCurrent(), motor.getPosition(), motor.getPidTarget());
         return lineNum;
     }   //updateStatus
+
+    /**
+     * This method is called to prep the subsystem for tuning.
+     *
+     * @param tuneParams specifies tuning parameters.
+     *        tuneParam0 - Kp
+     *        tuneParam1 - Ki
+     *        tuneParam2 - Kd
+     *        tuneParam3 - Kf
+     *        tuneParam4 - iZone
+     *        tuneParam5 - PidTolerance
+     *        tuneParam6 - GravityCompPower
+     */
+    @Override
+    public void prepSubsystemForTuning(double... tuneParams)
+    {
+        motor.setPositionPidParameters(
+            tuneParams[0], tuneParams[1], tuneParams[2], tuneParams[3], tuneParams[4], tuneParams[5],
+            Params.SOFTWARE_PID_ENABLED);
+        tuneGravityCompPower = tuneParams[6];
+    }   //prepSubsystemForTuning
 
 }   //class DcMotorArm

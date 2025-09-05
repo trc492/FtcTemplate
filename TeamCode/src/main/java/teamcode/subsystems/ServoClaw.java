@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Titan Robotics Club (http://www.titanrobotics.com)
+ * Copyright (c) 2025 Titan Robotics Club (http://www.titanrobotics.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -37,8 +37,6 @@ import trclib.subsystem.TrcSubsystem;
  * This class implements a Claw Subsystem. This implementation consists of two servos and a sensor to detect the
  * presence of an object and can auto grab it. The sensor can be either a digital sensor such as touch sensor or beam
  * break sensor) or an analog sensor such as a distance sensor.
- * There are many possible implementations by setting different parameters.
- * Please refer to the TrcLib documentation (<a href="https://trc492.github.io">...</a>) for details.
  */
 public class Claw extends TrcSubsystem
 {
@@ -47,10 +45,10 @@ public class Claw extends TrcSubsystem
         public static final String SUBSYSTEM_NAME               = "Claw";
         public static final boolean NEED_ZERO_CAL               = false;
 
-        public static final String PRIMARY_SERVO_NAME           = SUBSYSTEM_NAME + ".primary";
+        public static final String PRIMARY_SERVO_NAME           = SUBSYSTEM_NAME + ".leftClaw";
         public static final boolean PRIMARY_SERVO_INVERTED      = false;
 
-        public static final String FOLLOWER_SERVO_NAME          = SUBSYSTEM_NAME + ".follower";
+        public static final String FOLLOWER_SERVO_NAME          = SUBSYSTEM_NAME + ".rightClaw";
         public static final boolean FOLLOWER_SERVO_INVERTED     = !PRIMARY_SERVO_INVERTED;
 
         public static final double OPEN_POS                     = 0.2;
@@ -60,8 +58,9 @@ public class Claw extends TrcSubsystem
 
         public static final boolean USE_ANALOG_SENSOR           = true;
         public static final String ANALOG_SENSOR_NAME           = SUBSYSTEM_NAME + ".sensor";
-        public static final double SENSOR_TRIGGER_THRESHOLD     = 2.0;
-        public static final boolean ANALOG_TRIGGER_INVERTED     = true;
+        public static final double LOWER_TRIGGER_THRESHOLD      = 2.0;
+        public static final double UPPER_TRIGGER_THRESHOLD      = 3.0;
+        public static final double TRIGGER_SETTLING_TIME        = 0.1;
 
         public static final boolean USE_DIGITAL_SENSOR          = false;
         public static final String DIGITAL_SENSOR_NAME          = SUBSYSTEM_NAME + ".sensor";
@@ -82,8 +81,8 @@ public class Claw extends TrcSubsystem
         dashboard = FtcDashboard.getInstance();
         if (Params.USE_ANALOG_SENSOR)
         {
-            analogSensor = FtcOpMode.getInstance().hardwareMap.get(
-                Rev2mDistanceSensor.class, Params.ANALOG_SENSOR_NAME);
+            analogSensor =
+                FtcOpMode.getInstance().hardwareMap.get(Rev2mDistanceSensor.class, Params.ANALOG_SENSOR_NAME);
         }
         else
         {
@@ -97,8 +96,9 @@ public class Claw extends TrcSubsystem
 
         if (analogSensor != null)
         {
-            clawParams.setAnalogSensorTrigger(
-                this::getSensorData, Params.ANALOG_TRIGGER_INVERTED, Params.SENSOR_TRIGGER_THRESHOLD);
+            clawParams.setAnalogSourceTrigger(
+                Params.ANALOG_SENSOR_NAME, this::getSensorData, Params.LOWER_TRIGGER_THRESHOLD,
+                Params.UPPER_TRIGGER_THRESHOLD, Params.TRIGGER_SETTLING_TIME);
         }
         else if (Params.USE_DIGITAL_SENSOR)
         {
@@ -182,8 +182,19 @@ public class Claw extends TrcSubsystem
         dashboard.displayPrintf(
             lineNum++, "%s: pos=%s, hasObject=%s, sensor=%s, autoActive=%s",
             Params.SUBSYSTEM_NAME, claw.isClosed()? "closed": "open", claw.hasObject(),
-            analogSensor != null? claw.getSensorValue(): claw.getSensorState(), claw.isAutoActive());
+            analogSensor != null? claw.getSensorValue(): claw.getTriggerState(), claw.isAutoActive());
         return lineNum;
     }   //updateStatus
+
+    /**
+     * This method is called to prep the subsystem for tuning.
+     *
+     * @param tuneParams specifies tuning parameters.
+     */
+    @Override
+    public void prepSubsystemForTuning(double... tuneParams)
+    {
+        claw.setLogicalPosRange(tuneParams[0], tuneParams[1]);
+    }   //prepSubsystemForTuning
 
 }   //class Claw
