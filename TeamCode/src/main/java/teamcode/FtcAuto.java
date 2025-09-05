@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Titan Robotics Club (http://www.titanrobotics.com)
+ * Copyright (c) 2025 Titan Robotics Club (http://www.titanrobotics.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -252,7 +252,7 @@ public class FtcAuto extends FtcOpMode
     public void stopMode(TrcRobot.RunMode prevMode, TrcRobot.RunMode nextMode)
     {
         //
-        // Opmode is about to stop, cancel autonomous command in progress if any.
+        // OpMode is about to stop, cancel autonomous command in progress if any.
         //
         if (autoCommand != null)
         {
