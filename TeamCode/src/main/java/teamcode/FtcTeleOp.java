@@ -587,7 +587,44 @@ public class FtcTeleOp extends FtcOpMode
                 break;
 
             case B:
-                if (robot.intake != null)
+                if (robot.shooter != null)
+                {
+                    if (pressed)
+                    {
+                        if (robot.autoShootTask != null)
+                        {
+                            // Auto Shoot Task is enabled, auto shoot at any AprilTag detected.
+                            if (robot.autoShootTask.isActive())
+                            {
+                                robot.autoShootTask.cancel();
+                                robot.globalTracer.traceInfo(moduleName, ">>>>> Cancel Auto Shoot");
+                            }
+                            else
+                            {
+                                robot.autoShootTask.autoShoot(moduleName, null, !driverAltFunc, (int[]) null);
+                                robot.globalTracer.traceInfo(moduleName, ">>>>> Auto Shoot");
+                            }
+                        }
+                        else
+                        {
+                            // Auto Shoot Task is disabled, shoot manually.
+                            if (robot.shooter.isActive())
+                            {
+                                robot.shooter.cancel(moduleName);
+                                robot.globalTracer.traceInfo(moduleName, ">>>>> Cancel Manual Shoot");
+                            }
+                            else
+                            {
+                                robot.shooter.aimShooter(
+                                    moduleName, robot.shooterSubsystem.shooter1Velocity.getValue() / 60.0, 0.0,
+                                    null, null, null, 0.0, robot.shooterSubsystem::shoot,
+                                    Shooter.Params.SHOOTER_OFF_DELAY);
+                                robot.globalTracer.traceInfo(moduleName, ">>>>> Manual Shoot");
+                            }
+                        }
+                    }
+                }
+                else if (robot.intake != null)
                 {
                     if (pressed)
                     {
@@ -632,43 +669,6 @@ public class FtcTeleOp extends FtcOpMode
                                     robot.intake.autoIntake(moduleName);
                                     robot.globalTracer.traceInfo(moduleName, ">>>>> Sensor Intake");
                                 }
-                            }
-                        }
-                    }
-                }
-                else if (robot.shooter != null)
-                {
-                    if (pressed)
-                    {
-                        if (robot.autoShootTask != null)
-                        {
-                            // Auto Shoot Task is enabled, auto shoot at any AprilTag detected.
-                            if (robot.autoShootTask.isActive())
-                            {
-                                robot.autoShootTask.cancel();
-                                robot.globalTracer.traceInfo(moduleName, ">>>>> Cancel Auto Shoot");
-                            }
-                            else
-                            {
-                                robot.autoShootTask.autoShoot(moduleName, null, !driverAltFunc, (int[]) null);
-                                robot.globalTracer.traceInfo(moduleName, ">>>>> Auto Shoot");
-                            }
-                        }
-                        else
-                        {
-                            // Auto Shoot Task is disabled, shoot manually.
-                            if (robot.shooter.isActive())
-                            {
-                                robot.shooter.cancel(moduleName);
-                                robot.globalTracer.traceInfo(moduleName, ">>>>> Cancel Manual Shoot");
-                            }
-                            else
-                            {
-                                robot.shooter.aimShooter(
-                                    moduleName, robot.shooterSubsystem.shooter1Velocity.getValue() / 60.0, 0.0,
-                                    null, null, null, 0.0, robot.shooterSubsystem::shoot,
-                                    Shooter.Params.SHOOTER_OFF_DELAY);
-                                robot.globalTracer.traceInfo(moduleName, ">>>>> Manual Shoot");
                             }
                         }
                     }
