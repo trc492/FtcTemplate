@@ -259,7 +259,7 @@ public class TaskAutoShoot extends TrcAutoTask<TaskAutoShoot.State>
                         Shooter.Params.SHOOTER_OFF_DELAY);
                     tracer.traceInfo(
                         moduleName, "***** ShootParams: distance=" + aprilTagDistance + ", params=" + shootParams);
-                    }
+                }
                 else
                 {
                     // We did not use vision, just shoot assuming operator manually aimed.

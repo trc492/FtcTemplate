@@ -66,7 +66,7 @@ public class Shooter extends TrcSubsystem
         public static final boolean SHOOTER_MOTOR2_INVERTED     = true;
 
         // Assume shooter motor1 and motor2 are the same type and have same gear ratio but they could have different
-        // PID coefficients during to different motor strengths and frictions.
+        // PID coefficients due to different motor strengths and frictions.
         public static final double GOBILDA6000_CPR              = 28.0;
         public static final double SHOOTER_GEAR_RATIO           = 24.0/36.0;
         public static final double SHOOTER_REV_PER_COUNT        = 1.0/(GOBILDA6000_CPR * SHOOTER_GEAR_RATIO);
