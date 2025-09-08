@@ -50,6 +50,10 @@ public class Shooter extends TrcSubsystem
     {
         public static final String SUBSYSTEM_NAME               = "Shooter";
         public static final boolean NEED_ZERO_CAL               = false;
+        public static final boolean TUNE_SHOOTER_MOTOR1_PID     = false;
+        public static final boolean TUNE_SHOOTER_MOTOR2_PID     = false;
+        public static final boolean TUNE_PAN_MOTOR_PID          = false;
+        public static final boolean TUNE_TILT_MOTOR_PID         = false;
 
         public static final boolean HAS_TWO_SHOOTER_MOTORS      = false;
         public static final boolean HAS_PAN_MOTOR               = false;
@@ -76,14 +80,15 @@ public class Shooter extends TrcSubsystem
         public static final TrcPidController.PidCoefficients shooter2PidCoeffs =
             new TrcPidController.PidCoefficients(0.075, 0.0, 0.0, 0.008, 0.0);
         public static final double SHOOTER_PID_TOLERANCE        = 10.0/60.0;// in RPS (10 RPM)
+        public static final double SHOOTER_OFF_DELAY            = 0.5;      // in sec
 
+	// These are for tuning shooter motor.
         public static final double SHOOTER_MIN_VEL              = 10.0;     // in RPM
         public static final double SHOOTER_MAX_VEL              = 7360.0;   // in RPM
         public static final double SHOOTER_MIN_VEL_INC          = 1.0;      // in RPM
         public static final double SHOOTER_MAX_VEL_INC          = 1000.0;   // in RPM
         public static final double SHOOTER_DEF_VEL              = 1000.0;   // in RPM
         public static final double SHOOTER_DEF_VEL_INC          = 10.0;     // in RPM
-        public static final double SHOOTER_OFF_DELAY            = 0.5;      // in sec
 
         // Pan Motor
         public static final String PAN_MOTOR_NAME               = SUBSYSTEM_NAME + ".panMotor";
@@ -130,6 +135,8 @@ public class Shooter extends TrcSubsystem
 
     /**
      * Constructor: Creates an instance of the object.
+     *
+     * @param intake specifies the intake subsystem for shooting control.
      */
     public Shooter(TrcRollerIntake intake)
     {
@@ -168,6 +175,7 @@ public class Shooter extends TrcSubsystem
         motor.setPositionSensorScaleAndOffset(Params.SHOOTER_REV_PER_COUNT, 0.0);
         motor.setVelocityPidParameters(
             Params.shooter1PidCoeffs, Params.SHOOTER_PID_TOLERANCE, Params.SHOOTER_SOFTWARE_PID_ENABLED);
+        // For tuning shooter motor 1 PID.
         shooter1Velocity = new TrcDiscreteValue(
             Params.SUBSYSTEM_NAME + ".motor1TargetVel",
             Params.SHOOTER_MIN_VEL, Params.SHOOTER_MAX_VEL,
@@ -182,6 +190,7 @@ public class Shooter extends TrcSubsystem
             motor.setPositionSensorScaleAndOffset(Params.SHOOTER_REV_PER_COUNT, 0.0);
             motor.setVelocityPidParameters(
                 Params.shooter2PidCoeffs, Params.SHOOTER_PID_TOLERANCE, Params.SHOOTER_SOFTWARE_PID_ENABLED);
+            // For tuning shooter motor 2 PID.
             shooter2Velocity = new TrcDiscreteValue(
                 Params.SUBSYSTEM_NAME + ".motor2TargetVel",
                 Params.SHOOTER_MIN_VEL, Params.SHOOTER_MAX_VEL,
@@ -338,27 +347,32 @@ public class Shooter extends TrcSubsystem
     @Override
     public void prepSubsystemForTuning(double... tuneParams)
     {
-        // To tune Shooter Motor PID, uncomment the code below.
-        shooter.getShooterMotor1().setVelocityPidParameters(
-            tuneParams[0], tuneParams[1], tuneParams[2], tuneParams[3], tuneParams[4], tuneParams[5],
-            Params.SHOOTER_SOFTWARE_PID_ENABLED);
-        shooter1Velocity.setValue(tuneParams[6]);
-
-        // To tune Shooter Motor PID, uncomment the code below.
-        // shooter.getShooterMotor2().setVelocityPidParameters(
-        //     tuneParams[0], tuneParams[1], tuneParams[2], tuneParams[3], tuneParams[4], tuneParams[5],
-        //     Params.SHOOTER_SOFTWARE_PID_ENABLED);
-        // shooter2Velocity.setValue(tuneParams[6]);
-
-        // To tune Pan Motor PID, uncomment the code below.
-        // shooter.getPanMotor().setPositionPidParameters(
-        //     tuneParams[0], tuneParams[1], tuneParams[2], tuneParams[3], tuneParams[4], tuneParams[5],
-        //     Params.PAN_SOFTWARE_PID_ENABLED);
-
-        // To tune Tilt Motor PID, uncomment the code below.
-        // shooter.getTiltMotor().setPositionPidParameters(
-        //     tuneParams[0], tuneParams[1], tuneParams[2], tuneParams[3], tuneParams[4], tuneParams[5],
-        //     Params.TILT_SOFTWARE_PID_ENABLED);
+        if (Params.TUNE_SHOOTER_MOTOR1_PID)
+        {
+            shooter.getShooterMotor1().setVelocityPidParameters(
+                tuneParams[0], tuneParams[1], tuneParams[2], tuneParams[3], tuneParams[4], tuneParams[5],
+                Params.SHOOTER_SOFTWARE_PID_ENABLED);
+            shooter1Velocity.setValue(tuneParams[6]);
+        }
+        else if (Params.TUNE_SHOOTER_MOTOR2_PID)
+        {
+             shooter.getShooterMotor2().setVelocityPidParameters(
+                 tuneParams[0], tuneParams[1], tuneParams[2], tuneParams[3], tuneParams[4], tuneParams[5],
+                 Params.SHOOTER_SOFTWARE_PID_ENABLED);
+             shooter2Velocity.setValue(tuneParams[6]);
+        }
+        else if (Params.TUNE_PAN_MOTOR_PID)
+        {
+             shooter.getPanMotor().setPositionPidParameters(
+                 tuneParams[0], tuneParams[1], tuneParams[2], tuneParams[3], tuneParams[4], tuneParams[5],
+                 Params.PAN_SOFTWARE_PID_ENABLED);
+        }
+        else if (Params.TUNE_TILT_MOTOR_PID)
+        {
+             shooter.getTiltMotor().setPositionPidParameters(
+                 tuneParams[0], tuneParams[1], tuneParams[2], tuneParams[3], tuneParams[4], tuneParams[5],
+                 Params.TILT_SOFTWARE_PID_ENABLED);
+        }
     }   //prepSubsystemForTuning
 
 }   //class Shooter
