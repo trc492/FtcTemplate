@@ -32,7 +32,6 @@ import trclib.vision.TrcOpenCvColorBlobPipeline;
 /**
  * This class creates the robot object that consists of sensors, indicators, drive base and all the subsystems.
  */
-@Config
 public class Dashboard
 {
     private static Double nextDashboardUpdateTime =  null;
@@ -49,24 +48,26 @@ public class Dashboard
     public static int updateDashboard(Robot robot, int lineNum)
     {
         double currTime = TrcTimer.getCurrentTime();
+        boolean slowLoop = nextDashboardUpdateTime == null || currTime >= nextDashboardUpdateTime;
 
-        if (nextDashboardUpdateTime == null || currTime >= nextDashboardUpdateTime)
+        if (slowLoop)
         {
             nextDashboardUpdateTime = currTime + RobotParams.Robot.DASHBOARD_UPDATE_INTERVAL;
-            if (RobotParams.Preferences.showDriveBase)
-            {
-                lineNum = robot.robotBase.updateStatus(lineNum);
-            }
+        }
 
-            if (RobotParams.Preferences.showVision && robot.vision != null)
-            {
-                lineNum = robot.vision.updateStatus(lineNum);
-            }
+        if (RobotParams.Preferences.showDriveBase)
+        {
+            lineNum = robot.robotBase.updateStatus(lineNum, slowLoop);
+        }
 
-            if (RobotParams.Preferences.showSubsystems)
-            {
-                lineNum = TrcSubsystem.updateStatusAll(lineNum);
-            }
+        if (RobotParams.Preferences.showVision && robot.vision != null)
+        {
+            lineNum = robot.vision.updateStatus(lineNum, slowLoop);
+        }
+
+        if (RobotParams.Preferences.showSubsystems)
+        {
+            lineNum = TrcSubsystem.updateStatusAll(lineNum, slowLoop);
         }
 
         return lineNum;
@@ -75,8 +76,9 @@ public class Dashboard
     @Config
     public static class Vision
     {
-        public static double[] colorThresholds = null;
-        public static TrcOpenCvColorBlobPipeline.FilterContourParams filterContourParams = null;
+        public static double[] colorThresholds = new double[6];
+        public static TrcOpenCvColorBlobPipeline.FilterContourParams filterContourParams =
+            new TrcOpenCvColorBlobPipeline.FilterContourParams();
     }   //class Vision
 
     @Config
@@ -102,7 +104,7 @@ public class Dashboard
     @Config
     public static class Subsystem
     {
-        public static String subsystemName = null;
+        public static String subsystemName = "";
         // 7 doubles: Kp, Ki, Kd, Kf, iZone, PIDTolerance, GravityCompPower
         public static double[] tuneParams = new double[7];
     }   //class Subsystem

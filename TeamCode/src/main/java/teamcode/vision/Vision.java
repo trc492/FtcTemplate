@@ -960,33 +960,37 @@ public class Vision
      * This method update the dashboard with vision status.
      *
      * @param lineNum specifies the starting line number to print the subsystem status.
+     * @param slowLoop specifies true if this is a slow loop, false otherwise.
      * @return updated line number for the next subsystem to print.
      */
-    public int updateStatus(int lineNum)
+    public int updateStatus(int lineNum, boolean slowLoop)
     {
-        if (rawColorBlobVision != null)
+        if (slowLoop)
         {
-            lineNum = rawColorBlobVision.updateStatus(lineNum);
-        }
+            if (rawColorBlobVision != null)
+            {
+                lineNum = rawColorBlobVision.updateStatus(lineNum);
+            }
 
-        if (limelightVision != null)
-        {
-            lineNum = limelightVision.updateStatus(lineNum);
-        }
+            if (limelightVision != null)
+            {
+                lineNum = limelightVision.updateStatus(lineNum);
+            }
 
-        if (aprilTagVision != null)
-        {
-            lineNum = aprilTagVision.updateStatus(lineNum);
-        }
+            if (aprilTagVision != null)
+            {
+                lineNum = aprilTagVision.updateStatus(lineNum);
+            }
 
-        if (redBlobVision != null)
-        {
-            lineNum = redBlobVision.updateStatus(lineNum);
-        }
+            if (redBlobVision != null)
+            {
+                lineNum = redBlobVision.updateStatus(lineNum);
+            }
 
-        if (blueBlobVision != null)
-        {
-            lineNum = blueBlobVision.updateStatus(lineNum);
+            if (blueBlobVision != null)
+            {
+                lineNum = blueBlobVision.updateStatus(lineNum);
+            }
         }
 
         return lineNum;
