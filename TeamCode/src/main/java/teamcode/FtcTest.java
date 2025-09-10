@@ -26,6 +26,8 @@ import androidx.annotation.NonNull;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import java.util.Arrays;
+
 import ftclib.drivebase.FtcRobotDrive;
 import ftclib.drivebase.FtcSwerveDrive;
 import ftclib.driverio.FtcChoiceMenu;
@@ -642,14 +644,20 @@ public class FtcTest extends FtcTeleOp
                 {
                     if (pressed)
                     {
-                        robot.globalTracer.traceInfo(
-                            moduleName, "Tune subsystem: " + Dashboard.Subsystem.subsystemName);
-                        if (Dashboard.Subsystem.subsystemName.isEmpty())
+                        if (!Dashboard.Subsystem.subsystemName.isEmpty())
                         {
-                            TrcSubsystem subsystem = TrcSubsystem.getSubsystem(Dashboard.Subsystem.subsystemName);
+                            String[] tokens = Dashboard.Subsystem.subsystemName.split("\\.");
+                            String subComponent = tokens.length > 1 && !tokens[1].isEmpty()? tokens[1]: null;
+                            TrcSubsystem subsystem = TrcSubsystem.getSubsystem(tokens[0]);
+
+                            robot.globalTracer.traceInfo(
+                                moduleName,
+                                "Tuning Subsystem " + tokens[0] + ":" +
+                                "\n\tsubComponent=" + subComponent +
+                                "\n\ttuneParams=" + Arrays.toString(Dashboard.Subsystem.tuneParams));
                             if (subsystem != null)
                             {
-                                subsystem.prepSubsystemForTuning(Dashboard.Subsystem.tuneParams);
+                                subsystem.prepSubsystemForTuning(subComponent, Dashboard.Subsystem.tuneParams);
                             }
                         }
                     }

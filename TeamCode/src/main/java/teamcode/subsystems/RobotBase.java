@@ -421,26 +421,31 @@ public class RobotBase
      * This method update the dashboard with the drive base status.
      *
      * @param lineNum specifies the starting line number to print the subsystem status.
+     * @param slowLoop specifies true if this is a slow loop, false otherwise.
      * @return updated line number for the next subsystem to print.
      */
-    public int updateStatus(int lineNum)
+    public int updateStatus(int lineNum, boolean slowLoop)
     {
-        if (robotDrive != null)
+        if (slowLoop)
         {
-            if (RobotParams.Preferences.showPidDrive)
+            if (robotDrive != null)
             {
-                TrcPidController xPidCtrl = robotDrive.pidDrive.getXPidCtrl();
-                if (xPidCtrl != null)
+                if (RobotParams.Preferences.showPidDrive)
                 {
-                    xPidCtrl.displayPidInfo(lineNum);
+                    TrcPidController xPidCtrl = robotDrive.pidDrive.getXPidCtrl();
+                    if (xPidCtrl != null)
+                    {
+                        xPidCtrl.displayPidInfo(lineNum);
+                        lineNum += 2;
+                    }
+                    robotDrive.pidDrive.getYPidCtrl().displayPidInfo(lineNum);
+                    lineNum += 2;
+                    robotDrive.pidDrive.getTurnPidCtrl().displayPidInfo(lineNum);
                     lineNum += 2;
                 }
-                robotDrive.pidDrive.getYPidCtrl().displayPidInfo(lineNum);
-                lineNum += 2;
-                robotDrive.pidDrive.getTurnPidCtrl().displayPidInfo(lineNum);
-                lineNum += 2;
             }
         }
+
         return lineNum;
     }   //updateStatus
 
