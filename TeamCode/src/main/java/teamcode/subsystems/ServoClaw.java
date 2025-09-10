@@ -175,25 +175,31 @@ public class ServoClaw extends TrcSubsystem
      * This method update the dashboard with the subsystem status.
      *
      * @param lineNum specifies the starting line number to print the subsystem status.
+     * @param slowLoop specifies true if this is a slow loop, false otherwise.
      * @return updated line number for the next subsystem to print.
      */
     @Override
-    public int updateStatus(int lineNum)
+    public int updateStatus(int lineNum, boolean slowLoop)
     {
-        dashboard.displayPrintf(
-            lineNum++, "%s: pos=%s, closed=%s, hasObject=%s, sensorState=%s, sensorValue=%.3f, autoActive=%s",
-            Params.SUBSYSTEM_NAME, claw.getPosition(), claw.isClosed(), claw.hasObject(), claw.getTriggerState(),
-            claw.getSensorValue(), claw.isAutoActive());
+        if (slowLoop)
+        {
+            dashboard.displayPrintf(
+                lineNum++, "%s: pos=%s, closed=%s, hasObject=%s, sensorState=%s, sensorValue=%.3f, autoActive=%s",
+                Params.SUBSYSTEM_NAME, claw.getPosition(), claw.isClosed(), claw.hasObject(), claw.getTriggerState(),
+                claw.getSensorValue(), claw.isAutoActive());
+        }
+
         return lineNum;
     }   //updateStatus
 
     /**
      * This method is called to prep the subsystem for tuning.
      *
+     * @param subComponent specifies the sub-component of the Subsystem to be tuned, can be null if no sub-component.
      * @param tuneParams specifies tuning parameters.
      */
     @Override
-    public void prepSubsystemForTuning(double... tuneParams)
+    public void prepSubsystemForTuning(String subComponent, double... tuneParams)
     {
         claw.setOpenClosePositions(tuneParams[0], tuneParams[1]);
     }   //prepSubsystemForTuning

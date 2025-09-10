@@ -149,21 +149,27 @@ public class Turret extends TrcSubsystem
      * This method update the dashboard with the subsystem status.
      *
      * @param lineNum specifies the starting line number to print the subsystem status.
+     * @param slowLoop specifies true if this is a slow loop, false otherwise.
      * @return updated line number for the next subsystem to print.
      */
     @Override
-    public int updateStatus(int lineNum)
+    public int updateStatus(int lineNum, boolean slowLoop)
     {
-        dashboard.displayPrintf(
-            lineNum++, "%s: power=%.3f, current=%.3f, pos=%.3f/%.3f, lowerLimit=%s",
-            Params.SUBSYSTEM_NAME, motor.getPower(), motor.getCurrent(), motor.getPosition(), motor.getPidTarget(),
-            motor.isLowerLimitSwitchActive());
+        if (slowLoop)
+        {
+            dashboard.displayPrintf(
+                lineNum++, "%s: power=%.3f, current=%.3f, pos=%.3f/%.3f, lowerLimit=%s",
+                Params.SUBSYSTEM_NAME, motor.getPower(), motor.getCurrent(), motor.getPosition(), motor.getPidTarget(),
+                motor.isLowerLimitSwitchActive());
+        }
+
         return lineNum;
     }   //updateStatus
 
     /**
      * This method is called to prep the subsystem for tuning.
      *
+     * @param subComponent specifies the sub-component of the Subsystem to be tuned, can be null if no sub-component.
      * @param tuneParams specifies tuning parameters.
      *        tuneParam0 - Kp
      *        tuneParam1 - Ki
@@ -174,7 +180,7 @@ public class Turret extends TrcSubsystem
      *        tuneParam6 - GravityCompPower
      */
     @Override
-    public void prepSubsystemForTuning(double... tuneParams)
+    public void prepSubsystemForTuning(String subComponent, double... tuneParams)
     {
         motor.setPositionPidParameters(
             tuneParams[0], tuneParams[1], tuneParams[2], tuneParams[3], tuneParams[4], tuneParams[5],

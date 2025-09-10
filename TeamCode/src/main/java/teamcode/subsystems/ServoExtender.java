@@ -203,25 +203,31 @@ public class ServoExtender extends TrcSubsystem
      * This method update the dashboard with the subsystem status.
      *
      * @param lineNum specifies the starting line number to print the subsystem status.
+     * @param slowLoop specifies true if this is a slow loop, false otherwise.
      * @return updated line number for the next subsystem to print.
      */
     @Override
-    public int updateStatus(int lineNum)
+    public int updateStatus(int lineNum, boolean slowLoop)
     {
-        dashboard.displayPrintf(
-            lineNum++, "%s: pos=%.3f, extended=%s", Params.SUBSYSTEM_NAME, servo.getPosition(), isExtended());
+        if (slowLoop)
+        {
+            dashboard.displayPrintf(
+                lineNum++, "%s: pos=%.3f, extended=%s", Params.SUBSYSTEM_NAME, servo.getPosition(), isExtended());
+        }
+
         return lineNum;
     }   //updateStatus
 
     /**
      * This method is called to prep the subsystem for tuning.
      *
+     * @param subComponent specifies the sub-component of the Subsystem to be tuned, can be null if no sub-component.
      * @param tuneParams specifies tuning parameters.
      *        tuneParam0 - retract position
      *        tuneParam1 - extend position
      */
     @Override
-    public void prepSubsystemForTuning(double... tuneParams)
+    public void prepSubsystemForTuning(String subComponent, double... tuneParams)
     {
         Params.POS_RETRACT = tuneParams[0];
         Params.POS_EXTEND = tuneParams[1];

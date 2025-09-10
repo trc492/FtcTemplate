@@ -271,21 +271,27 @@ public class DiffyServoWrist extends TrcSubsystem
      * This method update the dashboard with the subsystem status.
      *
      * @param lineNum specifies the starting line number to print the subsystem status.
+     * @param slowLoop specifies true if this is a slow loop, false otherwise.
      * @return updated line number for the next subsystem to print.
      */
     @Override
-    public int updateStatus(int lineNum)
+    public int updateStatus(int lineNum, boolean slowLoop)
     {
-        dashboard.displayPrintf(
-            lineNum++, "%s: tilt(pwr/pos)=%.1f/%.1f,rotate(pwr/pos)=%.1f/%.1f",
-            Params.SUBSYSTEM_NAME, diffyWrist.getTiltPower(), diffyWrist.getTiltPosition(),
-            diffyWrist.getRotatePower(), diffyWrist.getRotatePosition());
+        if (slowLoop)
+        {
+            dashboard.displayPrintf(
+                lineNum++, "%s: tilt(pwr/pos)=%.1f/%.1f,rotate(pwr/pos)=%.1f/%.1f",
+                Params.SUBSYSTEM_NAME, diffyWrist.getTiltPower(), diffyWrist.getTiltPosition(),
+                diffyWrist.getRotatePower(), diffyWrist.getRotatePosition());
+        }
+
         return lineNum;
     }   //updateStatus
 
     /**
      * This method is called to prep the subsystem for tuning.
      *
+     * @param subComponent specifies the sub-component of the Subsystem to be tuned, can be null if no sub-component.
      * @param tuneParams specifies tuning parameters.
      *        tuneParam0 - Kp
      *        tuneParam1 - Ki
@@ -296,7 +302,7 @@ public class DiffyServoWrist extends TrcSubsystem
      *        tuneParam6 - GravityCompPower
      */
     @Override
-    public void prepSubsystemForTuning(double... tuneParams)
+    public void prepSubsystemForTuning(String subComponent, double... tuneParams)
     {
         // DiffyWirst doesn't support tuning.
     }   //prepSubsystemForTuning
