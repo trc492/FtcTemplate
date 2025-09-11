@@ -133,9 +133,9 @@ public class Shooter extends TrcSubsystem
         // Launcher
         public static final String LAUNCHER_SERVO_NAME          = SUBSYSTEM_NAME + ".launcher";
         public static final boolean LAUNCHER_SERVO_INVERTED     = true;
-        public static final double LAUNCHER_LAUNCH_DURATION     = 0.5;  // in seconds
-        public static final double LAUNCHER_REST_POS            = 0.0;
-        public static final double LAUNCHER_LAUNCH_POS          = 0.5;
+        public static double LAUNCHER_REST_POS                  = 0.0;
+        public static double LAUNCHER_LAUNCH_POS                = 0.5;
+        public static double LAUNCHER_LAUNCH_DURATION           = 0.5;  // in seconds
     }   //class Params
 
     private final FtcDashboard dashboard;
@@ -396,6 +396,12 @@ public class Shooter extends TrcSubsystem
                     Params.SUBSYSTEM_NAME, motor.getPower(), motor.getCurrent(), motor.getPosition(),
                     motor.getPidTarget());
             }
+
+            if (launcher != null)
+            {
+                dashboard.displayPrintf(
+                    lineNum++, "%sLauncher: pos=%.3f", Params.SUBSYSTEM_NAME, launcher.getPosition());
+            }
         }
         else
         {
@@ -413,13 +419,18 @@ public class Shooter extends TrcSubsystem
      *
      * @param subComponent specifies the sub-component of the Subsystem to be tuned, can be null if no sub-component.
      * @param tuneParams specifies tuning parameters.
-     *        tuneParam0 - Kp
-     *        tuneParam1 - Ki
-     *        tuneParam2 - Kd
-     *        tuneParam3 - Kf
-     *        tuneParam4 - iZone
-     *        tuneParam5 - PidTolerance (in RPM for velocity, in degrees for pan/tilt)
-     *        tuneParam6 - Shooter motor target velocity in RPM
+     *        Motor PID tuning:
+     *          tuneParam0 - Kp
+     *          tuneParam1 - Ki
+     *          tuneParam2 - Kd
+     *          tuneParam3 - Kf
+     *          tuneParam4 - iZone
+     *          tuneParam5 - PidTolerance (in RPM for velocity, in degrees for pan/tilt)
+     *          tuneParam6 - Shooter motor target velocity in RPM
+     *        Launcher position tuning:
+     *          tuneParams0 - RestPos
+     *          tuneParams1 - LaunchPos
+     *          tuneParams2 - LaunchDuration
      */
     @Override
     public void prepSubsystemForTuning(String subComponent, double... tuneParams)
@@ -451,6 +462,12 @@ public class Shooter extends TrcSubsystem
                 shooter.getTiltMotor().setPositionPidParameters(
                     tuneParams[0], tuneParams[1], tuneParams[2], tuneParams[3], tuneParams[4], tuneParams[5],
                     Params.TILT_SOFTWARE_PID_ENABLED);
+            }
+            else if (subComponent.equalsIgnoreCase("Launcher"))
+            {
+                Params.LAUNCHER_REST_POS = tuneParams[0];
+                Params.LAUNCHER_LAUNCH_POS = tuneParams[1];
+                Params.LAUNCHER_LAUNCH_DURATION = tuneParams[2];
             }
         }
     }   //prepSubsystemForTuning
