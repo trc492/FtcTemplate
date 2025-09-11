@@ -24,13 +24,14 @@ package teamcode.subsystems;
 
 import ftclib.driverio.FtcDashboard;
 import ftclib.motor.FtcMotorActuator.MotorType;
+import ftclib.motor.FtcServoActuator;
 import ftclib.subsystem.FtcShooter;
 import trclib.controller.TrcPidController;
 import trclib.dataprocessor.TrcDiscreteValue;
 import trclib.motor.TrcMotor;
+import trclib.motor.TrcServo;
 import trclib.robotcore.TrcDbgTrace;
 import trclib.robotcore.TrcEvent;
-import trclib.subsystem.TrcRollerIntake;
 import trclib.subsystem.TrcShootParamTable;
 import trclib.subsystem.TrcShooter;
 import trclib.subsystem.TrcSubsystem;
@@ -54,11 +55,12 @@ public class Shooter extends TrcSubsystem
         public static final boolean HAS_TWO_SHOOTER_MOTORS      = false;
         public static final boolean HAS_PAN_MOTOR               = false;
         public static final boolean HAS_TILT_MOTOR              = false;
+        public static final boolean HAS_LAUNCHER                = true;
 
         // Shooter Motor1
         public static final String SHOOTER_MOTOR1_NAME          = SUBSYSTEM_NAME + ".shooterMotor1";
         public static final MotorType SHOOTER_MOTOR1_TYPE       = MotorType.DcMotor;
-        public static final boolean SHOOTER_MOTOR1_INVERTED     = true;
+        public static final boolean SHOOTER_MOTOR1_INVERTED     = false;
 
         // Shooter Motor2
         public static final String SHOOTER_MOTOR2_NAME          = SUBSYSTEM_NAME + ".shooterMotor2";
@@ -75,10 +77,10 @@ public class Shooter extends TrcSubsystem
             new TrcPidController.PidCoefficients(0.075, 0.0, 0.0, 0.008, 0.0);
         public static final TrcPidController.PidCoefficients shooter2PidCoeffs =
             new TrcPidController.PidCoefficients(0.075, 0.0, 0.0, 0.008, 0.0);
-        public static final double SHOOTER_PID_TOLERANCE        = 10.0/60.0;// in RPS (10 RPM)
+        public static final double SHOOTER_PID_TOLERANCE        = 1.0;      // in RPS (60 RPM)
         public static final double SHOOTER_OFF_DELAY            = 0.5;      // in sec
 
-	// These are for tuning shooter motor.
+        // These are for tuning shooter motor with gamepad.
         public static final double SHOOTER_MIN_VEL              = 10.0;     // in RPM
         public static final double SHOOTER_MAX_VEL              = 7360.0;   // in RPM
         public static final double SHOOTER_MIN_VEL_INC          = 1.0;      // in RPM
@@ -90,6 +92,12 @@ public class Shooter extends TrcSubsystem
         public static final String PAN_MOTOR_NAME               = SUBSYSTEM_NAME + ".panMotor";
         public static final MotorType PAN_MOTOR_TYPE            = MotorType.DcMotor;
         public static final boolean PAN_MOTOR_INVERTED          = false;
+
+        public static final double PAN_ZERO_CAL_POWER           = -0.2;
+        public static final double PAN_STALL_MIN_POWER          = Math.abs(PAN_ZERO_CAL_POWER);
+        public static final double PAN_STALL_TOLERANCE          = 0.1;
+        public static final double PAN_STALL_TIMEOUT            = 0.1;
+        public static final double PAN_STALL_RESET_TIMEOUT      = 0.0;
 
         public static final double PAN_DEG_PER_COUNT            = 1.0;
         public static final boolean PAN_SOFTWARE_PID_ENABLED    = true;
@@ -121,26 +129,31 @@ public class Shooter extends TrcSubsystem
             .add("test4ft", 48.0, 70.0, 0.0, 60.0)
             .add("test5ft", 60.0, 80.0, 0.0, 60.0)
             .add("test6ft", 72.0, 90.0, 0.0, 60.0);
+
+        // Launcher
+        public static final String LAUNCHER_SERVO_NAME          = SUBSYSTEM_NAME + ".launcher";
+        public static final boolean LAUNCHER_SERVO_INVERTED     = true;
+        public static final double LAUNCHER_LAUNCH_DURATION     = 0.5;  // in seconds
+        public static final double LAUNCHER_REST_POS            = 0.0;
+        public static final double LAUNCHER_LAUNCH_POS          = 0.5;
     }   //class Params
 
     private final FtcDashboard dashboard;
-    private final TrcRollerIntake intake;
     private final TrcShooter shooter;
     public final TrcDiscreteValue shooter1Velocity;
     public final TrcDiscreteValue shooter2Velocity;
+    public final TrcServo launcher;
+    private String launchOwner;
+    private TrcEvent launchCompletionEvent;
+    private TrcEvent launchCallbackEvent = null;
 
     /**
      * Constructor: Creates an instance of the object.
-     *
-     * @param intake specifies the intake subsystem for shooting control.
      */
-    public Shooter(TrcRollerIntake intake)
+    public Shooter()
     {
         super(Params.SUBSYSTEM_NAME, Params.NEED_ZERO_CAL);
-
         dashboard = FtcDashboard.getInstance();
-        this.intake = intake;
-
         FtcShooter.Params shooterParams = new FtcShooter.Params()
             .setShooterMotor1(
                 Params.SHOOTER_MOTOR1_NAME, Params.SHOOTER_MOTOR1_TYPE, Params.SHOOTER_MOTOR1_INVERTED);
@@ -204,6 +217,12 @@ public class Shooter extends TrcSubsystem
             motor.setPositionSensorScaleAndOffset(Params.PAN_DEG_PER_COUNT, 0.0);
             motor.setPositionPidParameters(
                 Params.panPidCoeffs, Params.PAN_PID_TOLERANCE, Params.PAN_SOFTWARE_PID_ENABLED);
+            // There is no lower limit switch, enable stall detection for zero calibration and soft limits for
+            // protection.
+            motor.setStallProtection(
+                Params.PAN_STALL_MIN_POWER, Params.PAN_STALL_TOLERANCE, Params.PAN_STALL_TIMEOUT,
+                Params.PAN_STALL_RESET_TIMEOUT);
+            motor.setSoftPositionLimits(Params.PAN_MIN_POS, Params.PAN_MAX_POS, false);
         }
 
         motor = shooter.getTiltMotor();
@@ -212,6 +231,18 @@ public class Shooter extends TrcSubsystem
             motor.setPositionSensorScaleAndOffset(Params.TILT_DEG_PER_COUNT, 0.0);
             motor.setPositionPidParameters(
                 Params.tiltPidCoeffs, Params.TILT_PID_TOLERANCE, Params.TILT_SOFTWARE_PID_ENABLED);
+            motor.setSoftPositionLimits(Params.TILT_MIN_POS, Params.TILT_MAX_POS, false);
+        }
+
+        if (Params.HAS_LAUNCHER)
+        {
+            FtcServoActuator.Params launcherParams = new FtcServoActuator.Params()
+                .setPrimaryServo(Params.LAUNCHER_SERVO_NAME, Params.LAUNCHER_SERVO_INVERTED);
+            launcher = new FtcServoActuator(launcherParams).getServo();
+        }
+        else
+        {
+            launcher = null;
         }
     }   //Shooter
 
@@ -226,7 +257,7 @@ public class Shooter extends TrcSubsystem
     }   //getShooter
 
     /**
-     * This method is called to feed the game piece to the shooter, typically when TrcShooter has reached shooting
+     * This method is called to launch the game piece into the shooter, typically when TrcShooter has reached shooting
      * velocity and Pan/Tilt have aimed at the target and ready to shoot.
      *
      * @param owner specifies the owner that acquired the subsystem ownerships.
@@ -234,17 +265,48 @@ public class Shooter extends TrcSubsystem
      */
     public void shoot(String owner, TrcEvent completionEvent)
     {
-        if (intake != null)
+        if (launcher != null)
         {
-            intake.autoEject(owner, completionEvent, 0.0);
-            TrcDbgTrace.globalTraceInfo(instanceName, "Shooter ready, initiate shoot.");
+            TrcDbgTrace.globalTraceInfo(instanceName, "shoot(owner=" + owner + ", event=" + completionEvent + ")");
+            launchOwner = owner;
+            launchCompletionEvent = completionEvent;
+            launchCallbackEvent = new TrcEvent(Params.SUBSYSTEM_NAME + ".launchCallback");
+            launchCallbackEvent.setCallback(this::launchCallback, null);
+            launcher.setPosition(
+                owner, 0.0, Params.LAUNCHER_LAUNCH_POS, launchCallbackEvent, Params.LAUNCHER_LAUNCH_DURATION);
         }
         else if (completionEvent != null)
         {
+            TrcDbgTrace.globalTraceInfo(instanceName, "There is launcher, signal completion anyway.");
             completionEvent.signal();
-            TrcDbgTrace.globalTraceInfo(instanceName, "There is no intake, signal completion anyway.");
         }
     }   //shoot
+
+    /**
+     * This method is called when the launch duration has expired.
+     *
+     * @param context not used.
+     * @param canceled specifies true if launch was canceled (not used).
+     */
+    private void launchCallback(Object context, boolean canceled)
+    {
+        // Reset launcher, fire and forget.
+        launcher.setPosition(launchOwner, 0.0, Params.LAUNCHER_REST_POS, null, 0.0);
+        if (launchCompletionEvent != null)
+        {
+            if (canceled)
+            {
+                launchCompletionEvent.cancel();
+            }
+            else
+            {
+                launchCompletionEvent.signal();
+            }
+            launchCompletionEvent = null;
+        }
+        launchOwner = null;
+        launchCallbackEvent = null;
+    }   //launchCallback
 
     //
     // Implements TrcSubsystem abstract methods.
@@ -257,6 +319,10 @@ public class Shooter extends TrcSubsystem
     public void cancel()
     {
         shooter.cancel();
+        if (launcher != null)
+        {
+            launcher.cancel();
+        }
     }   //cancel
 
     /**
@@ -269,8 +335,9 @@ public class Shooter extends TrcSubsystem
     public void zeroCalibrate(String owner, TrcEvent event)
     {
         // Shooter does not need zero calibration.
-        // Assuming pan and tilt are using absolute encoders. If not, we need to add code to zero calibrate pan and
-        // tilt here.
+        // Tilter has absolute encoder and therefore no need for zero calibration.
+        // Zero calibrate turret (pan).
+        shooter.panMotor.zeroCalibrate(owner, Params.PAN_ZERO_CAL_POWER, event);
     }   //zeroCalibrate
 
     /**

@@ -169,7 +169,7 @@ public class Robot
                 if (RobotParams.Preferences.useShooter)
                 {
                     // Note: Since shooter depends on Intake, Intake subsystem must instantiate before shooter.
-                    shooterSubsystem = new Shooter(intake);
+                    shooterSubsystem = new Shooter();
                     shooter = shooterSubsystem.getShooter();
                 }
 
