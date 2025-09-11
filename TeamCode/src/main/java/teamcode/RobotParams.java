@@ -23,7 +23,6 @@
 package teamcode;
 
 import android.annotation.SuppressLint;
-import android.os.Environment;
 
 import teamcode.subsystems.RobotBase;
 import trclib.drivebase.TrcDriveBase.DriveOrientation;
@@ -91,7 +90,7 @@ public class RobotParams
         public static final String LOG_FOLDER_PATH              = TEAM_FOLDER_PATH + "/tracelogs";
         public static final String STEER_ZERO_CAL_FILE          = TEAM_FOLDER_PATH + "/SteerZeroCalibration.txt";
         public static final double DASHBOARD_UPDATE_INTERVAL    = 0.2;      // in msec
-        public static final String ROBOT_CODEBASE               = "Robot2025";
+        public static final String ROBOT_CODEBASE               = "Robot2026";
         // Robot Drive Parameters.
         public static final DriveMode DRIVE_MODE                = DriveMode.ArcadeMode;
         public static final DriveOrientation DRIVE_ORIENTATION  = DriveOrientation.ROBOT;
