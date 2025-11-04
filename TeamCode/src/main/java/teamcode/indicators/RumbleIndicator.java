@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package teamcode.subsystems;
+package teamcode.indicators;
 
 import ftclib.driverio.FtcGamepad;
 import ftclib.driverio.FtcGamepadRumble;
@@ -31,9 +31,17 @@ import trclib.driverio.TrcPriorityIndicator;
  */
 public class RumbleIndicator
 {
-    // Rumble pattern names.
     public static final String ENDGAME_DEADLINE = "EndGameDeadline";
-    private final TrcPriorityIndicator<?> indicator;
+    public static final FtcGamepadRumble.RumblePattern endGameRumble =
+        new FtcGamepadRumble.RumblePattern("EndGameRumble", 1.0, 1.0, 0.5);
+    public static final TrcPriorityIndicator.Pattern[] rumblePatternPriorities =
+    {
+        // Highest priority.
+        new TrcPriorityIndicator.Pattern(ENDGAME_DEADLINE, endGameRumble)
+        // Lowest priority.
+    };
+
+    private final TrcPriorityIndicator indicator;
 
     /**
      * Constructor: Create an instance of the object.
@@ -43,13 +51,8 @@ public class RumbleIndicator
      */
     public RumbleIndicator(String indicatorName, FtcGamepad gamepad)
     {
-        final FtcGamepadRumble.Pattern[] rumblePatternPriorities = {
-            // Highest priority.
-            new FtcGamepadRumble.Pattern(ENDGAME_DEADLINE, 3)
-            // Lowest priority.
-        };
         indicator = new FtcGamepadRumble(indicatorName, gamepad.gamepad);
-        ((FtcGamepadRumble) indicator).setPatternPriorities(rumblePatternPriorities);
+        indicator.setPatternPriorities(rumblePatternPriorities);
     }   //RumbleIndicator
 
     /**
@@ -61,7 +64,7 @@ public class RumbleIndicator
     {
         if (indicator != null)
         {
-            indicator.setPatternState(patternName, true, 1.0);
+            indicator.setPatternState(patternName, true);
         }
     }   //setRumblePattern
 

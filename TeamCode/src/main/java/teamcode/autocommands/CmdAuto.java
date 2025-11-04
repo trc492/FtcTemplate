@@ -115,10 +115,10 @@ public class CmdAuto implements TrcRobot.RobotCommand
                     // Set robot location according to auto choices.
                     robot.setRobotStartPosition(autoChoices);
                     // Do delay if necessary.
-                    if (autoChoices.delay > 0.0)
+                    if (autoChoices.startDelay > 0.0)
                     {
-                        robot.globalTracer.traceInfo(moduleName, "***** Do delay " + autoChoices.delay + "s.");
-                        timer.set(autoChoices.delay, event);
+                        robot.globalTracer.traceInfo(moduleName, "***** Do delay " + autoChoices.startDelay + "s.");
+                        timer.set(autoChoices.startDelay, event);
                         sm.waitForSingleEvent(event, State.DONE);
                     }
                     else

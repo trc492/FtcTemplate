@@ -29,9 +29,8 @@ import ftclib.driverio.FtcDashboard;
 import ftclib.driverio.FtcMatchInfo;
 import ftclib.robotcore.FtcOpMode;
 import ftclib.sensor.FtcRobotBattery;
-import teamcode.subsystems.LEDIndicator;
-import teamcode.subsystems.RobotBase;
-import teamcode.subsystems.RumbleIndicator;
+import teamcode.indicators.LEDIndicator;
+import teamcode.subsystems.BaseDrive;
 import teamcode.vision.Vision;
 import trclib.motor.TrcMotor;
 import trclib.motor.TrcServo;
@@ -55,16 +54,13 @@ public class Robot
     public static FtcMatchInfo matchInfo = null;
     private static TrcPose2D endOfAutoRobotPose = null;
     // Robot Drive.
-    public RobotBase robotBase;
+    public BaseDrive baseDrive;
     public FtcRobotDrive.RobotInfo robotInfo;
     public FtcRobotDrive robotDrive;
     // Vision subsystems.
     public Vision vision;
     // Sensors and indicators.
-    public LEDIndicator ledIndicator1;
-    public LEDIndicator ledIndicator2;
-    public RumbleIndicator driverRumble;
-    public RumbleIndicator operatorRumble;
+    public LEDIndicator ledIndicator;
     public FtcRobotBattery battery;
     // Subsystems.
     // Autotasks.
@@ -83,27 +79,23 @@ public class Robot
         dashboard = FtcDashboard.getInstance();
         speak("Init starting");
         // Create and initialize Robot Base.
-        robotBase = new RobotBase();
-        robotInfo = robotBase.getRobotInfo();
-        robotDrive = robotBase.getRobotDrive();
+        baseDrive = new BaseDrive();
+        robotInfo = baseDrive.getRobotInfo();
+        robotDrive = baseDrive.getRobotDrive();
         // Create and initialize vision subsystems.
         if (RobotParams.Preferences.useVision &&
-            (RobotParams.Preferences.tuneColorBlobVision ||
+            (RobotParams.Preferences.useLimelightVision ||
              RobotParams.Preferences.useWebcamAprilTagVision ||
-             RobotParams.Preferences.useColorBlobVision ||
-             RobotParams.Preferences.useLimelightVision))
+             RobotParams.Preferences.useColorBlobVision))
         {
             vision = new Vision(this);
         }
         // If robotType is VisionOnly, the robot controller is disconnected from the robot for testing vision.
         // In this case, we should not instantiate any robot hardware.
-        if (RobotParams.Preferences.robotType != RobotBase.RobotType.VisionOnly)
+        if (RobotParams.Preferences.robotType != BaseDrive.RobotType.VisionOnly)
         {
             // Create and initialize sensors and indicators.
-            ledIndicator1 = robotInfo.indicator1Name != null?
-                new LEDIndicator(robotInfo.indicator1Name, robotInfo.indicator1Type): null;
-            ledIndicator2 = robotInfo.indicator2Name != null?
-                new LEDIndicator(robotInfo.indicator2Name, robotInfo.indicator2Type): null;
+            ledIndicator = robotInfo.indicatorNames != null? new LEDIndicator(robotInfo.indicatorNames): null;
             battery = RobotParams.Preferences.useBatteryMonitor? new FtcRobotBattery(): null;
             //
             // Create and initialize other subsystems.
@@ -122,8 +114,12 @@ public class Robot
                 }
             }
         }
-
         speak("Init complete");
+        Dashboard.DashboardParams.updateDashboardEnabled = RobotParams.Preferences.updateDashboard;
+        if (Dashboard.DashboardParams.updateDashboardEnabled)
+        {
+            dashboard.enableDashboardUpdate(1, true);
+        }
     }   //Robot
 
     /**
@@ -135,7 +131,7 @@ public class Robot
     @Override
     public String toString()
     {
-        return robotInfo != null? robotInfo.robotName: RobotParams.Robot.ROBOT_CODEBASE;
+        return robotInfo != null? robotInfo.robotName: RobotParams.Preferences.robotType.toString();
     }   //toString
 
     /**
@@ -174,6 +170,7 @@ public class Robot
             // Consume it so it's no longer valid for next run.
             endOfAutoRobotPose = null;
         }
+
         TrcDigitalInput.setElapsedTimerEnabled(true);
         TrcMotor.setElapsedTimerEnabled(true);
         TrcServo.setElapsedTimerEnabled(true);
@@ -208,41 +205,22 @@ public class Robot
         //
         if (vision != null)
         {
-            vision.setCameraStreamEnabled(false);
-            if (vision.isRawColorBlobVisionEnabled())
-            {
-                globalTracer.traceInfo(moduleName, "Disabling RawColorBlobVision.");
-                vision.setRawColorBlobVisionEnabled(false);
-            }
-
             if (vision.isLimelightVisionEnabled())
             {
                 globalTracer.traceInfo(moduleName, "Disabling LimelightVision.");
-                vision.setLimelightVisionEnabled(0, false);
+                vision.setLimelightVisionEnabled(Vision.LimelightPipelineType.APRIL_TAG, false);
             }
 
-            if (vision.isAprilTagVisionEnabled())
+            if (vision.isWebcamAprilTagVisionEnabled())
             {
                 globalTracer.traceInfo(moduleName, "Disabling Webcam AprilTagVision.");
-                vision.setAprilTagVisionEnabled(false);
+                vision.setWebcamAprilTagVisionEnabled(false);
             }
 
-            if (vision.redBlobVision != null)
+            if (vision.colorBlobVision != null)
             {
-                globalTracer.traceInfo(moduleName, "Disabling RedBlobVision.");
-                vision.setColorBlobVisionEnabled(Vision.ColorBlobType.RedBlob, false);
-            }
-
-            if (vision.blueBlobVision != null)
-            {
-                globalTracer.traceInfo(moduleName, "Disabling BlueBlobVision.");
-                vision.setColorBlobVisionEnabled(Vision.ColorBlobType.BlueBlob, false);
-            }
-
-            if (vision.limelightVision != null)
-            {
-                globalTracer.traceInfo(moduleName, "Disabling LimelightVision.");
-                vision.setLimelightVisionEnabled(0, false);
+                globalTracer.traceInfo(moduleName, "Disabling ColorBlobVision.");
+                vision.setColorBlobVisionEnabled(Vision.ColorBlobType.Any, false);
             }
 
             vision.close();
@@ -276,10 +254,9 @@ public class Robot
     public void cancelAll()
     {
         globalTracer.traceInfo(moduleName, "Cancel all operations.");
-        // Cancel subsystems.
-        if (robotDrive != null) robotDrive.cancel();
-        TrcSubsystem.cancelAll();
         // Cancel auto tasks.
+        // Cancel subsystems.
+        TrcSubsystem.cancelAll();
     }   //cancelAll
 
     /**
@@ -332,14 +309,16 @@ public class Robot
             // Translate blue alliance pose to red alliance pose.
             if (RobotParams.Game.fieldIsMirrored)
             {
-                // Mirrored field.
+                // Field is mirrored on X axis.
+                // Same X, Flip Y. Heading left becomes right and right becomes left.
                 double angleDelta = (newPose.angle - 90.0)*2.0;
                 newPose.angle -= angleDelta;
                 newPose.y = -newPose.y;
             }
             else
             {
-                // Symmetrical field.
+                // Field is symmetrical.
+                // Flip X, Flip Y. Heading flips 180-degree.
                 newPose.x = -newPose.x;
                 newPose.y = -newPose.y;
                 newPose.angle = (newPose.angle + 180.0) % 360.0;

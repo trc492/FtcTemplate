@@ -24,9 +24,11 @@ package teamcode;
 
 import com.acmerobotics.dashboard.config.Config;
 
-import trclib.controller.TrcPidController;
-import trclib.subsystem.TrcSubsystem;
-import trclib.timer.TrcTimer;
+import teamcode.subsystems.BaseDrive;
+import teamcode.vision.Vision;
+import trclib.drivebase.TrcDriveBase;
+import trclib.drivebase.TrcSwerveDriveBase;
+import trclib.driverio.TrcGameController;
 import trclib.vision.TrcOpenCvColorBlobPipeline;
 
 /**
@@ -34,79 +36,31 @@ import trclib.vision.TrcOpenCvColorBlobPipeline;
  */
 public class Dashboard
 {
-    private static Double nextDashboardUpdateTime =  null;
-
-    /**
-     * This method is called periodically to update various hardware/subsystem status of the robot to the dashboard
-     * and trace log. In order to lower the potential impact these updates, this method will only update the dashboard
-     * at DASHBOARD_UPDATE_INTERVAL.
-     *
-     * @param robot specifies the robot object.
-     * @param lineNum specifies the first Dashboard line for printing status.
-     * @return next available dashboard line.
-     */
-    public static int updateDashboard(Robot robot, int lineNum)
+    @Config
+    public static class DashboardParams
     {
-        double currTime = TrcTimer.getCurrentTime();
-        boolean slowLoop = nextDashboardUpdateTime == null || currTime >= nextDashboardUpdateTime;
-
-        if (slowLoop)
-        {
-            nextDashboardUpdateTime = currTime + RobotParams.Robot.DASHBOARD_UPDATE_INTERVAL;
-        }
-
-        if (RobotParams.Preferences.showDriveBase)
-        {
-            lineNum = robot.robotBase.updateStatus(lineNum, slowLoop);
-        }
-
-        if (RobotParams.Preferences.showVision && robot.vision != null)
-        {
-            lineNum = robot.vision.updateStatus(lineNum, slowLoop);
-        }
-
-        if (RobotParams.Preferences.showSubsystems)
-        {
-            lineNum = TrcSubsystem.updateStatusAll(lineNum, slowLoop);
-        }
-
-        return lineNum;
-    }   //updateDashboard
+        public static boolean updateDashboardEnabled = RobotParams.Preferences.updateDashboard;
+        public static String tuneSubsystemName = "";
+        public static FtcAuto.AutoChoices autoChoices = FtcAuto.autoChoices;
+    }   //class DashboardParams
 
     @Config
-    public static class Vision
+    public static class Subsystem_Drivebase
     {
-        public static double[] colorThresholds = new double[6];
-        public static TrcOpenCvColorBlobPipeline.FilterContourParams filterContourParams =
-            new TrcOpenCvColorBlobPipeline.FilterContourParams();
-    }   //class Vision
+        public static TrcDriveBase.BaseParams driveBaseParams = BaseDrive.SwerveRobotInfo.baseParams;
+        public static TrcSwerveDriveBase.SwerveParams swerveDriveParams = BaseDrive.SwerveRobotInfo.swerveParams;
+        public static TrcGameController.DriveMode driveMode = TrcGameController.DriveMode.ArcadeMode;
+        public static TrcDriveBase.DriveOrientation driveOrientation  = TrcDriveBase.DriveOrientation.ROBOT;
+        public static double driveSlowScale = 0.5;
+        public static double driveNormalScale = 1.0;
+        public static double turnSlowScale = 0.3;
+        public static double turnNormalScale = 0.5;
+    }   //class Subsystem_Drivebase
 
     @Config
-    public static class Drive
+    public static class Subsystem_Vision
     {
-        public static double xTarget = 0.0;
-        public static double yTarget = 0.0;
-        public static double turnTarget = 0.0;
-        public static double drivePower = 1.0;
-        public static double turnPower = 1.0;
-        public static double driveTime = 0.0;
-        public static TrcPidController.PidCoefficients xPidCoeffs =
-            new TrcPidController.PidCoefficients(0.0, 0.0, 0.0, 0.0, 0.0);
-        public static TrcPidController.PidCoefficients yPidCoeffs =
-            new TrcPidController.PidCoefficients(0.0, 0.0, 0.0, 0.0, 0.0);
-        public static TrcPidController.PidCoefficients turnPidCoeffs =
-            new TrcPidController.PidCoefficients(0.0, 0.0, 0.0, 0.0, 0.0);
-        public static double maxVelocity = 0.0;
-        public static double maxAcceleration = 0.0;
-        public static double maxDeceleration = 0.0;
-    }   //class Drive
-
-    @Config
-    public static class Subsystem
-    {
-        public static String subsystemName = "";
-        // 7 doubles: Kp, Ki, Kd, Kf, iZone, PIDTolerance, GravityCompPower
-        public static double[] tuneParams = new double[7];
-    }   //class Subsystem
+        public static TrcOpenCvColorBlobPipeline.PipelineParams colorBlobVision = Vision.colorBlobPipelineParams;
+    }   //class Subsystem_Vision
 
 }   //class Dashboard

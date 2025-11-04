@@ -29,7 +29,8 @@ import java.util.Locale;
 import ftclib.drivebase.FtcSwerveDrive;
 import ftclib.driverio.FtcGamepad;
 import ftclib.robotcore.FtcOpMode;
-import teamcode.subsystems.RumbleIndicator;
+import teamcode.indicators.RumbleIndicator;
+import teamcode.vision.Vision;
 import trclib.drivebase.TrcDriveBase;
 import trclib.pathdrive.TrcPose2D;
 import trclib.robotcore.TrcDbgTrace;
@@ -47,11 +48,13 @@ public class FtcTeleOp extends FtcOpMode
     protected Robot robot;
     protected FtcGamepad driverGamepad;
     protected FtcGamepad operatorGamepad;
+    protected RumbleIndicator driverRumble;
+    protected RumbleIndicator operatorRumble;
     private double drivePowerScale;
     private double turnPowerScale;
     protected boolean driverAltFunc = false;
     protected boolean operatorAltFunc = false;
-    private boolean statusUpdateOn = false;
+    protected boolean allowAnalogControl = true;
     private boolean relocalizing = false;
     private TrcPose2D robotFieldPose = null;
     private Integer savedLimelightPipeline = null;
@@ -74,7 +77,7 @@ public class FtcTeleOp extends FtcOpMode
         {
             String filePrefix = Robot.matchInfo != null?
                 String.format(Locale.US, "%s%02d_TeleOp", Robot.matchInfo.matchType, Robot.matchInfo.matchNumber):
-                "Unknown_TeleOp";
+                "Standalone_TeleOp";
             TrcDbgTrace.openTraceLog(RobotParams.Robot.LOG_FOLDER_PATH, filePrefix);
         }
         // Create and initialize Gamepads.
@@ -90,13 +93,13 @@ public class FtcTeleOp extends FtcOpMode
 
         if (RobotParams.Preferences.useRumble)
         {
-            robot.driverRumble = new RumbleIndicator("DriverRumble", driverGamepad);
-            robot.operatorRumble = new RumbleIndicator("OperatorRumble", operatorGamepad);
+            driverRumble = new RumbleIndicator("DriverRumble", driverGamepad);
+            operatorRumble = new RumbleIndicator("OperatorRumble", operatorGamepad);
         }
 
-        drivePowerScale = RobotParams.Robot.DRIVE_NORMAL_SCALE;
-        turnPowerScale = RobotParams.Robot.TURN_NORMAL_SCALE;
-        setDriveOrientation(RobotParams.Robot.DRIVE_ORIENTATION);
+        drivePowerScale = Dashboard.Subsystem_Drivebase.driveNormalScale;
+        turnPowerScale = Dashboard.Subsystem_Drivebase.turnNormalScale;
+        setDriveOrientation(Dashboard.Subsystem_Drivebase.driveOrientation);
     }   //robotInit
 
     //
@@ -130,15 +133,15 @@ public class FtcTeleOp extends FtcOpMode
         //
         if (robot.vision != null)
         {
-            if (robot.vision.aprilTagVision != null)
+            if (robot.vision.webcamAprilTagVision != null)
             {
                 robot.globalTracer.traceInfo(moduleName, "Enabling WebCam AprilTagVision.");
-                robot.vision.setAprilTagVisionEnabled(true);
+                robot.vision.setWebcamAprilTagVisionEnabled(true);
             }
             else if (robot.vision.limelightVision != null)
             {
                 robot.globalTracer.traceInfo(moduleName, "Enabling Limelight AprilTagVision.");
-                robot.vision.setLimelightVisionEnabled(0, true);
+                robot.vision.setLimelightVisionEnabled(Vision.LimelightPipelineType.APRIL_TAG, true);
             }
         }
     }   //startMode
@@ -179,69 +182,66 @@ public class FtcTeleOp extends FtcOpMode
     @Override
     public void periodic(double elapsedTime, boolean slowPeriodicLoop)
     {
-        if (slowPeriodicLoop)
+        if (allowAnalogControl)
         {
-            int lineNum = 1;
-            //
-            // DriveBase subsystem.
-            //
-            if (robot.robotDrive != null)
+            if (slowPeriodicLoop)
             {
-                // We are trying to re-localize the robot and vision hasn't seen AprilTag yet.
-                if (relocalizing)
+                //
+                // DriveBase subsystem.
+                //
+                if (robot.robotDrive != null)
                 {
-                    if (robotFieldPose == null)
+                    // We are trying to re-localize the robot and vision hasn't seen AprilTag yet.
+                    if (relocalizing)
                     {
-                        robotFieldPose = robot.vision.getRobotFieldPose();
-                    }
-                }
-                else
-                {
-                    double[] inputs = driverGamepad.getDriveInputs(
-                        RobotParams.Robot.DRIVE_MODE, true, drivePowerScale, turnPowerScale);
-
-                    if (robot.robotDrive.driveBase.supportsHolonomicDrive())
-                    {
-                        robot.robotDrive.driveBase.holonomicDrive(
-                            null, inputs[0], inputs[1], inputs[2], robot.robotDrive.driveBase.getDriveGyroAngle());
+                        if (robotFieldPose == null)
+                        {
+                            robotFieldPose = robot.vision.getRobotFieldPose();
+                        }
                     }
                     else
                     {
-                        robot.robotDrive.driveBase.arcadeDrive(inputs[1], inputs[2]);
-                    }
+                        double[] inputs = driverGamepad.getDriveInputs(
+                            Dashboard.Subsystem_Drivebase.driveMode, true, drivePowerScale, turnPowerScale);
 
-                    if (RobotParams.Preferences.updateDashboard || statusUpdateOn)
+                        if (robot.robotDrive.driveBase.supportsHolonomicDrive())
+                        {
+                            robot.robotDrive.driveBase.holonomicDrive(
+                                null, inputs[0], inputs[1], inputs[2], robot.robotDrive.driveBase.getDriveGyroAngle());
+                        }
+                        else
+                        {
+                            robot.robotDrive.driveBase.arcadeDrive(inputs[1], inputs[2]);
+                        }
+
+                        if (robot.dashboard.isDashboardUpdateEnabled() && RobotParams.Preferences.showDriveBaseStatus)
+                        {
+                            robot.dashboard.displayPrintf(
+                                14, "RobotDrive: Power=(%.2f,y=%.2f,rot=%.2f),Mode:%s",
+                                inputs[0], inputs[1], inputs[2], robot.robotDrive.driveBase.getDriveOrientation());
+                        }
+                    }
+                    // Check for EndGame warning.
+                    if (elapsedTime > RobotParams.Game.ENDGAME_DEADLINE)
                     {
-                        robot.dashboard.displayPrintf(
-                            lineNum++, "RobotDrive: Power=(%.2f,y=%.2f,rot=%.2f),Mode:%s",
-                            inputs[0], inputs[1], inputs[2], robot.robotDrive.driveBase.getDriveOrientation());
+                        if (driverRumble != null)
+                        {
+                            driverRumble.setRumblePattern(RumbleIndicator.ENDGAME_DEADLINE);
+                        }
+
+                        if (operatorRumble != null)
+                        {
+                            operatorRumble.setRumblePattern(RumbleIndicator.ENDGAME_DEADLINE);
+                        }
                     }
                 }
-                // Check for EndGame warning.
-                if (elapsedTime > RobotParams.Game.ENDGAME_DEADLINE)
+                //
+                // Other subsystems.
+                //
+                if (RobotParams.Preferences.useSubsystems)
                 {
-                    if (robot.driverRumble != null)
-                    {
-                        robot.driverRumble.setRumblePattern(RumbleIndicator.ENDGAME_DEADLINE);
-                    }
-
-                    if (robot.operatorRumble != null)
-                    {
-                        robot.operatorRumble.setRumblePattern(RumbleIndicator.ENDGAME_DEADLINE);
-                    }
+                    // Analog control of subsystems.
                 }
-            }
-            //
-            // Other subsystems.
-            //
-            if (RobotParams.Preferences.useSubsystems)
-            {
-                // Analog control of subsystems.
-            }
-            // Display subsystem status.
-            if (RobotParams.Preferences.updateDashboard || statusUpdateOn)
-            {
-                Dashboard.updateDashboard(robot, lineNum);
             }
         }
     }   //periodic
@@ -258,9 +258,9 @@ public class FtcTeleOp extends FtcOpMode
             robot.globalTracer.traceInfo(moduleName, "driveOrientation=" + orientation);
             robot.robotDrive.driveBase.setDriveOrientation(
                 orientation, orientation == TrcDriveBase.DriveOrientation.FIELD);
-            if (robot.ledIndicator1 != null)
+            if (robot.ledIndicator != null)
             {
-                robot.ledIndicator1.setDriveOrientation(orientation);
+                robot.ledIndicator.setDriveOrientation(orientation);
             }
         }
     }   //setDriveOrientation
@@ -277,7 +277,7 @@ public class FtcTeleOp extends FtcOpMode
      */
     public void driverButtonEvent(FtcGamepad.ButtonType button, boolean pressed)
     {
-        robot.dashboard.displayPrintf(8, "Driver: %s=%s", button, pressed? "Pressed": "Released");
+        robot.dashboard.displayPrintf(15, "Driver: %s=%s", button, pressed? "Pressed": "Released");
 
         switch (button)
         {
@@ -340,22 +340,30 @@ public class FtcTeleOp extends FtcOpMode
                     if (pressed)
                     {
                         robot.globalTracer.traceInfo(moduleName, ">>>>> DrivePower slow.");
-                        drivePowerScale = RobotParams.Robot.DRIVE_SLOW_SCALE;
-                        turnPowerScale = RobotParams.Robot.TURN_SLOW_SCALE;
+                        drivePowerScale = Dashboard.Subsystem_Drivebase.driveSlowScale;
+                        turnPowerScale = Dashboard.Subsystem_Drivebase.turnSlowScale;
                     }
                     else
                     {
                         robot.globalTracer.traceInfo(moduleName, ">>>>> DrivePower normal.");
-                        drivePowerScale = RobotParams.Robot.DRIVE_NORMAL_SCALE;
-                        turnPowerScale = RobotParams.Robot.TURN_NORMAL_SCALE;
+                        drivePowerScale = Dashboard.Subsystem_Drivebase.driveNormalScale;
+                        turnPowerScale = Dashboard.Subsystem_Drivebase.turnNormalScale;
                     }
                 }
-                else if (pressed)
+                else
                 {
-                    if (!RobotParams.Preferences.updateDashboard)
+                    if (pressed)
                     {
-                        // Toggle status update ON/OFF.
-                        statusUpdateOn = !statusUpdateOn;
+                        boolean enabled = !robot.dashboard.isDashboardUpdateEnabled();
+                        robot.globalTracer.traceInfo(moduleName, ">>>>> setUpdateDashboardEnable=" + enabled);
+                        if (enabled)
+                        {
+                            robot.dashboard.enableDashboardUpdate(1, true);
+                        }
+                        else
+                        {
+                            robot.dashboard.disableDashboardUpdate();
+                        }
                     }
                 }
                 break;
@@ -393,7 +401,7 @@ public class FtcTeleOp extends FtcOpMode
                 // Do AprilTag Vision re-localization.
                 if (robot.vision != null && robot.robotDrive != null)
                 {
-                    boolean hasAprilTagVision = robot.vision.isAprilTagVisionEnabled();
+                    boolean hasAprilTagVision = robot.vision.isWebcamAprilTagVisionEnabled();
                     // If Webcam AprilTag vision is not enabled, check if we have Limelight since Limelight has
                     // AprilTag pipeline as well.
                     if (!hasAprilTagVision && robot.vision.limelightVision != null)
@@ -404,7 +412,7 @@ public class FtcTeleOp extends FtcOpMode
                             // Webcam AprilTag vision is not enable, enable Limelight AprilTag pipeline instead.
                             // Note: we assume pipeline 0 is the AprilTag pipeline.
                             savedLimelightPipeline = robot.vision.limelightVision.getPipeline();
-                            robot.vision.setLimelightVisionEnabled(0, true);
+                            robot.vision.setLimelightVisionEnabled(Vision.LimelightPipelineType.APRIL_TAG, true);
                         }
                     }
 
@@ -448,7 +456,7 @@ public class FtcTeleOp extends FtcOpMode
      */
     public void operatorButtonEvent(FtcGamepad.ButtonType button, boolean pressed)
     {
-        robot.dashboard.displayPrintf(8, "Operator: %s=%s", button, pressed? "Pressed": "Released");
+        robot.dashboard.displayPrintf(15, "Operator: %s=%s", button, pressed? "Pressed": "Released");
 
         switch (button)
         {
@@ -464,6 +472,24 @@ public class FtcTeleOp extends FtcOpMode
                 break;
 
             case RightBumper:
+                if (operatorAltFunc)
+                {
+                    if (pressed)
+                    {
+                        boolean enabled = !robot.dashboard.isDashboardUpdateEnabled();
+                        robot.globalTracer.traceInfo(moduleName, ">>>>> setUpdateDashboardEnable=" + enabled);
+                        if (enabled)
+                        {
+                            robot.dashboard.enableDashboardUpdate(1, true);
+                        }
+                        else
+                        {
+                            robot.dashboard.disableDashboardUpdate();
+                        }
+                    }
+                }
+                break;
+
             case DpadUp:
             case DpadDown:
             case DpadLeft:

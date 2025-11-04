@@ -53,7 +53,7 @@ public class TaskAuto extends TrcAutoTask<TaskAuto.State>
         @NonNull
         public String toString()
         {
-            return "";
+            return "()";
         }   //toString
     }   //class TaskParams
 
@@ -81,7 +81,7 @@ public class TaskAuto extends TrcAutoTask<TaskAuto.State>
         TaskParams taskParams = new TaskParams();
         tracer.traceInfo(
             moduleName,
-            "autoAssist(owner=" + owner + ", event=" + completionEvent + ", taskParams=(" + taskParams + "))");
+            "autoAssist(owner=" + owner + ", event=" + completionEvent + ", taskParams=" + taskParams + ")");
         startAutoTask(owner, State.START, taskParams, completionEvent);
     }   //autoAssist
 
