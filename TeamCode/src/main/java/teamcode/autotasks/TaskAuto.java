@@ -104,7 +104,7 @@ public class TaskAuto extends TrcAutoTask<TaskAuto.State>
         // For example:
         // return owner == null ||
         //        subsystem1.acquireExclusiveAccess(owner) && subsystem2.acquireExclusiveAccess(owner);
-        return owner == null || robot.robotDrive.driveBase.acquireExclusiveAccess(owner);
+        return owner == null || robot.robotBase.driveBase.acquireExclusiveAccess(owner);
     }   //acquireSubsystemsOwnership
 
     /**
@@ -122,8 +122,8 @@ public class TaskAuto extends TrcAutoTask<TaskAuto.State>
             tracer.traceInfo(
                 moduleName,
                 "Releasing subsystem ownership on behalf of " + owner +
-                "\n\trobotDrive=" + ownershipMgr.getOwner(robot.robotDrive.driveBase));
-            robot.robotDrive.driveBase.releaseExclusiveAccess(owner);
+                "\n\trobotDrive=" + ownershipMgr.getOwner(robot.robotBase.driveBase));
+            robot.robotBase.driveBase.releaseExclusiveAccess(owner);
         }
     }   //releaseSubsystemsOwnership
 
@@ -137,7 +137,7 @@ public class TaskAuto extends TrcAutoTask<TaskAuto.State>
     protected void stopSubsystems(String owner)
     {
         tracer.traceInfo(moduleName, "Stopping subsystems.");
-        robot.robotDrive.cancel(owner);
+        robot.robotBase.cancel(owner);
     }   //stopSubsystems
 
     /**

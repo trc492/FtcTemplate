@@ -134,8 +134,8 @@ public class CmdAuto implements TrcRobot.RobotCommand
                     break;
             }
             robot.globalTracer.tracePostStateInfo(
-                sm.toString(), state, robot.robotDrive.driveBase, robot.robotDrive.pidDrive,
-                robot.robotDrive.purePursuitDrive, null);
+                sm.toString(), state, robot.robotBase.driveBase, robot.robotBase.pidDrive,
+                robot.robotBase.purePursuitDrive, null);
         }
 
         return !sm.isEnabled();

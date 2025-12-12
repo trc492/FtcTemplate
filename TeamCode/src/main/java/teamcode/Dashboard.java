@@ -24,10 +24,9 @@ package teamcode;
 
 import com.acmerobotics.dashboard.config.Config;
 
-import teamcode.subsystems.BaseDrive;
+import teamcode.subsystems.DriveBase;
 import teamcode.vision.Vision;
 import trclib.drivebase.TrcDriveBase;
-import trclib.drivebase.TrcSwerveDriveBase;
 import trclib.driverio.TrcGameController;
 import trclib.vision.TrcOpenCvColorBlobPipeline;
 
@@ -41,17 +40,17 @@ public class Dashboard
     {
         public static boolean updateDashboardEnabled = RobotParams.Preferences.updateDashboard;
         public static String tuneSubsystemName = "";
+        public static FtcAuto.Alliance alliance = FtcAuto.Alliance.BLUE_ALLIANCE;
         public static FtcAuto.AutoChoices autoChoices = FtcAuto.autoChoices;
     }   //class DashboardParams
 
     @Config
     public static class Subsystem_Drivebase
     {
-        public static TrcDriveBase.BaseParams driveBaseParams = BaseDrive.SwerveRobotInfo.baseParams;
-        public static TrcSwerveDriveBase.SwerveParams swerveDriveParams = BaseDrive.SwerveRobotInfo.swerveParams;
+        public static TrcDriveBase.BaseParams driveBaseParams = DriveBase.MecanumRobotInfo.baseParams;
         public static TrcGameController.DriveMode driveMode = TrcGameController.DriveMode.ArcadeMode;
         public static TrcDriveBase.DriveOrientation driveOrientation  = TrcDriveBase.DriveOrientation.ROBOT;
-        public static double driveSlowScale = 0.5;
+        public static double driveSlowScale = 0.3;
         public static double driveNormalScale = 1.0;
         public static double turnSlowScale = 0.3;
         public static double turnNormalScale = 0.5;

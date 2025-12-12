@@ -29,9 +29,9 @@ import org.firstinspires.ftc.vision.VisionProcessor;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 
-import ftclib.drivebase.FtcRobotDrive;
 import ftclib.driverio.FtcDashboard;
 import ftclib.robotcore.FtcOpMode;
 import ftclib.vision.FtcEocvColorBlobProcessor;
@@ -42,12 +42,12 @@ import ftclib.vision.FtcVisionEocvColorBlob;
 import teamcode.Robot;
 import teamcode.RobotParams;
 import teamcode.indicators.LEDIndicator;
-import trclib.dataprocessor.TrcUtil;
 import trclib.pathdrive.TrcPose2D;
 import trclib.robotcore.TrcDbgTrace;
 import trclib.vision.TrcHomographyMapper;
 import trclib.vision.TrcOpenCvColorBlobPipeline;
 import trclib.vision.TrcOpenCvDetector;
+import trclib.vision.TrcVision;
 import trclib.vision.TrcVisionTargetInfo;
 
 /**
@@ -73,7 +73,8 @@ public class Vision
             .setLensProperties(678.154, 678.170, 318.135, 228.374)
             .setDistortionCoefficents(0.154576, -1.19143, 0, 0, 2.06105, 0, 0, 0);
 
-    public static final FtcRobotDrive.VisionInfo frontCamParams = new FtcRobotDrive.VisionInfo()
+    // Front camera properties
+    public static final TrcVision.CameraInfo frontCamParams = new TrcVision.CameraInfo()
         .setCameraInfo("Webcam 1", 640, 480)
         .setCameraPose(-4.25, 5.5, 10.608, -2.0, -32.346629699, 0.0)
         .setLensProperties(logitechC920At640x480)
@@ -88,7 +89,8 @@ public class Vision
                 24.0, 37.5,                     // World Top Right
                 -4.75, 9.0,                     // World Bottom Left
                 6.25, 9.0));                    // World Bottom Right
-    public static final FtcRobotDrive.VisionInfo backCamParams = new FtcRobotDrive.VisionInfo()
+    // Back camera properties
+    public static final TrcVision.CameraInfo backCamParams = new TrcVision.CameraInfo()
         .setCameraInfo("Webcam 2", 640, 480)
         .setCameraPose(0.0, 2.0, 9.75, 0.0, 15.0, 0.0)
         .setLensProperties(logitechC920At640x480)
@@ -105,10 +107,10 @@ public class Vision
                 2.5626, 21.0 - RobotParams.Robot.ROBOT_LENGTH/2.0 - 2.0));  // World Bottom Right
     // Limelight camera properties
     public static final int NUM_LIMELIGHT_PIPELINES = 2;
-    public static final FtcRobotDrive.VisionInfo limelightParams = new FtcRobotDrive.VisionInfo()
+    public static final TrcVision.CameraInfo limelightParams = new TrcVision.CameraInfo()
         .setCameraInfo("Limelight3a", 640, 480)
-        .setCameraFOV(54.5, 42.0)
-        .setCameraPose(135.47*TrcUtil.INCHES_PER_MM, 2.073, 10.758, -3.438, 0.0, 0.0);
+        .setCameraFOV(54.505, 42.239)
+        .setCameraPose(0.0, 0.0, 16.361, 0.0, 18.0, 0.0);
 
     public enum ColorBlobType
     {
@@ -196,9 +198,7 @@ public class Vision
         if (RobotParams.Preferences.useLimelightVision && robot.robotInfo.limelight != null)
         {
             tracer.traceInfo(moduleName, "Starting LimelightVision...");
-            limelightVision = new FtcLimelightVision(
-                robot.robotInfo.limelight.camName, robot.robotInfo.limelight.camPose,
-                this::getLimelightTargetGroundOffset);
+            limelightVision = new FtcLimelightVision(robot.robotInfo.limelight, this::getLimelightTargetGroundOffset);
             setLimelightPipeline(LimelightPipelineType.APRIL_TAG);
         }
 
@@ -420,9 +420,8 @@ public class Vision
         {
             String objectName = null;
             int pipelineIndex = -1;
-            Double robotHeading = robot.robotDrive != null? robot.robotDrive.driveBase.getHeading(): null;
 
-            limelightInfo = limelightVision.getBestDetectedTargetInfo(resultType, matchIds, robotHeading, comparator);
+            limelightInfo = limelightVision.getBestDetectedTargetInfo(resultType, matchIds, comparator);
             if (limelightInfo != null)
             {
                 pipelineIndex = limelightVision.getPipeline();
@@ -510,14 +509,15 @@ public class Vision
     /**
      * This method calls Webcam AprilTag vision to detect the AprilTag object.
      *
-     * @param id specifies the AprilTag ID to look for, null if match to any ID.
+     * @param aprilTagIds specifies an array of AprilTag ID to look for, null if match to any ID.
      * @param lineNum specifies the dashboard line number to display the detected object info, -1 to disable printing.
      * @return detected AprilTag object info.
      */
-    public TrcVisionTargetInfo<FtcVisionAprilTag.DetectedObject> getWebcamDetectedAprilTag(Integer id, int lineNum)
+    public TrcVisionTargetInfo<FtcVisionAprilTag.DetectedObject> getWebcamDetectedAprilTag(
+        int[] aprilTagIds, int lineNum)
     {
         TrcVisionTargetInfo<FtcVisionAprilTag.DetectedObject> aprilTagInfo =
-            webcamAprilTagVision.getBestDetectedTargetInfo(id, null);
+            webcamAprilTagVision.getBestDetectedTargetInfo(aprilTagIds, null);
 
         if (aprilTagInfo != null && robot.ledIndicator != null)
         {
@@ -530,7 +530,8 @@ public class Vision
         if (lineNum != -1)
         {
             robot.dashboard.displayPrintf(
-                lineNum, "AprilTag[%s]: %s", id, aprilTagInfo != null ? aprilTagInfo : "Not found.");
+                lineNum, "AprilTag[%s]: %s",
+                Arrays.toString(aprilTagIds), aprilTagInfo != null ? aprilTagInfo : "Not found.");
         }
 
         return aprilTagInfo;
@@ -548,18 +549,19 @@ public class Vision
 
         if (aprilTagInfo != null)
         {
-            TrcPose2D aprilTagPose =
+            TrcPose2D aprilTagFieldPose =
                 RobotParams.Game.APRILTAG_POSES[aprilTagInfo.detectedObj.aprilTagDetection.id - 1];
-            TrcPose2D cameraPose = aprilTagPose.subtractRelativePose(aprilTagInfo.objPose);
-            robotPose = cameraPose.subtractRelativePose(
-                new TrcPose2D(robot.robotInfo.webCam1.camPose.x, robot.robotInfo.webCam1.camPose.y,
-                              robot.robotInfo.webCam1.camPose.yaw));
+            TrcPose2D camPoseOnBot = new TrcPose2D(
+                robot.robotInfo.webCam1.camPose.x, robot.robotInfo.webCam1.camPose.y,
+                robot.robotInfo.webCam1.camPose.yaw);
+            robotPose = aprilTagFieldPose.addRelativePose(aprilTagInfo.objPose.invert())
+                                         .addRelativePose(camPoseOnBot.invert());
             tracer.traceInfo(
                 moduleName,
                 "AprilTagId=" + aprilTagInfo.detectedObj.aprilTagDetection.id +
-                ", aprilTagFieldPose=" + aprilTagPose +
+                ", aprilTagFieldPose=" + aprilTagFieldPose +
                 ", aprilTagPoseFromCamera=" + aprilTagInfo.objPose +
-                ", cameraPose=" + cameraPose +
+                ", cameraPose=" + camPoseOnBot +
                 ", robotPose=%s" + robotPose);
         }
 
@@ -569,7 +571,6 @@ public class Vision
     /**
      * This method uses vision to find an AprilTag and uses the AprilTag's absolute field location and its relative
      * position from the camera to calculate the robot's absolute field location.
-     *
      * @return robot field location.
      */
     public TrcPose2D getRobotFieldPose()

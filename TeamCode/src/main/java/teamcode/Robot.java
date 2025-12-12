@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Titan Robotics Club (http://www.titanrobotics.com)
+ * Copyright (c) 2025 Titan Robotics Club (http://www.titanrobotics.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,13 +24,13 @@ package teamcode;
 
 import androidx.annotation.NonNull;
 
-import ftclib.drivebase.FtcRobotDrive;
+import ftclib.drivebase.FtcRobotBase;
 import ftclib.driverio.FtcDashboard;
 import ftclib.driverio.FtcMatchInfo;
 import ftclib.robotcore.FtcOpMode;
 import ftclib.sensor.FtcRobotBattery;
 import teamcode.indicators.LEDIndicator;
-import teamcode.subsystems.BaseDrive;
+import teamcode.subsystems.DriveBase;
 import teamcode.vision.Vision;
 import trclib.motor.TrcMotor;
 import trclib.motor.TrcServo;
@@ -54,9 +54,9 @@ public class Robot
     public static FtcMatchInfo matchInfo = null;
     private static TrcPose2D endOfAutoRobotPose = null;
     // Robot Drive.
-    public BaseDrive baseDrive;
-    public FtcRobotDrive.RobotInfo robotInfo;
-    public FtcRobotDrive robotDrive;
+    public DriveBase robotDriveBase;
+    public FtcRobotBase.RobotInfo robotInfo;
+    public FtcRobotBase robotBase;
     // Vision subsystems.
     public Vision vision;
     // Sensors and indicators.
@@ -64,6 +64,7 @@ public class Robot
     public FtcRobotBattery battery;
     // Subsystems.
     // Autotasks.
+    public TrcPose2D relocalizedRobotPose = null;
 
     /**
      * Constructor: Create an instance of the object.
@@ -79,9 +80,9 @@ public class Robot
         dashboard = FtcDashboard.getInstance();
         speak("Init starting");
         // Create and initialize Robot Base.
-        baseDrive = new BaseDrive();
-        robotInfo = baseDrive.getRobotInfo();
-        robotDrive = baseDrive.getRobotDrive();
+        robotDriveBase = new DriveBase();
+        robotInfo = robotDriveBase.getRobotInfo();
+        robotBase = robotDriveBase.getRobotBase();
         // Create and initialize vision subsystems.
         if (RobotParams.Preferences.useVision &&
             (RobotParams.Preferences.useLimelightVision ||
@@ -92,7 +93,7 @@ public class Robot
         }
         // If robotType is VisionOnly, the robot controller is disconnected from the robot for testing vision.
         // In this case, we should not instantiate any robot hardware.
-        if (RobotParams.Preferences.robotType != BaseDrive.RobotType.VisionOnly)
+        if (RobotParams.Preferences.robotType != DriveBase.RobotType.VisionOnly)
         {
             // Create and initialize sensors and indicators.
             ledIndicator = robotInfo.indicatorNames != null? new LEDIndicator(robotInfo.indicatorNames): null;
@@ -103,9 +104,7 @@ public class Robot
             if (RobotParams.Preferences.useSubsystems)
             {
                 // Create subsystems.
-
                 // Create autotasks.
-
                 // Zero calibrate all subsystems only in Auto or if TeleOp is run standalone without prior Auto.
                 // There is no reason to zero calibrate again if Auto was run right before TeleOp.
                 if (runMode == TrcRobot.RunMode.AUTO_MODE || FtcAuto.autoChoices.alliance == null)
@@ -142,28 +141,28 @@ public class Robot
      */
     public void startMode(TrcRobot.RunMode runMode)
     {
-        if (robotDrive != null)
+        if (robotBase != null)
         {
             //
             // Since the IMU gyro is giving us cardinal heading, we need to enable its cardinal to cartesian converter.
             //
-            if (robotDrive.gyro != null)
+            if (robotBase.gyro != null)
             {
-                robotDrive.gyro.setEnabled(true);
+                robotBase.gyro.setEnabled(true);
                 // The following are performance counters, could be disabled for competition if you want.
                 // But it might give you some insight if somehow autonomous wasn't performing as expected.
-                robotDrive.gyro.setElapsedTimerEnabled(true);
+                robotBase.gyro.setElapsedTimerEnabled(true);
             }
             //
             // Enable odometry for all opmodes. We may need odometry in TeleOp for auto-assist drive.
             //
-            robotDrive.driveBase.setOdometryEnabled(true);
+            robotBase.driveBase.setOdometryEnabled(true);
             if (runMode == TrcRobot.RunMode.TELEOP_MODE)
             {
                 if (endOfAutoRobotPose != null)
                 {
                     // We had a previous autonomous run that saved the robot position at the end, use it.
-                    robotDrive.driveBase.setFieldPosition(endOfAutoRobotPose);
+                    robotBase.driveBase.setFieldPosition(endOfAutoRobotPose);
                     globalTracer.traceInfo(moduleName, "Restore saved RobotPose=" + endOfAutoRobotPose);
                 }
             }
@@ -189,10 +188,10 @@ public class Robot
         //
         // Print all performance counters if there are any.
         //
-        if (robotDrive != null && robotDrive.gyro != null)
+        if (robotBase != null && robotBase.gyro != null)
         {
-            robotDrive.gyro.printElapsedTime(globalTracer);
-            robotDrive.gyro.setElapsedTimerEnabled(false);
+            robotBase.gyro.printElapsedTime(globalTracer);
+            robotBase.gyro.setElapsedTimerEnabled(false);
         }
         TrcDigitalInput.printElapsedTime(globalTracer);
         TrcDigitalInput.setElapsedTimerEnabled(false);
@@ -226,27 +225,49 @@ public class Robot
             vision.close();
        }
 
-        if (robotDrive != null)
+        if (robotBase != null)
         {
             if (runMode == TrcRobot.RunMode.AUTO_MODE)
             {
                 // Save current robot location at the end of autonomous so subsequent teleop run can restore it.
-                endOfAutoRobotPose = robotDrive.driveBase.getFieldPosition();
+                endOfAutoRobotPose = robotBase.driveBase.getFieldPosition();
                 globalTracer.traceInfo(moduleName, "Saved robot pose=" + endOfAutoRobotPose);
             }
             //
             // Disable odometry.
             //
-            robotDrive.driveBase.setOdometryEnabled(false);
+            robotBase.driveBase.setOdometryEnabled(false);
             //
             // Disable gyro task.
             //
-            if (robotDrive.gyro != null)
+            if (robotBase.gyro != null)
             {
-                robotDrive.gyro.setEnabled(false);
+                robotBase.gyro.setEnabled(false);
             }
         }
+
+        if (ledIndicator != null)
+        {
+            globalTracer.traceInfo(moduleName, "Turning all LED indicators OFF.");
+            ledIndicator.reset();
+        }
     }   //stopMode
+
+    /**
+     * This method is called periodically on the main robot thread. Typically, you put code here that requires to be
+     * run regardless of RobotMode (autonomous or teleop).
+     *
+     * @param elapsedTime specifies the elapsed time since the mode started.
+     * @param slowPeriodicLoop specifies true if it is running the slow periodic loop on the main robot thread,
+     *        false otherwise.
+     */
+    public void periodic(double elapsedTime, boolean slowPeriodicLoop)
+    {
+        if (relocalizedRobotPose != null && vision != null && vision.limelightVision != null)
+        {
+            vision.limelightVision.updateRobotHeading(robotBase.driveBase.getHeading());
+        }
+    }   //periodic
 
     /**
      * This method is called to cancel all pending operations and release the ownership of all subsystems.

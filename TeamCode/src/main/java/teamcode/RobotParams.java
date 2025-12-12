@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Titan Robotics Club (http://www.titanrobotics.com)
+ * Copyright (c) 2025 Titan Robotics Club (http://www.titanrobotics.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,7 @@ package teamcode;
 
 import android.annotation.SuppressLint;
 
-import teamcode.subsystems.BaseDrive;
+import teamcode.subsystems.DriveBase;
 import trclib.pathdrive.TrcPose2D;
 
 /**
@@ -41,7 +41,7 @@ public class RobotParams
     public static class Preferences
     {
         // Global config
-        public static final BaseDrive.RobotType robotType       = BaseDrive.RobotType.MecanumRobot;
+        public static final DriveBase.RobotType robotType       = DriveBase.RobotType.MecanumRobot;
         public static final boolean inCompetition               = false;
         public static final boolean useTraceLog                 = true;
         public static final boolean useBatteryMonitor           = false;
@@ -50,16 +50,16 @@ public class RobotParams
         public static final boolean updateDashboard             = !inCompetition;   // Start up default value.
         public static final boolean useRumble                   = false;
         // Vision
-        public static final boolean useVision                   = true;
+        public static final boolean useVision                   = false;
         public static final boolean showVisionStatus            = false;
-        public static final boolean useLimelightVision          = true;
-        public static final boolean useWebCam                   = true;
+        public static final boolean useLimelightVision          = false;
+        public static final boolean useWebCam                   = false;
         public static final boolean useWebcamAprilTagVision     = false;
-        public static final boolean useColorBlobVision          = true;
+        public static final boolean useColorBlobVision          = false;
         public static final boolean useSolvePnp                 = false;
-        public static final boolean streamWebcamToDashboard     = false;
         public static final boolean showVisionView              = false;    // For both HDMI and Dashboard
         public static final boolean showVisionStat              = false;    // For HDMI
+        public static final boolean streamWebcamToDashboard     = false;
         // Master switches for Subsystems
         public static final boolean useSubsystems               = true;
         // Drive Base Subsystem
@@ -68,6 +68,7 @@ public class RobotParams
         public static final boolean showPidDrive                = false;
         public static final boolean showDriveBaseGraph          = false;
         public static final boolean tuneDriveBase               = false;
+        public static final boolean tuneSteerPowerComp          = false;
         // Other Subsystems
         // Auto Tasks
     }   //class Preferences
@@ -81,9 +82,8 @@ public class RobotParams
         public static final String TEAM_FOLDER_PATH             = "/sdcard/FIRST/ftc3543";
         public static final String LOG_FOLDER_PATH              = TEAM_FOLDER_PATH + "/tracelogs";
         public static final String STEER_ZERO_CAL_FILE          = TEAM_FOLDER_PATH + "/SteerZeroCalibration.txt";
-        // Robot Drive Parameters.
-        public static final double ROBOT_LENGTH                 = 18.0;
-        public static final double ROBOT_WIDTH                  = 18.0;
+        public static final double ROBOT_LENGTH                 = 18.0;     //inches
+        public static final double ROBOT_WIDTH                  = 18.0;     //inches
     }   //class Robot
 
     /**
@@ -127,6 +127,10 @@ public class RobotParams
             (((1.0+46.0/17.0)*(1.0+46.0/17.0)*(1.0+46.0/11.0))*28.0);
         public static final double GOBILDA_84_MAX_RPM           = 84.0;
         public static final double GOBILDA_84_MAX_VEL_PPS       = GOBILDA_84_ENC_PPR*GOBILDA_84_MAX_RPM/60.0;
+        //https://www.gobilda.com/5203-series-yellow-jacket-planetary-gear-motor-26-9-1-ratio-24mm-length-8mm-rex-shaft-223-rpm-3-3-5v-encoder/
+        public static final double GOBILDA_223_ENC_PPR          = (((1.0+46.0/11.0)*(1.0+46.0/11.0))*28.0);
+        public static final double GOBILDA_223_MAX_RPM          = 223.0;
+        public static final double GOBILA_223_MAX_VEL_PPS       = GOBILDA_223_ENC_PPR*GOBILDA_223_MAX_RPM/60.0;
         //https://www.gobilda.com/5203-series-yellow-jacket-planetary-gear-motor-19-2-1-ratio-24mm-length-8mm-rex-shaft-312-rpm-3-3-5v-encoder/
         public static final double GOBILDA_312_ENC_PPR          = (((1.0+46.0/17.0)*(1.0+46.0/11.0))*28.0);
         public static final double GOBILDA_312_MAX_RPM          = 312.0;
