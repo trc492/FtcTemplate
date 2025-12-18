@@ -138,7 +138,8 @@ public class DriveBase extends TrcSubsystem
             .setXPidParams(xDrivePidCoeffs, 1.0)
             .setYPidParams(yDrivePidCoeffs, 1.0)
             .setTurnPidParams(turnPidCoeffs, 0.5)
-            .setVelocityPidParams(velPidCoeffs);
+            .setVelocityPidParams(velPidCoeffs)
+            .setDriveCharacteristics(30.0, 150.0, 150.0,  15.0);
 
         public MecanumRobotInfo()
         {

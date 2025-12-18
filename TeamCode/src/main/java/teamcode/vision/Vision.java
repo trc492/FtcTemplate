@@ -428,7 +428,7 @@ public class Vision
                 switch (pipelineIndex)
                 {
                     case 0:
-                        objectName = (int)limelightInfo.detectedObj.objId == 20?
+                        objectName = (int) limelightInfo.detectedObj.objId == RobotParams.Game.BLUE_APRILTAG_ID?
                             LEDIndicator.BLUE_APRILTAG: LEDIndicator.RED_APRILTAG;
                         if (robot.ledIndicator != null)
                         {
@@ -523,8 +523,8 @@ public class Vision
         {
             robot.ledIndicator.setAprilTagPatternsOff();
             robot.ledIndicator.setStatusPattern(
-                aprilTagInfo.detectedObj.aprilTagDetection.id == 20 ?
-                    LEDIndicator.BLUE_APRILTAG : LEDIndicator.RED_APRILTAG, true);
+                aprilTagInfo.detectedObj.aprilTagDetection.id == RobotParams.Game.BLUE_APRILTAG_ID?
+                    LEDIndicator.BLUE_APRILTAG: LEDIndicator.RED_APRILTAG, true);
         }
 
         if (lineNum != -1)

@@ -99,6 +99,8 @@ public class RobotParams
             new TrcPose2D(0.0, 0.0, 0.0),   // TagId 3
             new TrcPose2D(0.0, 0.0, 0.0)    // TagId 4
         };
+        public static final int BLUE_APRILTAG_ID                = 20;
+        public static final int RED_APRILTAG_ID                 = 24;
         // Robot start locations.
         // Game elapsed times.
         public static final double AUTO_PERIOD                  = 30.0;     // 30 seconds auto period
