@@ -332,13 +332,13 @@ public class Robot
         {
             if (relativePose)
             {
-                if (!RobotParams.Game.fieldIsMirrored)
+                if (!RobotParams.Field.mirroredField)
                 {
                     newPose.x = -newPose.x;
                 }
             }
             // Translate blue alliance pose to red alliance pose.
-            else if (RobotParams.Game.fieldIsMirrored)
+            else if (RobotParams.Field.mirroredField)
             {
                 // Field is mirrored on X axis.
                 // Same X, Flip Y. Heading left becomes right and right becomes left.

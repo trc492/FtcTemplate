@@ -468,16 +468,7 @@ public class FtcTeleOp extends FtcOpMode
         {
             if (pressed)
             {
-                boolean enabled = !robot.dashboard.isDashboardUpdateEnabled();
-                robot.globalTracer.traceInfo(moduleName, ">>>>> setUpdateDashboardEnable=" + enabled);
-                if (enabled)
-                {
-                    robot.dashboard.enableDashboardUpdate(1, true);
-                }
-                else
-                {
-                    robot.dashboard.disableDashboardUpdate();
-                }
+                toggleDashboardUpdateMode();
             }
         }
     }   //setDriveSpeedMode

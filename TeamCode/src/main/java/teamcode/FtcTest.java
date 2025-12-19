@@ -31,7 +31,6 @@ import ftclib.drivebase.FtcSwerveBase;
 import ftclib.driverio.FtcChoiceMenu;
 import ftclib.driverio.FtcGamepad;
 import ftclib.driverio.FtcMenu;
-import ftclib.vision.FtcLimelightVision;
 import teamcode.vision.Vision;
 import trclib.command.CmdDriveMotorsTest;
 import trclib.command.CmdPidDrive;
@@ -436,7 +435,7 @@ public class FtcTest extends FtcTeleOp
                     break;
 
                 case VISION_TEST:
-                    doVisionTest();
+                    lineNum = doVisionTest(lineNum);
                     break;
 
                 case CALIBRATE_SWERVE_STEERING:
@@ -869,29 +868,17 @@ public class FtcTest extends FtcTeleOp
 
     /**
      * This method calls vision code to detect target objects and display their info.
+     *
+     * @param lineNum specifies the starting line number to print the subsystem status.
      */
-    private void doVisionTest()
+    private int doVisionTest(int lineNum)
     {
         if (robot.vision != null)
         {
-            if (robot.vision.limelightVision != null)
-            {
-                robot.vision.getLimelightDetectedObject(
-                    robot.vision.limelightVision.getPipeline() == Vision.LimelightPipelineType.APRIL_TAG.value?
-                        FtcLimelightVision.ResultType.Fiducial: FtcLimelightVision.ResultType.Python,
-                    null, null, -1);
-            }
-
-            if (robot.vision.webcamAprilTagVision != null)
-            {
-                robot.vision.getWebcamDetectedAprilTag(null, -1);
-            }
-
-            if (robot.vision.isColorBlobVisionEnabled(Vision.ColorBlobType.Any))
-            {
-                robot.vision.getDetectedColorBlob(Vision.ColorBlobType.Any, 0.0, -1);
-            }
+            lineNum = robot.vision.updateStatus(lineNum, true);
         }
+
+        return lineNum;
     }   //doVisionTest
 
 }   //class FtcTest
