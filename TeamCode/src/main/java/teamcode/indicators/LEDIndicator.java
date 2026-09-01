@@ -40,6 +40,7 @@ public class LEDIndicator
     public static final String STATUS_LED_NAME = "StatusLED";
     public static final String COLOR_BLOB_LED_NAME = "ColorBlobLED";
     // LED pattern names.
+    public static final String APRILTAG_FOUND = "AprilTagFound";
     public static final String RED_BLOB = "RedBlob";
     public static final String BLUE_BLOB = "BlueBlob";
     public static final String RED_APRILTAG = "RedAprilTag";
@@ -50,31 +51,31 @@ public class LEDIndicator
     public static final String DRIVE_FIELD_MODE = "FieldMode";
     public static final String DRIVE_ROBOT_MODE = "RobotMode";
     public static final String DRIVE_INVERTED_MODE = "InvertedMode";
-    public static final String OFF_PATTERN = "Off";
+    public static final String OFF = "Off";
 
-    public final TrcPriorityIndicator.Pattern[] statusLEDPatternPriorities = new TrcPriorityIndicator.Pattern[]
-        {
-            // Highest priority.
-            new TrcPriorityIndicator.Pattern(RED_APRILTAG, TrcRevBlinkin.RevLedPattern.SolidRed, 0.5, 0.0),
-            new TrcPriorityIndicator.Pattern(BLUE_APRILTAG, TrcRevBlinkin.RevLedPattern.SolidBlue, 0.5, 0.0),
-            new TrcPriorityIndicator.Pattern(NOT_FOUND, TrcRevBlinkin.RevLedPattern.SolidYellow, 0.5, 0.0),
-            new TrcPriorityIndicator.Pattern(SEARCHING_RED_APRILTAG, TrcRevBlinkin.RevLedPattern.SolidRed, 0.5, 0.0),
-            new TrcPriorityIndicator.Pattern(SEARCHING_BLUE_APRILTAG, TrcRevBlinkin.RevLedPattern.SolidBlue, 0.5, 0.0),
-            new TrcPriorityIndicator.Pattern(DRIVE_FIELD_MODE, TrcRevBlinkin.RevLedPattern.SolidAqua, 0.5, 0.0),
-            new TrcPriorityIndicator.Pattern(DRIVE_ROBOT_MODE, TrcRevBlinkin.RevLedPattern.SolidWhite, 0.5, 0.0),
-            new TrcPriorityIndicator.Pattern(DRIVE_INVERTED_MODE, TrcRevBlinkin.RevLedPattern.SolidOrange, 0.5, 0.0),
-            new TrcPriorityIndicator.Pattern(OFF_PATTERN, TrcRevBlinkin.RevLedPattern.SolidBlack)
-            // Lowest priority.
-        };
+    public final TrcPriorityIndicator.Pattern[] statusLEDPatternPriorities =
+    {
+        // Highest priority.
+        new TrcPriorityIndicator.Pattern(RED_APRILTAG, TrcRevBlinkin.RevLedPattern.SolidRed, 0.5, 0.0),
+        new TrcPriorityIndicator.Pattern(BLUE_APRILTAG, TrcRevBlinkin.RevLedPattern.SolidBlue, 0.5, 0.0),
+        new TrcPriorityIndicator.Pattern(NOT_FOUND, TrcRevBlinkin.RevLedPattern.SolidYellow, 0.5, 0.0),
+        new TrcPriorityIndicator.Pattern(SEARCHING_RED_APRILTAG, TrcRevBlinkin.RevLedPattern.SolidRed, 0.5, 0.0),
+        new TrcPriorityIndicator.Pattern(SEARCHING_BLUE_APRILTAG, TrcRevBlinkin.RevLedPattern.SolidBlue, 0.5, 0.0),
+        new TrcPriorityIndicator.Pattern(DRIVE_FIELD_MODE, TrcRevBlinkin.RevLedPattern.SolidAqua, 0.5, 0.0),
+        new TrcPriorityIndicator.Pattern(DRIVE_ROBOT_MODE, TrcRevBlinkin.RevLedPattern.SolidWhite, 0.5, 0.0),
+        new TrcPriorityIndicator.Pattern(DRIVE_INVERTED_MODE, TrcRevBlinkin.RevLedPattern.SolidOrange, 0.5, 0.0),
+        new TrcPriorityIndicator.Pattern(OFF, TrcRevBlinkin.RevLedPattern.SolidBlack)
+        // Lowest priority.
+    };
 
-    public final TrcPriorityIndicator.Pattern[] colorBlobLEDPatternPriorities = new TrcPriorityIndicator.Pattern[]
-        {
-            // Highest priority.
-            new TrcPriorityIndicator.Pattern(RED_BLOB, TrcGobildaIndicatorLight.GobildaLedPattern.Red, 0.25, 0.25),
-            new TrcPriorityIndicator.Pattern(BLUE_BLOB, TrcGobildaIndicatorLight.GobildaLedPattern.Blue, 0.25, 0.25),
-            new TrcPriorityIndicator.Pattern(OFF_PATTERN, TrcGobildaIndicatorLight.GobildaLedPattern.Black)
-            // Lowest priority.
-        };
+    public final TrcPriorityIndicator.Pattern[] colorBlobLEDPatternPriorities =
+    {
+        // Highest priority.
+        new TrcPriorityIndicator.Pattern(RED_BLOB, TrcGobildaIndicatorLight.GobildaLedPattern.Red, 0.25, 0.25),
+        new TrcPriorityIndicator.Pattern(BLUE_BLOB, TrcGobildaIndicatorLight.GobildaLedPattern.Blue, 0.25, 0.25),
+        new TrcPriorityIndicator.Pattern(OFF, TrcGobildaIndicatorLight.GobildaLedPattern.Black)
+        // Lowest priority.
+    };
 
     public final TrcDbgTrace tracer;
     private TrcPriorityIndicator statusIndicator = null;
@@ -133,39 +134,12 @@ public class LEDIndicator
         {
             statusIndicator.reset();
         }
-    }   //reset
 
-    /**
-     * This method sets the statusLED to indicate the drive orientation mode of the robot.
-     *
-     * @param orientation specifies the drive orientation mode.
-     */
-    public void setDriveOrientation(TrcDriveBase.DriveOrientation orientation)
-    {
-        if (statusIndicator != null)
+        if (colorBlobIndicator != null)
         {
-            switch (orientation)
-            {
-                case INVERTED:
-                    statusIndicator.setPatternState(DRIVE_INVERTED_MODE, true);
-                    statusIndicator.setPatternState(DRIVE_ROBOT_MODE, false);
-                    statusIndicator.setPatternState(DRIVE_FIELD_MODE, false);
-                    break;
-
-                case ROBOT:
-                    statusIndicator.setPatternState(DRIVE_INVERTED_MODE, false);
-                    statusIndicator.setPatternState(DRIVE_ROBOT_MODE, true);
-                    statusIndicator.setPatternState(DRIVE_FIELD_MODE, false);
-                    break;
-
-                case FIELD:
-                    statusIndicator.setPatternState(DRIVE_INVERTED_MODE, false);
-                    statusIndicator.setPatternState(DRIVE_ROBOT_MODE, false);
-                    statusIndicator.setPatternState(DRIVE_FIELD_MODE, true);
-                    break;
-            }
+            colorBlobIndicator.reset();
         }
-    }   //setDriveOrientation
+    }   //reset
 
     /**
      * This method sets the statusLED pattern ON or OFF.
@@ -206,5 +180,37 @@ public class LEDIndicator
             colorBlobIndicator.setPatternState(colorBlobName, on);
         }
     }   //setColorBlobPatternState
+
+    /**
+     * This method sets the statusLED to indicate the drive orientation mode of the robot.
+     *
+     * @param orientation specifies the drive orientation mode.
+     */
+    public void setDriveOrientation(TrcDriveBase.DriveOrientation orientation)
+    {
+        if (statusIndicator != null)
+        {
+            switch (orientation)
+            {
+                case Inverted:
+                    statusIndicator.setPatternState(DRIVE_INVERTED_MODE, true);
+                    statusIndicator.setPatternState(DRIVE_ROBOT_MODE, false);
+                    statusIndicator.setPatternState(DRIVE_FIELD_MODE, false);
+                    break;
+
+                case Robot:
+                    statusIndicator.setPatternState(DRIVE_INVERTED_MODE, false);
+                    statusIndicator.setPatternState(DRIVE_ROBOT_MODE, true);
+                    statusIndicator.setPatternState(DRIVE_FIELD_MODE, false);
+                    break;
+
+                case Field:
+                    statusIndicator.setPatternState(DRIVE_INVERTED_MODE, false);
+                    statusIndicator.setPatternState(DRIVE_ROBOT_MODE, false);
+                    statusIndicator.setPatternState(DRIVE_FIELD_MODE, true);
+                    break;
+            }
+        }
+    }   //setDriveOrientation
 
 }   //class LEDIndicator

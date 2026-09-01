@@ -62,12 +62,31 @@ public class CmdAuto implements TrcRobot.RobotCommand
         timer = new TrcTimer(moduleName);
         event = new TrcEvent(moduleName);
         sm = new TrcStateMachine<>(moduleName);
-        sm.start(State.START);
     }   //CmdAuto
 
     //
     // Implements the TrcRobot.RobotCommand interface.
     //
+
+    /**
+     * This method starts the RobotCommand. It is called to set the state to start from the beginning. Typically,
+     * you will reset the state machine to the initial state and reset any timers used by the command.
+     */
+    @Override
+    public void start()
+    {
+        sm.start(State.START);
+    }   //start
+
+    /**
+     * This method cancels the command if it is active.
+     */
+    @Override
+    public void cancel()
+    {
+        timer.cancel();
+        sm.stop();
+    }   //cancel
 
     /**
      * This method checks if the current RobotCommand  is running.
@@ -79,16 +98,6 @@ public class CmdAuto implements TrcRobot.RobotCommand
     {
         return sm.isEnabled();
     }   //isActive
-
-    /**
-     * This method cancels the command if it is active.
-     */
-    @Override
-    public void cancel()
-    {
-        timer.cancel();
-        sm.stop();
-    }   //cancel
 
     /**
      * This method must be called periodically by the caller to drive the command sequence forward.
@@ -103,11 +112,11 @@ public class CmdAuto implements TrcRobot.RobotCommand
 
         if (state == null)
         {
-            robot.dashboard.displayPrintf(8, "State: disabled or waiting (nextState=" + sm.getNextState() + ")...");
+            robot.dashboard.displayPrintf(15, "State: disabled or waiting (nextState=" + sm.getNextState() + ")...");
         }
         else
         {
-            robot.dashboard.displayPrintf(8, "State: " + state);
+            robot.dashboard.displayPrintf(15, "State: " + state);
             robot.globalTracer.tracePreStateInfo(sm.toString(), state);
             switch (state)
             {
@@ -119,7 +128,7 @@ public class CmdAuto implements TrcRobot.RobotCommand
                     {
                         robot.globalTracer.traceInfo(moduleName, "***** Do delay " + autoChoices.startDelay + "s.");
                         timer.set(autoChoices.startDelay, event);
-                        sm.waitForSingleEvent(event, State.DONE);
+                        sm.waitForEvents(State.DONE, event);
                     }
                     else
                     {

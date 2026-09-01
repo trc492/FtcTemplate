@@ -48,10 +48,12 @@ public class RobotParams
         // Driver feedback
         // Status Update: Dashboard Update may affect robot loop time, don't do it when in competition.
         public static final boolean updateDashboard             = !inCompetition;   // Start up default value.
+        public static final boolean useLED                      = false;
         public static final boolean useRumble                   = false;
         // Vision
         public static final boolean useVision                   = false;
         public static final boolean showVisionStatus            = false;
+        public static final boolean visionRelocalizeEnabled     = true;
         public static final boolean useLimelightVision          = false;
         public static final boolean useWebCam                   = false;
         public static final boolean useWebcamAprilTagVision     = false;
@@ -79,9 +81,10 @@ public class RobotParams
     public static class Robot
     {
         @SuppressLint("SdCardPath")
-        public static final String TEAM_FOLDER_PATH             = "/sdcard/FIRST/ftc3543";
-        public static final String LOG_FOLDER_PATH              = TEAM_FOLDER_PATH + "/tracelogs";
-        public static final String STEER_ZERO_CAL_FILE          = TEAM_FOLDER_PATH + "/SteerZeroCalibration.txt";
+        public static final String teamFolderPath               = "/sdcard/FIRST/ftc3543";
+        public static final String logFolderPath                = teamFolderPath + "/tracelogs";
+        public static final String purePursuitPathFile          = teamFolderPath + "/PurePursuitPath.csv";
+        public static final String steerZeroCalFile             = teamFolderPath + "/SteerZeroCalibration.txt";
         public static final double ROBOT_LENGTH                 = 18.0;     //inches
         public static final double ROBOT_WIDTH                  = 18.0;     //inches
     }   //class Robot
@@ -95,9 +98,9 @@ public class RobotParams
         public static final double AUTO_PERIOD                  = 30.0;     // 30 seconds auto period
         public static final double TELEOP_PERIOD                = 120.0;    // 2 minutes teleop period
         public static final double PARKING_TIME                 = 10.0;
-        public static final double ENDGAME_DEADLINE             = TELEOP_PERIOD - PARKING_TIME;
+        public static final double ENDGAME_THRESHOLD            = TELEOP_PERIOD - PARKING_TIME;
         // AprilTag locations.
-        public static final TrcPose2D[] APRILTAG_POSES          = new TrcPose2D[] {
+        public static final TrcPose2D[] aprilTagPoses           = new TrcPose2D[] {
             new TrcPose2D(0.0, 0.0, 0.0),   // TagId 1
             new TrcPose2D(0.0, 0.0, 0.0),   // TagId 2
             new TrcPose2D(0.0, 0.0, 0.0),   // TagId 3
@@ -113,9 +116,9 @@ public class RobotParams
      */
     public static class Field
     {
-        public static final double FULL_FIELD_INCHES            = 141.24;
-        public static final double HALF_FIELD_INCHES            = FULL_FIELD_INCHES/2.0;
-        public static final double FULL_TILE_INCHES             = FULL_FIELD_INCHES/6.0;
+        public static final double fullFieldInches              = 141.24;
+        public static final double halfFieldInches              = fullFieldInches/2.0;
+        public static final double fullTileInches               = fullFieldInches/6.0;
         public static final boolean mirroredField               = true;
     }   //class Field
 

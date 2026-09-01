@@ -31,23 +31,34 @@ import ftclib.driverio.FtcDashboard;
 import ftclib.driverio.FtcMatchInfo;
 import ftclib.robotcore.FtcOpMode;
 import ftclib.sensor.FtcRobotBattery;
+import ftclib.vision.FtcLimelightVision;
 import teamcode.indicators.LEDIndicator;
 import teamcode.subsystems.DriveBase;
 import teamcode.vision.Vision;
 import trclib.motor.TrcMotor;
 import trclib.motor.TrcServo;
 import trclib.pathdrive.TrcPose2D;
+import trclib.robotcore.TrcAutoTask;
 import trclib.robotcore.TrcDbgTrace;
 import trclib.robotcore.TrcEvent;
 import trclib.robotcore.TrcRobot;
 import trclib.sensor.TrcDigitalInput;
 import trclib.subsystem.TrcSubsystem;
+import trclib.vision.TrcVisionRelocalize;
+import trclib.vision.TrcVisionTargetInfo;
 
 /**
  * This class creates the robot object that consists of sensors, indicators, drive base and all the subsystems.
  */
 public class Robot
 {
+    public enum RelocalizationMode
+    {
+        Disabled,
+        OneShot,
+        Continuous
+    }   //enum RelocalizationMode
+
     private final String moduleName = getClass().getSimpleName();
     // Global objects.
     public final FtcOpMode opMode;
@@ -59,11 +70,13 @@ public class Robot
     public DriveBase robotDriveBase;
     public FtcRobotBase.RobotInfo robotInfo;
     public FtcRobotBase robotBase;
+    // Sensors and indicators.
+    public FtcRobotBattery battery;
+    public LEDIndicator ledIndicator;
     // Vision subsystems.
     public Vision vision;
-    // Sensors and indicators.
-    public LEDIndicator ledIndicator;
-    public FtcRobotBattery battery;
+    public TrcVisionRelocalize trcVisionRelocalize = null;
+    private RelocalizationMode relocalizationMode = RelocalizationMode.Disabled;
     // Subsystems.
     // Autotasks.
     public TrcPose2D relocalizedRobotPose = null;
@@ -85,28 +98,32 @@ public class Robot
         robotDriveBase = new DriveBase();
         robotInfo = robotDriveBase.getRobotInfo();
         robotBase = robotDriveBase.getRobotBase();
+        // Create and initialize sensors and indicators.
+        battery = RobotParams.Preferences.useBatteryMonitor? new FtcRobotBattery(): null;
+        ledIndicator = RobotParams.Preferences.useLED && robotInfo.indicatorNames != null?
+            new LEDIndicator(robotInfo.indicatorNames): null;
         // Create and initialize vision subsystems.
-        if (RobotParams.Preferences.useVision &&
+        if (RobotParams.Preferences.useVision && robotInfo.camInfos != null &&
             (RobotParams.Preferences.useLimelightVision ||
              RobotParams.Preferences.useWebcamAprilTagVision ||
              RobotParams.Preferences.useColorBlobVision))
         {
             vision = new Vision(this);
+            if (RobotParams.Preferences.visionRelocalizeEnabled && robotBase != null)
+            {
+                trcVisionRelocalize = new TrcVisionRelocalize(100);
+            }
         }
         // If robotType is VisionOnly, the robot controller is disconnected from the robot for testing vision.
         // In this case, we should not instantiate any robot hardware.
         if (RobotParams.Preferences.robotType != DriveBase.RobotType.VisionOnly)
         {
-            // Create and initialize sensors and indicators.
-            ledIndicator = robotInfo.indicatorNames != null? new LEDIndicator(robotInfo.indicatorNames): null;
-            battery = RobotParams.Preferences.useBatteryMonitor? new FtcRobotBattery(): null;
-            //
-            // Create and initialize other subsystems.
-            //
             if (RobotParams.Preferences.useSubsystems)
             {
                 // Create subsystems.
+
                 // Create autotasks.
+
                 // Zero calibrate all subsystems only in Auto or if TeleOp is run standalone without prior Auto.
                 // There is no reason to zero calibrate again if Auto was run right before TeleOp.
                 if (runMode == TrcRobot.RunMode.AUTO_MODE || FtcAuto.autoChoices.alliance == null)
@@ -159,14 +176,11 @@ public class Robot
             // Enable odometry for all opmodes. We may need odometry in TeleOp for auto-assist drive.
             //
             robotBase.driveBase.setOdometryEnabled(true);
-            if (runMode == TrcRobot.RunMode.TELEOP_MODE)
+            if (runMode == TrcRobot.RunMode.TELEOP_MODE && endOfAutoRobotPose != null)
             {
-                if (endOfAutoRobotPose != null)
-                {
-                    // We had a previous autonomous run that saved the robot position at the end, use it.
-                    robotBase.driveBase.setFieldPosition(endOfAutoRobotPose);
-                    globalTracer.traceInfo(moduleName, "Restore saved RobotPose=" + endOfAutoRobotPose);
-                }
+                // We had a previous autonomous run that saved the robot position at the end, use it.
+                robotBase.driveBase.setFieldPosition(endOfAutoRobotPose);
+                globalTracer.traceInfo(moduleName, "Restore saved RobotPose=" + endOfAutoRobotPose);
             }
             // Consume it so it's no longer valid for next run.
             endOfAutoRobotPose = null;
@@ -185,8 +199,55 @@ public class Robot
      */
     public void stopMode(TrcRobot.RunMode runMode)
     {
-        // Cancel all operations.
+        // Stop everything.
         cancelAll();
+        if (robotBase != null)
+        {
+            if (runMode == TrcRobot.RunMode.AUTO_MODE)
+            {
+                // Save current robot location at the end of autonomous so subsequent teleop run can restore it.
+                endOfAutoRobotPose = robotBase.driveBase.getFieldPosition();
+                globalTracer.traceInfo(moduleName, "Saved robot pose=" + endOfAutoRobotPose);
+            }
+            // Disable odometry.
+            robotBase.driveBase.setOdometryEnabled(false);
+            // Disable gyro task.
+            if (robotBase.gyro != null)
+            {
+                robotBase.gyro.setEnabled(false);
+            }
+        }
+        //
+        // Disable vision.
+        //
+        if (vision != null)
+        {
+            if (vision.isLimelightVisionEnabled())
+            {
+                globalTracer.traceInfo(moduleName, "Disabling LimelightVision.");
+                vision.setLimelightVisionEnabled(Vision.LimelightPipelineType.AprilTag, false);
+            }
+
+            if (vision.isWebcamAprilTagVisionEnabled())
+            {
+                globalTracer.traceInfo(moduleName, "Disabling Webcam AprilTagVision.");
+                vision.setWebcamAprilTagVisionEnabled(false);
+            }
+
+            if (vision.backCamColorBlobVision != null)
+            {
+                globalTracer.traceInfo(moduleName, "Disabling ColorBlobVision.");
+                vision.setColorBlobVisionEnabled(Vision.ColorBlobType.Any, false);
+            }
+
+            vision.close();
+       }
+
+        if (ledIndicator != null)
+        {
+            globalTracer.traceInfo(moduleName, "Turning all LED indicators OFF.");
+            ledIndicator.reset();
+        }
         //
         // Print all performance counters if there are any.
         //
@@ -201,58 +262,6 @@ public class Robot
         TrcMotor.setElapsedTimerEnabled(false);
         TrcServo.printElapsedTime(globalTracer);
         TrcServo.setElapsedTimerEnabled(false);
-        //
-        // Disable vision.
-        //
-        if (vision != null)
-        {
-            if (vision.isLimelightVisionEnabled())
-            {
-                globalTracer.traceInfo(moduleName, "Disabling LimelightVision.");
-                vision.setLimelightVisionEnabled(Vision.LimelightPipelineType.APRIL_TAG, false);
-            }
-
-            if (vision.isWebcamAprilTagVisionEnabled())
-            {
-                globalTracer.traceInfo(moduleName, "Disabling Webcam AprilTagVision.");
-                vision.setWebcamAprilTagVisionEnabled(false);
-            }
-
-            if (vision.colorBlobVision != null)
-            {
-                globalTracer.traceInfo(moduleName, "Disabling ColorBlobVision.");
-                vision.setColorBlobVisionEnabled(Vision.ColorBlobType.Any, false);
-            }
-
-            vision.close();
-       }
-
-        if (robotBase != null)
-        {
-            if (runMode == TrcRobot.RunMode.AUTO_MODE)
-            {
-                // Save current robot location at the end of autonomous so subsequent teleop run can restore it.
-                endOfAutoRobotPose = robotBase.driveBase.getFieldPosition();
-                globalTracer.traceInfo(moduleName, "Saved robot pose=" + endOfAutoRobotPose);
-            }
-            //
-            // Disable odometry.
-            //
-            robotBase.driveBase.setOdometryEnabled(false);
-            //
-            // Disable gyro task.
-            //
-            if (robotBase.gyro != null)
-            {
-                robotBase.gyro.setEnabled(false);
-            }
-        }
-
-        if (ledIndicator != null)
-        {
-            globalTracer.traceInfo(moduleName, "Turning all LED indicators OFF.");
-            ledIndicator.reset();
-        }
     }   //stopMode
 
     /**
@@ -265,9 +274,12 @@ public class Robot
      */
     public void periodic(double elapsedTime, boolean slowPeriodicLoop)
     {
-        if (relocalizedRobotPose != null && vision != null && vision.limelightVision != null)
+        if (relocalizationMode != RelocalizationMode.Disabled)
         {
-            vision.limelightVision.updateRobotHeading(robotBase.driveBase.getHeading());
+            if (relocalizeRobot() && relocalizationMode == RelocalizationMode.OneShot)
+            {
+                relocalizationMode = RelocalizationMode.Disabled;
+            }
         }
     }   //periodic
 
@@ -278,7 +290,9 @@ public class Robot
     {
         globalTracer.traceInfo(moduleName, "Cancel all operations.");
         // Cancel auto tasks.
+        TrcAutoTask.cancelAllTasks();
         // Cancel subsystems.
+        if (robotBase != null) robotBase.cancel();
         TrcSubsystem.cancelAll();
     }   //cancelAll
 
@@ -286,22 +300,94 @@ public class Robot
      * This method zero calibrates all subsystems.
      *
      * @param owner specifies the owner ID to check if the caller has ownership of the motor.
-     * @param event specifies the event to signal when the zero calibration is done.
+     * @param completionEvent specifies the event to signal when the zero calibration is done,
+     *        can be null if not provided.
      */
-    public void zeroCalibrate(String owner, TrcEvent event)
+    public void zeroCalibrate(String owner, TrcEvent completionEvent)
     {
         globalTracer.traceInfo(moduleName, "Zero calibrate all subsystems.");
-        TrcSubsystem.zeroCalibrateAll(owner, event);
+        TrcSubsystem.zeroCalibrateAll(owner, completionEvent);
     }   //zeroCalibrate
 
     /**
-     * This method retracts all appendages for robot high speed travelling.
+     * This method retracts all appendages for robot high speed traveling.
      */
     public void turtle()
     {
         globalTracer.traceInfo(moduleName, "Turtle mode.");
         TrcSubsystem.resetStateAll();
     }   //turtle
+
+    /**
+     * This method relocalizes the robot using vision.
+     *
+     * @return true if vision sees AprilTag and relocalize successfully, false otherwise.
+     */
+    public boolean relocalizeRobot()
+    {
+        boolean seenAprilTag = false;
+
+        if (vision != null && RobotParams.Preferences.visionRelocalizeEnabled && trcVisionRelocalize != null)
+        {
+            TrcPose2D robotPose = robotBase.driveBase.getFieldPosition();
+            long currTimestampMilli = System.currentTimeMillis();
+            trcVisionRelocalize.addTimedPose(currTimestampMilli, robotPose);
+            // Assume we are using Limelight to detect AprilTag.
+            double limelightYaw = -robotPose.angle;
+            limelightYaw = (limelightYaw + 180.0) % 360.0;
+            if (limelightYaw < 0) limelightYaw += 360.0;
+            limelightYaw -= 180.0;
+            vision.limelightVision.updateRobotHeading(limelightYaw);
+            TrcVisionTargetInfo<FtcLimelightVision.DetectedObject> aprilTagObj =
+                vision.getLimelightDetectedObject(FtcLimelightVision.ResultType.Fiducial, null, null, -1);
+
+            if (aprilTagObj != null)
+            {
+                seenAprilTag = true;
+                TrcPose2D robotVel = robotBase.driveBase.getRobotVelocity();
+                TrcPose2D relocalizedPose =
+                    Math.hypot(robotVel.x, robotVel.y) > 0.01 || Math.abs(robotVel.angle) > 1.0?
+                        trcVisionRelocalize.getRelocalizedPose(
+                            aprilTagObj.detectedObj.timestamp, aprilTagObj.detectedObj.robotPose, robotPose):
+                        aprilTagObj.detectedObj.robotPose;
+
+                robotBase.driveBase.setFieldPosition(relocalizedPose);
+                globalTracer.traceDebug(
+                    moduleName,
+                    "VisionRelocalize: TimeMilli=%d, Relocalize %s->%s, VisionPose[%d](time=%d, pose=%s)",
+                    currTimestampMilli, robotPose, relocalizedPose, (int)aprilTagObj.detectedObj.objId,
+                    (long)aprilTagObj.detectedObj.timestamp, aprilTagObj.detectedObj.robotPose);
+            }
+
+            if (ledIndicator != null)
+            {
+                ledIndicator.setStatusPattern(LEDIndicator.RED_APRILTAG, false);
+                ledIndicator.setStatusPattern(LEDIndicator.BLUE_APRILTAG, false);
+                if (seenAprilTag)
+                {
+                    ledIndicator.setStatusPattern(
+                        (int) aprilTagObj.detectedObj.objId == RobotParams.Game.RED_APRILTAG_ID?
+                            LEDIndicator.RED_APRILTAG:
+                        (int) aprilTagObj.detectedObj.objId == RobotParams.Game.BLUE_APRILTAG_ID?
+                            LEDIndicator.BLUE_APRILTAG: LEDIndicator.NOT_FOUND,
+                        true);
+                }
+            }
+        }
+
+        return seenAprilTag;
+    }   //relocalizeRobot
+
+    /**
+     * This method sets the relocalization mode.
+     *
+     * @param relocalizationMode specifies the relocalization mode.
+     */
+    public void setRelocalizationMode(RelocalizationMode relocalizationMode)
+    {
+        globalTracer.traceInfo(moduleName, "setRelocalizationMode to " + relocalizationMode);
+        this.relocalizationMode = relocalizationMode;
+    }   //setRelocalizationMode
 
     /**
      * This method sets the robot's starting position according to the autonomous choices.
@@ -328,7 +414,7 @@ public class Robot
     {
         TrcPose2D newPose = new TrcPose2D(x, y, heading);
 
-        if (alliance == FtcAuto.Alliance.BLUE_ALLIANCE)
+        if (alliance == FtcAuto.Alliance.Blue)
         {
             if (relativePose)
             {
@@ -358,8 +444,8 @@ public class Robot
 
         if (isTileUnit)
         {
-            newPose.x *= RobotParams.Field.FULL_TILE_INCHES;
-            newPose.y *= RobotParams.Field.FULL_TILE_INCHES;
+            newPose.x *= RobotParams.Field.fullTileInches;
+            newPose.y *= RobotParams.Field.fullTileInches;
         }
 
         return newPose;

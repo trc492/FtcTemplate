@@ -40,7 +40,7 @@ public class Dashboard
     {
         public static boolean updateDashboardEnabled = RobotParams.Preferences.updateDashboard;
         public static String tuneSubsystemName = "";
-        public static FtcAuto.Alliance alliance = FtcAuto.Alliance.BLUE_ALLIANCE;
+        public static FtcAuto.Alliance alliance = FtcAuto.Alliance.Blue;
         public static FtcAuto.AutoChoices autoChoices = FtcAuto.autoChoices;
     }   //class DashboardParams
 
@@ -48,8 +48,8 @@ public class Dashboard
     public static class Subsystem_Drivebase
     {
         public static TrcDriveBase.BaseParams driveBaseParams = DriveBase.MecanumRobotInfo.baseParams;
-        public static TrcGameController.DriveMode driveMode = TrcGameController.DriveMode.ArcadeMode;
-        public static TrcDriveBase.DriveOrientation driveOrientation  = TrcDriveBase.DriveOrientation.ROBOT;
+        public static TrcGameController.DriveMode driveMode = TrcGameController.DriveMode.Arcade;
+        public static TrcDriveBase.DriveOrientation driveOrientation  = TrcDriveBase.DriveOrientation.Robot;
         public static double driveSlowScale = 0.3;
         public static double driveNormalScale = 1.0;
         public static double turnSlowScale = 0.3;

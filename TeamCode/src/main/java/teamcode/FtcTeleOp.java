@@ -78,7 +78,7 @@ public class FtcTeleOp extends FtcOpMode
             String filePrefix = Robot.matchInfo != null?
                 String.format(Locale.US, "%s%02d_TeleOp", Robot.matchInfo.matchType, Robot.matchInfo.matchNumber):
                 "Standalone_TeleOp";
-            TrcDbgTrace.openTraceLog(RobotParams.Robot.LOG_FOLDER_PATH, filePrefix);
+            TrcDbgTrace.openTraceLog(RobotParams.Robot.logFolderPath, filePrefix);
         }
         // Create and initialize Gamepads.
         driverGamepad = new FtcGamepad("DriverGamepad", gamepad1);
@@ -133,7 +133,7 @@ public class FtcTeleOp extends FtcOpMode
         //
         if (robot.vision != null)
         {
-            if (robot.vision.webcamAprilTagVision != null)
+            if (robot.vision.frontCamAprilTagVision != null)
             {
                 robot.globalTracer.traceInfo(moduleName, "Enabling WebCam AprilTagVision.");
                 robot.vision.setWebcamAprilTagVisionEnabled(true);
@@ -141,7 +141,7 @@ public class FtcTeleOp extends FtcOpMode
             else if (robot.vision.limelightVision != null)
             {
                 robot.globalTracer.traceInfo(moduleName, "Enabling Limelight AprilTagVision.");
-                robot.vision.setLimelightVisionEnabled(Vision.LimelightPipelineType.APRIL_TAG, true);
+                robot.vision.setLimelightVisionEnabled(Vision.LimelightPipelineType.AprilTag, true);
             }
         }
     }   //startMode
@@ -166,7 +166,7 @@ public class FtcTeleOp extends FtcOpMode
 
         if (TrcDbgTrace.isTraceLogOpened())
         {
-            TrcDbgTrace.closeTraceLog();
+            TrcDbgTrace.closeTraceLog(null);
         }
     }   //stopMode
 
@@ -234,7 +234,7 @@ public class FtcTeleOp extends FtcOpMode
                         }
                     }
                     // Check for EndGame warning.
-                    if (elapsedTime > RobotParams.Game.ENDGAME_DEADLINE)
+                    if (elapsedTime > RobotParams.Game.ENDGAME_THRESHOLD)
                     {
                         if (driverRumble != null)
                         {
@@ -269,10 +269,10 @@ public class FtcTeleOp extends FtcOpMode
         {
             robot.globalTracer.traceInfo(moduleName, "driveOrientation=" + orientation);
             robot.robotBase.driveBase.setDriveOrientation(orientation, false);
-            if (orientation == TrcDriveBase.DriveOrientation.FIELD)
+            if (orientation == TrcDriveBase.DriveOrientation.Field)
             {
                 robot.robotBase.driveBase.setFieldForwardHeading(
-                    Dashboard.DashboardParams.alliance == FtcAuto.Alliance.RED_ALLIANCE? 0.0: 180.0);
+                    Dashboard.DashboardParams.alliance == FtcAuto.Alliance.Red? 0.0: 180.0);
             }
             if (robot.ledIndicator != null)
             {
@@ -393,8 +393,8 @@ public class FtcTeleOp extends FtcOpMode
                 if (operatorAltFunc && pressed)
                 {
                     Dashboard.DashboardParams.alliance =
-                        Dashboard.DashboardParams.alliance == FtcAuto.Alliance.BLUE_ALLIANCE?
-                            FtcAuto.Alliance.RED_ALLIANCE: FtcAuto.Alliance.BLUE_ALLIANCE;
+                        Dashboard.DashboardParams.alliance == FtcAuto.Alliance.Blue?
+                            FtcAuto.Alliance.Red: FtcAuto.Alliance.Blue;
                 }
                 break;
         }
@@ -426,15 +426,15 @@ public class FtcTeleOp extends FtcOpMode
             else if (robot.robotBase.driveBase.supportsHolonomicDrive())
             {
                 // Toggle between field or robot oriented driving, only applicable for holonomic drive base.
-                if (robot.robotBase.driveBase.getDriveOrientation() != TrcDriveBase.DriveOrientation.FIELD)
+                if (robot.robotBase.driveBase.getDriveOrientation() != TrcDriveBase.DriveOrientation.Field)
                 {
                     robot.globalTracer.traceInfo(moduleName, ">>>>> Enabling FIELD mode.");
-                    setDriveOrientation(TrcDriveBase.DriveOrientation.FIELD);
+                    setDriveOrientation(TrcDriveBase.DriveOrientation.Field);
                 }
                 else
                 {
                     robot.globalTracer.traceInfo(moduleName, ">>>>> Enabling ROBOT mode.");
-                    setDriveOrientation(TrcDriveBase.DriveOrientation.ROBOT);
+                    setDriveOrientation(TrcDriveBase.DriveOrientation.Robot);
                 }
             }
         }
@@ -494,7 +494,7 @@ public class FtcTeleOp extends FtcOpMode
                     // Webcam AprilTag vision is not enable, enable Limelight AprilTag pipeline instead.
                     // Note: we assume pipeline 0 is the AprilTag pipeline.
                     savedLimelightPipeline = robot.vision.limelightVision.getPipeline();
-                    robot.vision.setLimelightVisionEnabled(Vision.LimelightPipelineType.APRIL_TAG, true);
+                    robot.vision.setLimelightVisionEnabled(Vision.LimelightPipelineType.AprilTag, true);
                 }
             }
 

@@ -129,7 +129,7 @@ public class FtcTest extends FtcTeleOp
         // We are tuning subsystems, update Dashboard with the parameters from each subsystem.
         if (testChoices.test == Test.SUBSYSTEMS_TEST)
         {
-            TrcSubsystem.updateSubsystemParamsToDashboard();
+            TrcSubsystem.updateSubsystemParamsToDashboard(Dashboard.DashboardParams.tuneSubsystemName);
         }
     }   //robotInit
 
@@ -193,7 +193,7 @@ public class FtcTest extends FtcTeleOp
                     robot.robotBase.purePursuitDrive.start(
                         true, Dashboard.Subsystem_Drivebase.driveBaseParams.profiledMaxDriveVelocity,
                         Dashboard.Subsystem_Drivebase.driveBaseParams.profiledMaxDriveAcceleration,
-                        Dashboard.Subsystem_Drivebase.driveBaseParams.profiledMaxDriveDeceleration,
+                        Dashboard.Subsystem_Drivebase.driveBaseParams.profiledMaxDriveDeceleration, null,
                         new TrcPose2D(Dashboard.Subsystem_Drivebase.driveBaseParams.xDriveTarget*12.0,
                                       Dashboard.Subsystem_Drivebase.driveBaseParams.yDriveTarget*12.0,
                                       Dashboard.Subsystem_Drivebase.driveBaseParams.turnTarget));
@@ -215,7 +215,7 @@ public class FtcTest extends FtcTeleOp
             case VISION_TEST:
                 if (robot.vision != null)
                 {
-                    if (robot.vision.webcamAprilTagVision != null)
+                    if (robot.vision.frontCamAprilTagVision != null)
                     {
                         robot.globalTracer.traceInfo(moduleName, "Enabling AprilTagVision for Webcam.");
                         robot.vision.setWebcamAprilTagVisionEnabled(true);
@@ -224,10 +224,10 @@ public class FtcTest extends FtcTeleOp
                     if (robot.vision.limelightVision != null)
                     {
                         robot.globalTracer.traceInfo(moduleName, "Enabling AprilTagVision for Limelight.");
-                        robot.vision.setLimelightVisionEnabled(Vision.LimelightPipelineType.APRIL_TAG, true);
+                        robot.vision.setLimelightVisionEnabled(Vision.LimelightPipelineType.AprilTag, true);
                     }
 
-                    if (robot.vision.colorBlobVision != null)
+                    if (robot.vision.backCamColorBlobVision != null)
                     {
                         robot.globalTracer.traceInfo(moduleName, "Enabling ColorBlobVision.");
                         robot.vision.setColorBlobVisionEnabled(Vision.ColorBlobType.Any, true);
@@ -289,7 +289,7 @@ public class FtcTest extends FtcTeleOp
                 if (robot.robotBase != null)
                 {
                     double currTime = TrcTimer.getCurrentTime();
-                    TrcPose2D velPose = robot.robotBase.driveBase.getFieldVelocity();
+                    TrcPose2D velPose = robot.robotBase.driveBase.getRobotVelocity();
                     double velocity = TrcUtil.magnitude(velPose.x, velPose.y);
                     double acceleration = 0.0;
                     double deceleration = 0.0;
@@ -549,12 +549,12 @@ public class FtcTest extends FtcTeleOp
                 {
                     if (pressed)
                     {
-                        if (robot.vision.colorBlobVision != null)
+                        if (robot.vision.backCamColorBlobVision != null)
                         {
                             // Set display to next intermediate Mat in the pipeline.
                             if (robot.vision.isColorBlobVisionEnabled(Vision.ColorBlobType.Any))
                             {
-                                robot.vision.colorBlobVision.getVisionProcessor().getPipeline().setNextVideoOutput();
+                                robot.vision.backCamColorBlobVision.getVisionProcessor().getPipeline().setNextVideoOutput();
                             }
                         }
                         else if (robot.vision.isLimelightVisionEnabled())
@@ -631,7 +631,7 @@ public class FtcTest extends FtcTeleOp
                     passToTeleOp = false;
                 }
                 else if (testChoices.test == Test.VISION_TEST && robot.vision != null &&
-                         robot.vision.colorBlobVision != null)
+                         robot.vision.backCamColorBlobVision != null)
                 {
                     if (pressed)
                     {
@@ -686,6 +686,7 @@ public class FtcTest extends FtcTeleOp
                                     Dashboard.Subsystem_Drivebase.driveBaseParams.profiledMaxDriveVelocity,
                                     Dashboard.Subsystem_Drivebase.driveBaseParams.profiledMaxDriveAcceleration,
                                     Dashboard.Subsystem_Drivebase.driveBaseParams.profiledMaxDriveDeceleration,
+                                    null,
                                     tuneDriveAtEndPoint ? tuneDriveStartPoint : tuneDriveEndPoint);
                             }
                             else if (robot.robotBase.pidDrive != null)
@@ -711,7 +712,7 @@ public class FtcTest extends FtcTeleOp
                         if (pressed)
                         {
                             robot.robotBase.driveBase.resetOdometry();
-                            ((CmdPidDrive) testCommand).start(
+                            ((CmdPidDrive) testCommand).startPath(
                                 0.0, Dashboard.Subsystem_Drivebase.driveBaseParams.yDrivePowerLimit, null,
                                 new TrcPose2D(
                                     Dashboard.Subsystem_Drivebase.driveBaseParams.xDriveTarget*12.0,
@@ -724,7 +725,7 @@ public class FtcTest extends FtcTeleOp
                 {
                     if (pressed)
                     {
-                        TrcSubsystem.updateSubsystemParamsFromDashboard();
+                        TrcSubsystem.updateSubsystemParamsFromDashboard(Dashboard.DashboardParams.tuneSubsystemName);
                     }
                     passToTeleOp = false;
                 }

@@ -47,7 +47,8 @@ import trclib.subsystem.TrcSubsystem;
  */
 public class DriveBase extends TrcSubsystem
 {
-    private static final String moduleName = DriveBase.class.getSimpleName();
+    private static final String SUBSYSTEM_NAME = "DriveBase";
+    private static final boolean NEED_ZERO_CAL = false;
 
     /**
      * When the season starts, the competition robot may not be ready for programmers. It's crucial to save time by
@@ -56,112 +57,15 @@ public class DriveBase extends TrcSubsystem
      */
     public enum RobotType
     {
-        // This is useful for developing Vision code where all you need is a Robot Controller and camera.
-        VisionOnly,
-        // Generic Differential Drive Base Robot
-        DifferentialRobot,
+        // Generic Swerve Drive Base Robot
+        SwerveRobot,
         // Generic Mecanum Drive Base Robot
         MecanumRobot,
-        // Generic Swerve Drive Base Robot
-        SwerveRobot
+        // Generic Differential Drive Base Robot
+        DifferentialRobot,
+        // This is useful for developing Vision code where all you need is a Robot Controller and camera.
+        VisionOnly
     }   //enum RobotType
-
-    /**
-     * This class contains the VisionOnly Parameters. This is for tuning vision with only the Control Hub and no
-     * robot.
-     */
-    public static class VisionOnlyInfo extends FtcRobotBase.RobotInfo
-    {
-        public VisionOnlyInfo()
-        {
-            this.setRobotInfo("VisionOnly")
-                .setVisionInfo(Vision.frontCamParams, Vision.backCamParams, Vision.limelightParams);
-        }   //VisionOnlyInfo
-    }   //class VisionOnlyInfo
-
-    /**
-     * This class contains the Differential Robot Parameters.
-     */
-    public static class DifferentialRobotInfo extends FtcRobotBase.RobotInfo
-    {
-        private static final TrcPidController.PidCoefficients drivePidCoeffs =
-            new TrcPidController.PidCoefficients(0.035, 0.0, 0.0, 0.0, 0.0);
-        private static final TrcPidController.PidCoefficients turnPidCoeffs =
-            new TrcPidController.PidCoefficients(0.018, 0.0, 0.0, 0.0, 0.0);
-        private static final TrcPidController.PidCoefficients velPidCoeffs =
-            new TrcPidController.PidCoefficients(0.0, 0.0, 0.0, 0.0125, 0.0);
-
-        public static TrcDriveBase.BaseParams baseParams = new TrcDriveBase.BaseParams()
-            .setPidTolerances(2.0, 2.0)
-            .setYPidParams(drivePidCoeffs, 0.5)
-            .setTurnPidParams(turnPidCoeffs, 0.25)
-            .setVelocityPidParams(velPidCoeffs)
-            .setDriveCharacteristics(30.0, 150.0, 150.0,  15.0);
-
-        public DifferentialRobotInfo()
-        {
-            this.setBaseParams(baseParams)
-                .setRobotInfo(
-                    RobotType.MecanumRobot.toString(), RobotParams.Robot.ROBOT_LENGTH, RobotParams.Robot.ROBOT_WIDTH,
-                    336.0*TrcUtil.INCHES_PER_MM, 336.0*TrcUtil.INCHES_PER_MM)
-                .setIMUInfo(
-                    "imu",
-                    RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                    RevHubOrientationOnRobot.UsbFacingDirection.FORWARD)
-                .setDriveMotorInfo(
-                    FtcMotorActuator.MotorType.DcMotor,
-                    new String[] {"flDriveMotor", "frDriveMotor"},
-                    new boolean[] {true, false})
-                .setMotorOdometry(0.02166184604662450653409090909091)
-                .setPidStallDetectionEnabled(true)
-                .setPidDriveParams(false)
-                .setPurePursuitDriveParams(6.0, true, false);
-        }   //DifferentialRobotInfo
-    }   //class DifferentialRobotInfo
-
-    /**
-     * This class contains the Mecanum Drive Base Parameters.
-     */
-    public static class MecanumRobotInfo extends FtcRobotBase.RobotInfo
-    {
-        private static final TrcPidController.PidCoefficients xDrivePidCoeffs =
-            new TrcPidController.PidCoefficients(0.06, 0.0, 0.0001, 0.0, 0.0);
-        private static final TrcPidController.PidCoefficients yDrivePidCoeffs =
-            new TrcPidController.PidCoefficients(0.025, 0.02, 0.003, 0.0, 5.0);
-        private static final TrcPidController.PidCoefficients turnPidCoeffs =
-            new TrcPidController.PidCoefficients(0.04, 0.0, 0.002, 0.0, 0.0);
-        private static final TrcPidController.PidCoefficients velPidCoeffs =
-            new TrcPidController.PidCoefficients(0.0, 0.0, 0.0, 0.0, 0.0);
-
-        public static TrcDriveBase.BaseParams baseParams = new TrcDriveBase.BaseParams()
-            .setPidTolerances(2.0, 2.0)
-            .setXPidParams(xDrivePidCoeffs, 1.0)
-            .setYPidParams(yDrivePidCoeffs, 1.0)
-            .setTurnPidParams(turnPidCoeffs, 0.5)
-            .setVelocityPidParams(velPidCoeffs)
-            .setDriveCharacteristics(30.0, 150.0, 150.0,  15.0);
-
-        public MecanumRobotInfo()
-        {
-            this.setBaseParams(baseParams)
-                .setRobotInfo(
-                    RobotType.MecanumRobot.toString(), RobotParams.Robot.ROBOT_LENGTH, RobotParams.Robot.ROBOT_WIDTH,
-                    336.0*TrcUtil.INCHES_PER_MM, 336.0*TrcUtil.INCHES_PER_MM)
-                .setDriveMotorInfo(
-                    FtcMotorActuator.MotorType.DcMotor,
-                    new String[] {"flDriveMotor", "frDriveMotor", "blDriveMotor", "brDriveMotor"},
-                    new boolean[] {true, false, true, false})
-                .setPinpointOdometry(
-                    "pinpointOdo", 0.0, -24.0 * 8, GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD,
-                    true, true, -180.0, 180.0)
-                .setPidStallDetectionEnabled(true)
-                .setPidDriveParams(false)
-                .setPurePursuitDriveParams(6.0, true, false)
-                .setVisionInfo(Vision.frontCamParams, null, Vision.limelightParams)
-                .setIndicators(
-                    LEDIndicator.STATUS_LED_NAME, LEDIndicator.COLOR_BLOB_LED_NAME);
-        }   //MecanumRobotInfo
-    }   //class MecanumRobotInfo
 
     /**
      * This class contains the Swerve Drive Base Parameters.
@@ -183,7 +87,7 @@ public class DriveBase extends TrcSubsystem
             .setYPidParams(drivePidCoeffs, 0.5)
             .setTurnPidParams(turnPidCoeffs, 0.25)
             .setVelocityPidParams(velPidCoeffs)
-            .setDriveCharacteristics(30.0, 150.0, 150.0,  15.0);
+            .setMotionProfileParams(30.0, 150.0, 150.0);
         public static TrcSwerveDrive.SwerveParams swerveParams = new TrcSwerveDrive.SwerveParams()
             .setSteerMotorPidParams(
                 new TrcMotor.PidParams()
@@ -194,26 +98,26 @@ public class DriveBase extends TrcSubsystem
         {
             this.setBaseParams(baseParams)
                 .setRobotInfo(
-                    RobotType.SwerveRobot.toString(), RobotParams.Robot.ROBOT_LENGTH, RobotParams.Robot.ROBOT_WIDTH,
+                    RobotType.SwerveRobot.toString(), RobotParams.Robot.ROBOT_WIDTH, RobotParams.Robot.ROBOT_LENGTH,
                     336.0*TrcUtil.INCHES_PER_MM, 336.0*TrcUtil.INCHES_PER_MM)
                 .setDriveMotorInfo(
                     FtcMotorActuator.MotorType.DcMotor,
                     new String[] {"flDriveMotor", "frDriveMotor", "blDriveMotor", "brDriveMotor"},
                     new boolean[] {true, false, true, false})
-                .setPinpointOdometry(
-                    "pinpointOdo", 0.0, -24.0 * 8, GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD,
-                    true, false, -180.0, 180.0)
-                .setPidStallDetectionEnabled(true)
-                .setPidDriveParams(false)
-                .setPurePursuitDriveParams(6.0, true, false)
-                .setVisionInfo(Vision.frontCamParams, null, Vision.limelightParams)
-                .setIndicators(LEDIndicator.STATUS_LED_NAME, LEDIndicator.COLOR_BLOB_LED_NAME);
+                    .setPinpointOdometry(
+                        "pinpointOdo", 0.0, -24.0 * 8, GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD,
+                        true, false, -180.0, 180.0)
+                    .setPidStallDetectionEnabled(true)
+                    .setPidDriveParams(false)
+                    .setPurePursuitDriveParams(6.0, true, false)
+                    .setVisionInfo(Vision.frontCamInfo, null, Vision.limelightInfo)
+                    .setIndicators(LEDIndicator.STATUS_LED_NAME, LEDIndicator.COLOR_BLOB_LED_NAME);
             this.setSwerveParams(swerveParams)
                 .setSteerEncoderInfo(
                     new String[] {"flSteerEncoder", "frSteerEncoder", "blSteerEncoder", "brSteerEncoder"},
                     new boolean[] {false, false, false, false},
                     new double[] {0.7333581066135926, 0.244980314089807, 0.1889143994691428, 0.49038870456389433},
-                    RobotParams.Robot.STEER_ZERO_CAL_FILE)
+                    RobotParams.Robot.steerZeroCalFile)
                 .setSteerMotorInfo(
                     FtcMotorActuator.MotorType.CRServo,
                     new String[] {"flSteerServo", "frSteerServo", "blSteerServo", "brSteerServo"},
@@ -221,6 +125,103 @@ public class DriveBase extends TrcSubsystem
                 .setSwerveModuleNames(new String[] {"flWheel", "frWheel", "blWheel", "brWheel"});
         }   //SwerveRobotInfo
     }   //class SwerveRobotInfo
+
+    /**
+     * This class contains the Mecanum Drive Base Parameters.
+     */
+    public static class MecanumRobotInfo extends FtcRobotBase.RobotInfo
+    {
+        private static final TrcPidController.PidCoefficients xDrivePidCoeffs =
+            new TrcPidController.PidCoefficients(0.06, 0.0, 0.0001, 0.0, 0.0);
+        private static final TrcPidController.PidCoefficients yDrivePidCoeffs =
+            new TrcPidController.PidCoefficients(0.025, 0.02, 0.003, 0.0, 5.0);
+        private static final TrcPidController.PidCoefficients turnPidCoeffs =
+            new TrcPidController.PidCoefficients(0.04, 0.0, 0.002, 0.0, 0.0);
+        private static final TrcPidController.PidCoefficients velPidCoeffs =
+            new TrcPidController.PidCoefficients(0.0, 0.0, 0.0, 0.0, 0.0);
+
+        public static TrcDriveBase.BaseParams baseParams = new TrcDriveBase.BaseParams()
+            .setPidTolerances(2.0, 2.0)
+            .setXPidParams(xDrivePidCoeffs, 1.0)
+            .setYPidParams(yDrivePidCoeffs, 1.0)
+            .setTurnPidParams(turnPidCoeffs, 0.5)
+            .setVelocityPidParams(velPidCoeffs)
+            .setMotionProfileParams(30.0, 150.0, 150.0);
+
+        public MecanumRobotInfo()
+        {
+            this.setBaseParams(baseParams)
+                .setRobotInfo(
+                    RobotType.MecanumRobot.toString(), RobotParams.Robot.ROBOT_WIDTH, RobotParams.Robot.ROBOT_LENGTH,
+                    336.0*TrcUtil.INCHES_PER_MM, 336.0*TrcUtil.INCHES_PER_MM)
+                .setDriveMotorInfo(
+                    FtcMotorActuator.MotorType.DcMotor,
+                    new String[] {"flDriveMotor", "frDriveMotor", "blDriveMotor", "brDriveMotor"},
+                    new boolean[] {true, false, true, false})
+                .setPinpointOdometry(
+                    "pinpointOdo", 0.0, -24.0 * 8, GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD,
+                    true, true, -180.0, 180.0)
+                .setPidStallDetectionEnabled(true)
+                .setPidDriveParams(false)
+                .setPurePursuitDriveParams(6.0, true, false)
+                .setVisionInfo(Vision.frontCamInfo, null, Vision.limelightInfo)
+                .setIndicators(
+                    LEDIndicator.STATUS_LED_NAME, LEDIndicator.COLOR_BLOB_LED_NAME);
+        }   //MecanumRobotInfo
+    }   //class MecanumRobotInfo
+
+    /**
+     * This class contains the Differential Robot Parameters.
+     */
+    public static class DifferentialRobotInfo extends FtcRobotBase.RobotInfo
+    {
+        private static final TrcPidController.PidCoefficients drivePidCoeffs =
+            new TrcPidController.PidCoefficients(0.035, 0.0, 0.0, 0.0, 0.0);
+        private static final TrcPidController.PidCoefficients turnPidCoeffs =
+            new TrcPidController.PidCoefficients(0.018, 0.0, 0.0, 0.0, 0.0);
+        private static final TrcPidController.PidCoefficients velPidCoeffs =
+            new TrcPidController.PidCoefficients(0.0, 0.0, 0.0, 0.0125, 0.0);
+
+        public static TrcDriveBase.BaseParams baseParams = new TrcDriveBase.BaseParams()
+            .setPidTolerances(2.0, 2.0)
+            .setYPidParams(drivePidCoeffs, 0.5)
+            .setTurnPidParams(turnPidCoeffs, 0.25)
+            .setVelocityPidParams(velPidCoeffs)
+            .setMotionProfileParams(30.0, 150.0, 150.0);
+
+        public DifferentialRobotInfo()
+        {
+            this.setBaseParams(baseParams)
+                .setRobotInfo(
+                    RobotType.DifferentialRobot.toString(), RobotParams.Robot.ROBOT_WIDTH, RobotParams.Robot.ROBOT_LENGTH,
+                    336.0*TrcUtil.INCHES_PER_MM, 336.0*TrcUtil.INCHES_PER_MM)
+                .setIMUInfo(
+                    "imu",
+                    RevHubOrientationOnRobot.LogoFacingDirection.UP,
+                    RevHubOrientationOnRobot.UsbFacingDirection.FORWARD)
+                .setDriveMotorInfo(
+                    FtcMotorActuator.MotorType.DcMotor,
+                    new String[] {"flDriveMotor", "frDriveMotor"},
+                    new boolean[] {true, false})
+                .setMotorOdometry(0.02166184604662450653409090909091)
+                .setPidStallDetectionEnabled(true)
+                .setPidDriveParams(false)
+                .setPurePursuitDriveParams(6.0, true, false);
+        }   //DifferentialRobotInfo
+    }   //class DifferentialRobotInfo
+
+    /**
+     * This class contains the VisionOnly Parameters. This is for tuning vision with only the Control Hub and no
+     * robot.
+     */
+    public static class VisionOnlyInfo extends FtcRobotBase.RobotInfo
+    {
+        public VisionOnlyInfo()
+        {
+            this.setRobotInfo(RobotType.VisionOnly.toString())
+                .setVisionInfo(Vision.frontCamInfo, Vision.backCamInfo, Vision.limelightInfo);
+        }   //VisionOnlyInfo
+    }   //class VisionOnlyInfo
 
     private final FtcDashboard dashboard;
     private final FtcRobotBase.RobotInfo robotInfo;
@@ -231,18 +232,13 @@ public class DriveBase extends TrcSubsystem
      */
     public DriveBase()
     {
-        super(RobotParams.Preferences.robotType.toString(), false);
+        super(SUBSYSTEM_NAME, NEED_ZERO_CAL);
         dashboard = FtcDashboard.getInstance();
         switch (RobotParams.Preferences.robotType)
         {
-            case VisionOnly:
-                robotInfo = new VisionOnlyInfo();
-                robotBase = null;
-                break;
-
-            case DifferentialRobot:
-                robotInfo = new DifferentialRobotInfo();
-                robotBase = RobotParams.Preferences.useDriveBase? new FtcDifferentialBase(robotInfo): null;
+            case SwerveRobot:
+                robotInfo = new SwerveRobotInfo();
+                robotBase = RobotParams.Preferences.useDriveBase? new FtcSwerveBase((SwerveRobotInfo) robotInfo): null;
                 break;
 
             case MecanumRobot:
@@ -250,9 +246,14 @@ public class DriveBase extends TrcSubsystem
                 robotBase = RobotParams.Preferences.useDriveBase? new FtcMecanumBase(robotInfo): null;
                 break;
 
-            case SwerveRobot:
-                robotInfo = new SwerveRobotInfo();
-                robotBase = RobotParams.Preferences.useDriveBase? new FtcSwerveBase((SwerveRobotInfo) robotInfo): null;
+            case DifferentialRobot:
+                robotInfo = new DifferentialRobotInfo();
+                robotBase = RobotParams.Preferences.useDriveBase? new FtcDifferentialBase(robotInfo): null;
+                break;
+
+            case VisionOnly:
+                robotInfo = new VisionOnlyInfo();
+                robotBase = null;
                 break;
 
             default:
@@ -320,6 +321,15 @@ public class DriveBase extends TrcSubsystem
     }   //resetState
 
     /**
+     * This method publishes the FRC NetworkTable entries for the subsystem to the Dashboard.
+     * Not applicable for FTC.
+     */
+    @Override
+    public void publishToDashboard()
+    {
+    }   //pubishToDashboard
+
+    /**
      * This method update the dashboard with the subsystem status.
      *
      * @param lineNum specifies the starting line number to print the subsystem status.
@@ -334,58 +344,55 @@ public class DriveBase extends TrcSubsystem
             return lineNum;
         }
 
-        if (RobotParams.Preferences.showDriveBaseStatus)
+        if (slowLoop && RobotParams.Preferences.showDriveBaseStatus)
         {
-            if (slowLoop)
+            dashboard.displayPrintf(lineNum++, "Robot: %s", robotBase.driveBase.getFieldPosition());
+            dashboard.displayPrintf(
+                lineNum++, "DriveEnc: fl=%.0f,fr=%.0f,bl=%.0f,br=%.0f",
+                robotBase.driveMotors[FtcRobotBase.INDEX_FRONT_LEFT].getPosition(),
+                robotBase.driveMotors[FtcRobotBase.INDEX_FRONT_RIGHT].getPosition(),
+                robotBase.driveMotors[FtcRobotBase.INDEX_BACK_LEFT].getPosition(),
+                robotBase.driveMotors[FtcRobotBase.INDEX_BACK_RIGHT].getPosition());
+
+            if (robotBase instanceof FtcSwerveBase)
             {
-                dashboard.displayPrintf(lineNum++, "Robot: %s", robotBase.driveBase.getFieldPosition());
+                FtcSwerveBase swerveDrive = (FtcSwerveBase) robotBase;
                 dashboard.displayPrintf(
-                    lineNum++, "DriveEnc: fl=%.0f,fr=%.0f,bl=%.0f,br=%.0f",
-                    robotBase.driveMotors[FtcRobotBase.INDEX_FRONT_LEFT].getPosition(),
-                    robotBase.driveMotors[FtcRobotBase.INDEX_FRONT_RIGHT].getPosition(),
-                    robotBase.driveMotors[FtcRobotBase.INDEX_BACK_LEFT].getPosition(),
-                    robotBase.driveMotors[FtcRobotBase.INDEX_BACK_RIGHT].getPosition());
+                    lineNum++, "SteerEnc: fl=%.2f, fr=%.2f, bl=%.2f, br=%.2f",
+                    swerveDrive.steerEncoders[FtcRobotBase.INDEX_FRONT_LEFT].getScaledPosition(),
+                    swerveDrive.steerEncoders[FtcRobotBase.INDEX_FRONT_RIGHT].getScaledPosition(),
+                    swerveDrive.steerEncoders[FtcRobotBase.INDEX_BACK_LEFT].getScaledPosition(),
+                    swerveDrive.steerEncoders[FtcRobotBase.INDEX_BACK_RIGHT].getScaledPosition());
+                dashboard.displayPrintf(
+                    lineNum++, "SteerRaw: fl=%.2f, fr=%.2f, bl=%.2f, br=%.2f",
+                    swerveDrive.steerEncoders[FtcRobotBase.INDEX_FRONT_LEFT].getRawPosition(),
+                    swerveDrive.steerEncoders[FtcRobotBase.INDEX_FRONT_RIGHT].getRawPosition(),
+                    swerveDrive.steerEncoders[FtcRobotBase.INDEX_BACK_LEFT].getRawPosition(),
+                    swerveDrive.steerEncoders[FtcRobotBase.INDEX_BACK_RIGHT].getRawPosition());
+            }
 
-                if (robotBase instanceof FtcSwerveBase)
-                {
-                    FtcSwerveBase swerveDrive = (FtcSwerveBase) robotBase;
-                    dashboard.displayPrintf(
-                        lineNum++, "SteerEnc: fl=%.2f, fr=%.2f, bl=%.2f, br=%.2f",
-                        swerveDrive.steerEncoders[FtcRobotBase.INDEX_FRONT_LEFT].getScaledPosition(),
-                        swerveDrive.steerEncoders[FtcRobotBase.INDEX_FRONT_RIGHT].getScaledPosition(),
-                        swerveDrive.steerEncoders[FtcRobotBase.INDEX_BACK_LEFT].getScaledPosition(),
-                        swerveDrive.steerEncoders[FtcRobotBase.INDEX_BACK_RIGHT].getScaledPosition());
-                    dashboard.displayPrintf(
-                        lineNum++, "SteerRaw: fl=%.2f, fr=%.2f, bl=%.2f, br=%.2f",
-                        swerveDrive.steerEncoders[FtcRobotBase.INDEX_FRONT_LEFT].getRawPosition(),
-                        swerveDrive.steerEncoders[FtcRobotBase.INDEX_FRONT_RIGHT].getRawPosition(),
-                        swerveDrive.steerEncoders[FtcRobotBase.INDEX_BACK_LEFT].getRawPosition(),
-                        swerveDrive.steerEncoders[FtcRobotBase.INDEX_BACK_RIGHT].getRawPosition());
-                }
+            if (robotBase.gyro != null)
+            {
+                dashboard.displayPrintf(
+                    lineNum++, "Gyro(x,y,z): Heading=(%.1f,%.1f,%.1f), Rate=(%.3f,%.3f,%.3f)",
+                    robotBase.gyro.getXHeading().value, robotBase.gyro.getYHeading().value,
+                    robotBase.gyro.getZHeading().value, robotBase.gyro.getXRotationRate().value,
+                    robotBase.gyro.getYRotationRate().value,
+                    robotBase.gyro.getZRotationRate().value);
+            }
 
-                if (robotBase.gyro != null)
+            if (RobotParams.Preferences.showPidDrive)
+            {
+                TrcPidController xPidCtrl = robotBase.pidDrive.getXPidCtrl();
+                if (xPidCtrl != null)
                 {
-                    dashboard.displayPrintf(
-                        lineNum++, "Gyro(x,y,z): Heading=(%.1f,%.1f,%.1f), Rate=(%.3f,%.3f,%.3f)",
-                        robotBase.gyro.getXHeading().value, robotBase.gyro.getYHeading().value,
-                        robotBase.gyro.getZHeading().value, robotBase.gyro.getXRotationRate().value,
-                        robotBase.gyro.getYRotationRate().value,
-                        robotBase.gyro.getZRotationRate().value);
-                }
-
-                if (RobotParams.Preferences.showPidDrive)
-                {
-                    TrcPidController xPidCtrl = robotBase.pidDrive.getXPidCtrl();
-                    if (xPidCtrl != null)
-                    {
-                        xPidCtrl.displayPidInfo(lineNum);
-                        lineNum += 2;
-                    }
-                    robotBase.pidDrive.getYPidCtrl().displayPidInfo(lineNum);
-                    lineNum += 2;
-                    robotBase.pidDrive.getTurnPidCtrl().displayPidInfo(lineNum);
+                    xPidCtrl.displayPidInfo(lineNum);
                     lineNum += 2;
                 }
+                robotBase.pidDrive.getYPidCtrl().displayPidInfo(lineNum);
+                lineNum += 2;
+                robotBase.pidDrive.getTurnPidCtrl().displayPidInfo(lineNum);
+                lineNum += 2;
             }
         }
 
@@ -417,18 +424,46 @@ public class DriveBase extends TrcSubsystem
 
     /**
      * This method is called to update subsystem parameter to the Dashboard.
+     *
+     * @param subsystemName specifies the name of the subsystem to be updated.
      */
     @Override
-    public void updateParamsToDashboard()
+    public void updateParamsToDashboard(String subsystemName)
     {
+        // DriveBase doesn't support tuning.
     }   //updateParamsToDashboard
 
     /**
      * This method is called to update subsystem parameters from the Dashboard.
+     *
+     * @param subsystemName specifies the name of the subsystem to be updated.
      */
     @Override
-    public void updateParamsFromDashboard()
+    public void updateParamsFromDashboard(String subsystemName)
     {
+        // DriveBase doesn't support tuning.
     }   //updateParamsFromDashboard
+
+    /**
+     * This method is called to set the next tune target up from the current target.
+     *
+     * @param subsystemName specifies the name of the subsystem to update its tune target.
+     */
+    @Override
+    public void setNextTuneTargetUp(String subsystemName)
+    {
+        // DriveBase doesn't support tuning.
+    }   //setNextTuneTargetUp
+
+    /**
+     * This method is called to set the next tune target down from the current target.
+     *
+     * @param subsystemName specifies the name of the subsystem to update its tune target.
+     */
+    @Override
+    public void setNextTuneTargetDown(String subsystemName)
+    {
+        // DriveBase doesn't support tuning.
+    }   //setNextTuneTargetDown
 
 }   //class DriveBase
