@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Titan Robotics Club (http://www.titanrobotics.com)
+ * Copyright (c) 2026 Titan Robotics Club (http://www.titanrobotics.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -53,11 +53,12 @@ public class TaskAuto extends TrcAutoTask<TaskAuto.State>
         @NonNull
         public String toString()
         {
-            return "";
+            return "()";
         }   //toString
     }   //class TaskParams
 
     private final Robot robot;
+    private TaskParams taskParams = null;
 
     /**
      * Constructor: Create an instance of the object.
@@ -78,11 +79,11 @@ public class TaskAuto extends TrcAutoTask<TaskAuto.State>
      */
     public void autoAssist(String owner, TrcEvent completionEvent)
     {
-        TaskParams taskParams = new TaskParams();
+        taskParams = new TaskParams();
         tracer.traceInfo(
             moduleName,
-            "autoAssist(owner=" + owner + ", event=" + completionEvent + ", taskParams=(" + taskParams + "))");
-        startAutoTask(owner, State.START, taskParams, completionEvent);
+            "autoAssist(owner=" + owner + ", event=" + completionEvent + ", taskParams=" + taskParams + ")");
+        startAutoTask(owner, State.START, completionEvent);
     }   //autoAssist
 
     //
@@ -104,7 +105,7 @@ public class TaskAuto extends TrcAutoTask<TaskAuto.State>
         // For example:
         // return owner == null ||
         //        subsystem1.acquireExclusiveAccess(owner) && subsystem2.acquireExclusiveAccess(owner);
-        return owner == null || robot.robotDrive.driveBase.acquireExclusiveAccess(owner);
+        return owner == null || robot.robotBase.driveBase.acquireExclusiveAccess(owner);
     }   //acquireSubsystemsOwnership
 
     /**
@@ -122,8 +123,8 @@ public class TaskAuto extends TrcAutoTask<TaskAuto.State>
             tracer.traceInfo(
                 moduleName,
                 "Releasing subsystem ownership on behalf of " + owner +
-                "\n\trobotDrive=" + ownershipMgr.getOwner(robot.robotDrive.driveBase));
-            robot.robotDrive.driveBase.releaseExclusiveAccess(owner);
+                "\n\trobotDrive=" + ownershipMgr.getOwner(robot.robotBase.driveBase));
+            robot.robotBase.driveBase.releaseExclusiveAccess(owner);
         }
     }   //releaseSubsystemsOwnership
 
@@ -137,14 +138,13 @@ public class TaskAuto extends TrcAutoTask<TaskAuto.State>
     protected void stopSubsystems(String owner)
     {
         tracer.traceInfo(moduleName, "Stopping subsystems.");
-        robot.robotDrive.cancel(owner);
+        robot.robotBase.cancel(owner);
     }   //stopSubsystems
 
     /**
      * This methods is called periodically to run the auto-assist task.
      *
      * @param owner specifies the owner that acquired the subsystem ownerships.
-     * @param params specifies the task parameters.
      * @param state specifies the current state of the task.
      * @param taskType specifies the type of task being run.
      * @param runMode specifies the competition mode (e.g. Autonomous, TeleOp, Test).
@@ -153,11 +153,8 @@ public class TaskAuto extends TrcAutoTask<TaskAuto.State>
      */
     @Override
     protected void runTaskState(
-        String owner, Object params, State state, TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode,
-        boolean slowPeriodicLoop)
+        String owner, State state, TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode, boolean slowPeriodicLoop)
     {
-        TaskParams taskParams = (TaskParams) params;
-
         switch (state)
         {
             case START:

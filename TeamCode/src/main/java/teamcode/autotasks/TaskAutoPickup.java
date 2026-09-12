@@ -24,8 +24,11 @@ package teamcode.autotasks;
 
 import androidx.annotation.NonNull;
 
+import ftclib.vision.FtcLimelightVision;
+import teamcode.FtcAuto;
 import teamcode.Robot;
-import teamcode.subsystems.LEDIndicator;
+import teamcode.indicators.LEDIndicator;
+import teamcode.vision.Vision;
 import trclib.pathdrive.TrcPose2D;
 import trclib.robotcore.TrcAutoTask;
 import trclib.robotcore.TrcEvent;
@@ -33,7 +36,6 @@ import trclib.robotcore.TrcOwnershipMgr;
 import trclib.robotcore.TrcRobot;
 import trclib.robotcore.TrcTaskMgr;
 import trclib.timer.TrcTimer;
-import trclib.vision.TrcOpenCvColorBlobPipeline;
 import trclib.vision.TrcVisionTargetInfo;
 
 /**
@@ -53,17 +55,19 @@ public class TaskAutoPickup extends TrcAutoTask<TaskAutoPickup.State>
 
     private static class TaskParams
     {
+        FtcAuto.Alliance alliance;
         boolean useVision;
 
-        TaskParams(boolean useVision)
+        TaskParams(FtcAuto.Alliance alliance, boolean useVision)
         {
+            this.alliance = alliance;
             this.useVision = useVision;
         }   //TaskParams
 
         @NonNull
         public String toString()
         {
-            return "useVision=" + useVision;
+            return "alliance=" + alliance + ", useVision=" + useVision;
         }   //toString
     }   //class TaskParams
 
@@ -71,7 +75,7 @@ public class TaskAutoPickup extends TrcAutoTask<TaskAutoPickup.State>
     private final TrcEvent pickupEvent;
     private final TrcEvent driveEvent;
 
-    private boolean useVision = false;
+    private TaskParams taskParams = null;
     private Double visionExpiredTime = null;
     private TrcPose2D objPose = null;
 
@@ -93,16 +97,16 @@ public class TaskAutoPickup extends TrcAutoTask<TaskAutoPickup.State>
      *
      * @param owner specifies the owner to acquire subsystem ownerships, can be null if not requiring ownership.
      * @param completionEvent specifies the event to signal when done, can be null if none provided.
+     * @param alliance specifies the alliance color for vision processing.
      * @param useVision specifies true to use Vision, false otherwise.
      */
-    public void autoPickup(String owner, TrcEvent completionEvent, boolean useVision)
+    public void autoPickup(String owner, TrcEvent completionEvent, FtcAuto.Alliance alliance, boolean useVision)
     {
-        TaskParams taskParams = new TaskParams(useVision);
+        taskParams = new TaskParams(alliance, useVision);
         tracer.traceInfo(
             moduleName,
             "autoPickup(owner=" + owner + ", event=" + completionEvent + ", taskParams=(" + taskParams + "))");
-        this.useVision = useVision;
-        startAutoTask(owner, State.START, taskParams, completionEvent);
+        startAutoTask(owner, State.START, completionEvent);
     }   //autoPickup
 
     //
@@ -124,9 +128,9 @@ public class TaskAutoPickup extends TrcAutoTask<TaskAutoPickup.State>
 
         if (owner != null)
         {
-            if (useVision && robot.robotDrive != null)
+            if (taskParams.useVision && robot.robotBase != null)
             {
-                success = robot.robotDrive.driveBase.acquireExclusiveAccess(owner);
+                success = robot.robotBase.driveBase.acquireExclusiveAccess(owner);
             }
 
             success &= robot.intake.acquireExclusiveAccess(owner);
@@ -151,12 +155,12 @@ public class TaskAutoPickup extends TrcAutoTask<TaskAutoPickup.State>
                 moduleName,
                 "Releasing subsystem ownership on behalf of " + owner +
                 "\n\tintake=" + ownershipMgr.getOwner(robot.intake) +
-                (useVision && robot.robotDrive != null?
-                    ("\n\tdriveBase=" + ownershipMgr.getOwner(robot.robotDrive.driveBase)): ""));
+                (taskParams.useVision && robot.robotBase != null?
+                    ("\n\tdriveBase=" + ownershipMgr.getOwner(robot.robotBase.driveBase)): ""));
             robot.intake.releaseExclusiveAccess(owner);
-            if (useVision && robot.robotDrive != null)
+            if (taskParams.useVision && robot.robotBase != null)
             {
-                robot.robotDrive.driveBase.releaseExclusiveAccess(owner);
+                robot.robotBase.driveBase.releaseExclusiveAccess(owner);
             }
         }
     }   //releaseSubsystemsOwnership
@@ -172,9 +176,9 @@ public class TaskAutoPickup extends TrcAutoTask<TaskAutoPickup.State>
     {
         tracer.traceInfo(moduleName, "Stopping subsystems.");
         robot.intake.cancel();
-        if (useVision && robot.robotDrive != null)
+        if (taskParams.useVision && robot.robotBase != null)
         {
-            robot.robotDrive.cancel();
+            robot.robotBase.cancel();
         }
     }   //stopSubsystems
 
@@ -182,7 +186,6 @@ public class TaskAutoPickup extends TrcAutoTask<TaskAutoPickup.State>
      * This methods is called periodically to run the auto-assist task.
      *
      * @param owner specifies the owner that acquired the subsystem ownerships.
-     * @param params specifies the task parameters.
      * @param state specifies the current state of the task.
      * @param taskType specifies the type of task being run.
      * @param runMode specifies the competition mode (e.g. Autonomous, TeleOp, Test).
@@ -191,11 +194,8 @@ public class TaskAutoPickup extends TrcAutoTask<TaskAutoPickup.State>
      */
     @Override
     protected void runTaskState(
-        String owner, Object params, State state, TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode,
-        boolean slowPeriodicLoop)
+        String owner, State state, TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode, boolean slowPeriodicLoop)
     {
-        TaskParams taskParams = (TaskParams) params;
-
         switch (state)
         {
             case START:
@@ -207,9 +207,10 @@ public class TaskAutoPickup extends TrcAutoTask<TaskAutoPickup.State>
                     tracer.traceInfo(moduleName, "***** Not using Vision, manual pickup.");
                     sm.setState(State.PICKUP_OBJ);
                 }
-                else if (robot.vision != null && robot.vision.redBlobVision != null)
+                else if (robot.vision != null && robot.vision.limelightVision != null)
                 {
-                    tracer.traceInfo(moduleName, "***** Using ColorBlob Vision.");
+                    tracer.traceInfo(moduleName, "***** Using Limelight ColorBlob Vision.");
+                    robot.vision.setLimelightPipeline(Vision.LimelightPipelineType.ColorBlob);
                     visionExpiredTime = null;
                     sm.setState(State.FIND_OBJ);
                 }
@@ -221,10 +222,12 @@ public class TaskAutoPickup extends TrcAutoTask<TaskAutoPickup.State>
                 break;
 
             case FIND_OBJ:
-                // Use vision to determine the appropriate AprilTag location.
-                TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject> object =
-                    robot.vision.redBlobVision.getBestDetectedTargetInfo(
-                        null, null, 0.0, robot.robotInfo.webCam1.camZOffset);
+                // Use vision to determine the appropriate object location.
+                TrcVisionTargetInfo<FtcLimelightVision.DetectedObject> object =
+                    robot.vision.getLimelightDetectedObject(
+                        FtcLimelightVision.ResultType.Python,
+                        taskParams.alliance == FtcAuto.Alliance.Red? LEDIndicator.RED_BLOB: LEDIndicator.BLUE_BLOB,
+                        null, -1);
                 if (object != null)
                 {
                     objPose = object.detectedObj.getObjectPose();
@@ -241,26 +244,26 @@ public class TaskAutoPickup extends TrcAutoTask<TaskAutoPickup.State>
                 {
                     // Timed out, moving on.
                     tracer.traceInfo(moduleName, "***** No object found.");
-                    if (robot.ledIndicator1 != null)
+                    if (robot.ledIndicator != null)
                     {
                         // Indicate we timed out and found nothing.
-                        robot.ledIndicator1.setDetectedPattern(LEDIndicator.FOUND_NOTHING);
+                        robot.ledIndicator.setStatusPattern(LEDIndicator.NOT_FOUND, true);
                     }
                     sm.setState(State.DONE);
                 }
                 break;
 
             case PICKUP_OBJ:
+                TrcEvent ppEvent = null;
                 robot.intake.autoIntake(owner, pickupEvent, 0.0);
-                sm.addEvent(pickupEvent);
                 tracer.traceInfo(moduleName, "***** AutoIntakeForward");
-                if (objPose != null && robot.robotDrive != null)
+                if (objPose != null && robot.robotBase != null)
                 {
-                    robot.robotDrive.purePursuitDrive.start(owner, driveEvent, 0.0, true, objPose);
-                    sm.addEvent(driveEvent);
+                    ppEvent = driveEvent;
+                    robot.robotBase.purePursuitDrive.start(owner, driveEvent, 0.0, true, null, objPose);
                     tracer.traceInfo(moduleName, "***** Drive to object at " + objPose);
                 }
-                sm.waitForEvents(State.DONE, false);
+                sm.waitForEvents(State.DONE, false, pickupEvent, ppEvent);
                 break;
 
             case DONE:

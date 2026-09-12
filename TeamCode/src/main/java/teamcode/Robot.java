@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Titan Robotics Club (http://www.titanrobotics.com)
+ * Copyright (c) 2025 Titan Robotics Club (http://www.titanrobotics.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,31 +24,35 @@ package teamcode;
 
 import androidx.annotation.NonNull;
 
-import ftclib.drivebase.FtcRobotDrive;
+import java.util.stream.Stream;
+
+import ftclib.drivebase.FtcRobotBase;
 import ftclib.driverio.FtcDashboard;
 import ftclib.driverio.FtcMatchInfo;
 import ftclib.robotcore.FtcOpMode;
 import ftclib.sensor.FtcRobotBattery;
+import ftclib.vision.FtcLimelightVision;
 import teamcode.autotasks.TaskAutoPickup;
 import teamcode.autotasks.TaskAutoShoot;
+import teamcode.indicators.LEDIndicator;
 import teamcode.subsystems.CrServoArm;
+import teamcode.subsystems.DiffyServoWrist;
+import teamcode.subsystems.DriveBase;
+import teamcode.subsystems.Elevator;
+import teamcode.subsystems.Intake;
 import teamcode.subsystems.Latch;
 import teamcode.subsystems.MotorArm;
 import teamcode.subsystems.ServoClaw;
-import teamcode.subsystems.DiffyServoWrist;
-import teamcode.subsystems.Elevator;
-import teamcode.subsystems.Intake;
-import teamcode.subsystems.LEDIndicator;
-import teamcode.subsystems.RobotBase;
-import teamcode.subsystems.RumbleIndicator;
 import teamcode.subsystems.ServoExtender;
 import teamcode.subsystems.ServoWrist;
 import teamcode.subsystems.Shooter;
+import teamcode.subsystems.TelescopeArm;
 import teamcode.subsystems.Turret;
 import teamcode.vision.Vision;
 import trclib.motor.TrcMotor;
 import trclib.motor.TrcServo;
 import trclib.pathdrive.TrcPose2D;
+import trclib.robotcore.TrcAutoTask;
 import trclib.robotcore.TrcDbgTrace;
 import trclib.robotcore.TrcEvent;
 import trclib.robotcore.TrcRobot;
@@ -57,45 +61,67 @@ import trclib.subsystem.TrcRollerIntake;
 import trclib.subsystem.TrcServoClaw;
 import trclib.subsystem.TrcShooter;
 import trclib.subsystem.TrcSubsystem;
+import trclib.vision.TrcVisionRelocalize;
+import trclib.vision.TrcVisionTargetInfo;
 
 /**
  * This class creates the robot object that consists of sensors, indicators, drive base and all the subsystems.
  */
 public class Robot
 {
+    public enum RelocalizationMode
+    {
+        Disabled,
+        OneShot,
+        Continuous
+    }   //enum RelocalizationMode
+
     private final String moduleName = getClass().getSimpleName();
     // Global objects.
+    public final TrcDbgTrace globalTracer = TrcDbgTrace.getGlobalTracer();
     public final FtcOpMode opMode;
-    public final TrcDbgTrace globalTracer;
     public final FtcDashboard dashboard;
     public static FtcMatchInfo matchInfo = null;
-    private static TrcPose2D endOfAutoRobotPose = null;
     // Robot Drive.
-    public RobotBase robotBase;
-    public FtcRobotDrive.RobotInfo robotInfo;
-    public FtcRobotDrive robotDrive;
-    // Vision subsystems.
-    public Vision vision;
+    public DriveBase robotDriveBase;
+    public FtcRobotBase.RobotInfo robotInfo;
+    public FtcRobotBase robotBase;
+    private static TrcPose2D endOfAutoRobotPose = null;
     // Sensors and indicators.
-    public LEDIndicator ledIndicator1;
-    public LEDIndicator ledIndicator2;
-    public RumbleIndicator driverRumble;
-    public RumbleIndicator operatorRumble;
     public FtcRobotBattery battery;
-    // Subsystems.
+    public LEDIndicator ledIndicator;
+    // Vision.
+    public Vision vision;
+    private RelocalizationMode relocalizationMode = RelocalizationMode.Disabled;
+    public TrcVisionRelocalize trcVisionRelocalize = null;
+    //
+    // Other subsystems.
+    //
+    public MotorArm motorArmSubsystem;
     public TrcMotor motorArm;
+    public CrServoArm crServoArmSubsystem;
     public TrcMotor crServoArm;
+    public TelescopeArm telescopeArm;
+    public Elevator elevatorSubsystem;
     public TrcMotor elevator;
+    public Turret turretSubsystem;
     public TrcMotor turret;
+    public Intake intakeSubsystem;
     public TrcRollerIntake intake;
     public Shooter shooterSubsystem;
     public TrcShooter shooter;
     public DiffyServoWrist diffyWrist;
+    public ServoWrist servoWristSubsystem;
     public TrcServo servoWrist;
-    public ServoExtender servoExtender;
-    public TrcServoClaw claw;
+    public ServoExtender servoExtenderSubsystem;
+    public TrcServo servoExtender;
+    public ServoClaw servoClawSubsystem;
+    public TrcServoClaw servoClaw;
+    public Latch latchSubsystem;
     public TrcServo latch;
-    // Autotasks.
+    //
+    // Auto Tasks.
+    //
     public TaskAutoShoot autoShootTask;
     public TaskAutoPickup autoPickupTask;
 
@@ -109,67 +135,83 @@ public class Robot
     {
         // Initialize global objects.
         opMode = FtcOpMode.getInstance();
-        globalTracer = TrcDbgTrace.getGlobalTracer();
         dashboard = FtcDashboard.getInstance();
         speak("Init starting");
-        // Create and initialize Robot Base.
-        robotBase = new RobotBase();
-        robotInfo = robotBase.getRobotInfo();
-        robotDrive = robotBase.getRobotDrive();
-        // Create and initialize vision subsystems.
-        if (RobotParams.Preferences.useVision &&
-            (RobotParams.Preferences.tuneColorBlobVision ||
+
+        // Create and initialize DriveBase and RobotInfo. This must be done early because subsequent components may
+        // require it.
+        robotDriveBase = new DriveBase(this);
+        robotInfo = robotDriveBase.getRobotInfo();
+        robotBase = robotDriveBase.getRobotBase();
+
+        // Create and initialize sensors and indicators.
+        battery = RobotParams.Preferences.useBatteryMonitor? new FtcRobotBattery(): null;
+        ledIndicator = RobotParams.Preferences.useLED && robotInfo.indicatorNames != null?
+            new LEDIndicator(robotInfo.indicatorNames): null;
+
+        // Create and initialize Vision subsystem.
+        if (RobotParams.Preferences.useVision && robotInfo.camInfos != null &&
+            (RobotParams.Preferences.useLimelightVision ||
              RobotParams.Preferences.useWebcamAprilTagVision ||
-             RobotParams.Preferences.useColorBlobVision ||
-             RobotParams.Preferences.useLimelightVision))
+             RobotParams.Preferences.useColorBlobVision))
         {
             vision = new Vision(this);
+            if (RobotParams.Preferences.visionRelocalizeEnabled && robotBase != null)
+            {
+                trcVisionRelocalize = new TrcVisionRelocalize(100);
+            }
         }
+
+        //
+        // Create and initialize other subsystems.
+        //
+
         // If robotType is VisionOnly, the robot controller is disconnected from the robot for testing vision.
         // In this case, we should not instantiate any robot hardware.
-        if (RobotParams.Preferences.robotType != RobotBase.RobotType.VisionOnly)
+        if (RobotParams.Preferences.robotType != DriveBase.RobotType.VisionOnly)
         {
-            // Create and initialize sensors and indicators.
-            ledIndicator1 = robotInfo.indicator1Name != null?
-                new LEDIndicator(robotInfo.indicator1Name, robotInfo.indicator1Type): null;
-            ledIndicator2 = robotInfo.indicator2Name != null?
-                new LEDIndicator(robotInfo.indicator2Name, robotInfo.indicator2Type): null;
-            battery = RobotParams.Preferences.useBatteryMonitor? new FtcRobotBattery(): null;
-            //
-            // Create and initialize other subsystems.
-            //
             if (RobotParams.Preferences.useSubsystems)
             {
                 // Create subsystems.
                 if (RobotParams.Preferences.useMotorArm)
                 {
-                    motorArm = new MotorArm().getMotor();
+                    motorArmSubsystem = new MotorArm();
+                    motorArm = motorArmSubsystem.getMotor();
                 }
 
                 if (RobotParams.Preferences.useCrServoArm)
                 {
-                    crServoArm = new CrServoArm().getMotor();
+                    crServoArmSubsystem = new CrServoArm();
+                    crServoArm = crServoArmSubsystem.getMotor();
+                }
+
+                if (RobotParams.Preferences.useTelescopeArm)
+                {
+                    telescopeArm = new TelescopeArm();
                 }
 
                 if (RobotParams.Preferences.useElevator)
                 {
-                    elevator = new Elevator().getMotor();
+                    elevatorSubsystem = new Elevator();
+                    elevator = elevatorSubsystem.getMotor();
                 }
 
                 if (RobotParams.Preferences.useTurret)
                 {
-                    turret = new Turret().getMotor();
+                    turretSubsystem = new Turret();
+                    turret = turretSubsystem.getMotor();
                 }
 
                 if (RobotParams.Preferences.useIntake)
                 {
-                    intake = new Intake().getIntake();
+                    intakeSubsystem = new Intake(this);
+                    intake = intakeSubsystem.getIntake();
                 }
 
                 if (RobotParams.Preferences.useShooter)
                 {
                     // Note: Since shooter depends on Intake, Intake subsystem must instantiate before shooter.
-                    shooterSubsystem = new Shooter();
+                    shooterSubsystem = new Shooter(this);
                     shooter = shooterSubsystem.getShooter();
                 }
 
@@ -180,39 +222,37 @@ public class Robot
 
                 if (RobotParams.Preferences.useServoWrist)
                 {
-                    servoWrist = new ServoWrist().getServo();
+                    servoWristSubsystem = new ServoWrist();
+                    servoWrist = servoWristSubsystem.getServo();
                 }
 
                 if (RobotParams.Preferences.useServoExtender)
                 {
-                    servoExtender = new ServoExtender();
+                    servoExtenderSubsystem = new ServoExtender(this);
+                    servoExtender = servoExtenderSubsystem.getServo();
                 }
 
-                if (RobotParams.Preferences.useClaw)
+                if (RobotParams.Preferences.useServoClaw)
                 {
-                    claw = new ServoClaw().getClaw();
+                    servoClawSubsystem = new ServoClaw(this);
+                    servoClaw = servoClawSubsystem.getClaw();
                 }
 
                 if (RobotParams.Preferences.useLatch)
                 {
-                    latch = new Latch().getServo();
+                    latchSubsystem = new Latch(this);
+                    latch = latchSubsystem.getServo();
                 }
 
                 // Create autotasks.
-                if (RobotParams.Preferences.useAutoShoot)
+                if (RobotParams.Preferences.useAutoShoot && shooter != null)
                 {
-                    if (shooter != null)
-                    {
-                        autoShootTask = new TaskAutoShoot(this);
-                    }
+                    autoShootTask = new TaskAutoShoot(this);
                 }
 
-                if (RobotParams.Preferences.useAutoPickup)
+                if (RobotParams.Preferences.useAutoPickup && intake != null)
                 {
-                    if (intake != null)
-                    {
-                        autoPickupTask = new TaskAutoPickup(this);
-                    }
+                    autoPickupTask = new TaskAutoPickup(this);
                 }
 
                 // Zero calibrate all subsystems only in Auto or if TeleOp is run standalone without prior Auto.
@@ -223,8 +263,13 @@ public class Robot
                 }
             }
         }
-
         speak("Init complete");
+
+        Dashboard.DashboardParams.updateDashboardEnabled = RobotParams.Preferences.updateDashboard;
+        if (Dashboard.DashboardParams.updateDashboardEnabled)
+        {
+            dashboard.enableDashboardUpdate(1, true);
+        }
     }   //Robot
 
     /**
@@ -236,7 +281,7 @@ public class Robot
     @Override
     public String toString()
     {
-        return robotInfo != null? robotInfo.robotName: RobotParams.Robot.ROBOT_CODEBASE;
+        return robotInfo != null? robotInfo.robotName: RobotParams.Preferences.robotType.toString();
     }   //toString
 
     /**
@@ -247,34 +292,32 @@ public class Robot
      */
     public void startMode(TrcRobot.RunMode runMode)
     {
-        if (robotDrive != null)
+        if (robotBase != null)
         {
             //
             // Since the IMU gyro is giving us cardinal heading, we need to enable its cardinal to cartesian converter.
             //
-            if (robotDrive.gyro != null)
+            if (robotBase.gyro != null)
             {
-                robotDrive.gyro.setEnabled(true);
+                robotBase.gyro.setEnabled(true);
                 // The following are performance counters, could be disabled for competition if you want.
                 // But it might give you some insight if somehow autonomous wasn't performing as expected.
-                robotDrive.gyro.setElapsedTimerEnabled(true);
+                robotBase.gyro.setElapsedTimerEnabled(true);
             }
             //
             // Enable odometry for all opmodes. We may need odometry in TeleOp for auto-assist drive.
             //
-            robotDrive.driveBase.setOdometryEnabled(true);
-            if (runMode == TrcRobot.RunMode.TELEOP_MODE)
+            robotBase.driveBase.setOdometryEnabled(true);
+            if (runMode == TrcRobot.RunMode.TELEOP_MODE && endOfAutoRobotPose != null)
             {
-                if (endOfAutoRobotPose != null)
-                {
-                    // We had a previous autonomous run that saved the robot position at the end, use it.
-                    robotDrive.driveBase.setFieldPosition(endOfAutoRobotPose);
-                    globalTracer.traceInfo(moduleName, "Restore saved RobotPose=" + endOfAutoRobotPose);
-                }
+                // We had a previous autonomous run that saved the robot position at the end, use it.
+                robotBase.driveBase.setFieldPosition(endOfAutoRobotPose);
+                globalTracer.traceInfo(moduleName, "Restore saved RobotPose=" + endOfAutoRobotPose);
             }
             // Consume it so it's no longer valid for next run.
             endOfAutoRobotPose = null;
         }
+
         TrcDigitalInput.setElapsedTimerEnabled(true);
         TrcMotor.setElapsedTimerEnabled(true);
         TrcServo.setElapsedTimerEnabled(true);
@@ -288,15 +331,62 @@ public class Robot
      */
     public void stopMode(TrcRobot.RunMode runMode)
     {
-        // Cancel all operations.
+        // Stop everything.
         cancelAll();
+        if (robotBase != null)
+        {
+            if (runMode == TrcRobot.RunMode.AUTO_MODE)
+            {
+                // Save current robot location at the end of autonomous so subsequent teleop run can restore it.
+                endOfAutoRobotPose = robotBase.driveBase.getFieldPosition();
+                globalTracer.traceInfo(moduleName, "Saved robot pose=" + endOfAutoRobotPose);
+            }
+            // Disable odometry.
+            robotBase.driveBase.setOdometryEnabled(false);
+            // Disable gyro task.
+            if (robotBase.gyro != null)
+            {
+                robotBase.gyro.setEnabled(false);
+            }
+        }
+        //
+        // Disable vision.
+        //
+        if (vision != null)
+        {
+            if (vision.isLimelightVisionEnabled())
+            {
+                globalTracer.traceInfo(moduleName, "Disabling LimelightVision.");
+                vision.setLimelightVisionEnabled(Vision.LimelightPipelineType.AprilTag, false);
+            }
+
+            if (vision.isWebcamAprilTagVisionEnabled())
+            {
+                globalTracer.traceInfo(moduleName, "Disabling Webcam AprilTagVision.");
+                vision.setWebcamAprilTagVisionEnabled(false);
+            }
+
+            if (vision.backCamColorBlobVision != null)
+            {
+                globalTracer.traceInfo(moduleName, "Disabling ColorBlobVision.");
+                vision.setColorBlobVisionEnabled(Vision.ColorBlobType.Any, false);
+            }
+
+            vision.close();
+       }
+
+        if (ledIndicator != null)
+        {
+            globalTracer.traceInfo(moduleName, "Turning all LED indicators OFF.");
+            ledIndicator.reset();
+        }
         //
         // Print all performance counters if there are any.
         //
-        if (robotDrive != null && robotDrive.gyro != null)
+        if (robotBase != null && robotBase.gyro != null)
         {
-            robotDrive.gyro.printElapsedTime(globalTracer);
-            robotDrive.gyro.setElapsedTimerEnabled(false);
+            robotBase.gyro.printElapsedTime(globalTracer);
+            robotBase.gyro.setElapsedTimerEnabled(false);
         }
         TrcDigitalInput.printElapsedTime(globalTracer);
         TrcDigitalInput.setElapsedTimerEnabled(false);
@@ -304,72 +394,26 @@ public class Robot
         TrcMotor.setElapsedTimerEnabled(false);
         TrcServo.printElapsedTime(globalTracer);
         TrcServo.setElapsedTimerEnabled(false);
-        //
-        // Disable vision.
-        //
-        if (vision != null)
+    }   //stopMode
+
+    /**
+     * This method is called periodically on the main robot thread. Typically, you put code here that requires to be
+     * run regardless of RobotMode (autonomous or teleop).
+     *
+     * @param elapsedTime specifies the elapsed time since the mode started.
+     * @param slowPeriodicLoop specifies true if it is running the slow periodic loop on the main robot thread,
+     *        false otherwise.
+     */
+    public void periodic(double elapsedTime, boolean slowPeriodicLoop)
+    {
+        if (relocalizationMode != RelocalizationMode.Disabled)
         {
-            vision.setCameraStreamEnabled(false);
-            if (vision.isRawColorBlobVisionEnabled())
+            if (relocalizeRobot() && relocalizationMode == RelocalizationMode.OneShot)
             {
-                globalTracer.traceInfo(moduleName, "Disabling RawColorBlobVision.");
-                vision.setRawColorBlobVisionEnabled(false);
-            }
-
-            if (vision.isLimelightVisionEnabled())
-            {
-                globalTracer.traceInfo(moduleName, "Disabling LimelightVision.");
-                vision.setLimelightVisionEnabled(0, false);
-            }
-
-            if (vision.isAprilTagVisionEnabled())
-            {
-                globalTracer.traceInfo(moduleName, "Disabling Webcam AprilTagVision.");
-                vision.setAprilTagVisionEnabled(false);
-            }
-
-            if (vision.redBlobVision != null)
-            {
-                globalTracer.traceInfo(moduleName, "Disabling RedBlobVision.");
-                vision.setColorBlobVisionEnabled(Vision.ColorBlobType.RedBlob, false);
-            }
-
-            if (vision.blueBlobVision != null)
-            {
-                globalTracer.traceInfo(moduleName, "Disabling BlueBlobVision.");
-                vision.setColorBlobVisionEnabled(Vision.ColorBlobType.BlueBlob, false);
-            }
-
-            if (vision.limelightVision != null)
-            {
-                globalTracer.traceInfo(moduleName, "Disabling LimelightVision.");
-                vision.setLimelightVisionEnabled(0, false);
-            }
-
-            vision.close();
-       }
-
-        if (robotDrive != null)
-        {
-            if (runMode == TrcRobot.RunMode.AUTO_MODE)
-            {
-                // Save current robot location at the end of autonomous so subsequent teleop run can restore it.
-                endOfAutoRobotPose = robotDrive.driveBase.getFieldPosition();
-                globalTracer.traceInfo(moduleName, "Saved robot pose=" + endOfAutoRobotPose);
-            }
-            //
-            // Disable odometry.
-            //
-            robotDrive.driveBase.setOdometryEnabled(false);
-            //
-            // Disable gyro task.
-            //
-            if (robotDrive.gyro != null)
-            {
-                robotDrive.gyro.setEnabled(false);
+                relocalizationMode = RelocalizationMode.Disabled;
             }
         }
-    }   //stopMode
+    }   //periodic
 
     /**
      * This method is called to cancel all pending operations and release the ownership of all subsystems.
@@ -377,26 +421,28 @@ public class Robot
     public void cancelAll()
     {
         globalTracer.traceInfo(moduleName, "Cancel all operations.");
-        // Cancel subsystems.
-        if (robotDrive != null) robotDrive.cancel();
-        TrcSubsystem.cancelAll();
         // Cancel auto tasks.
+        TrcAutoTask.cancelAllTasks();
+        // Cancel subsystems.
+        if (robotBase != null) robotBase.cancel();
+        TrcSubsystem.cancelAll();
     }   //cancelAll
 
     /**
      * This method zero calibrates all subsystems.
      *
      * @param owner specifies the owner ID to check if the caller has ownership of the motor.
-     * @param event specifies the event to signal when the zero calibration is done.
+     * @param completionEvent specifies the event to signal when the zero calibration is done,
+     *        can be null if not provided.
      */
-    public void zeroCalibrate(String owner, TrcEvent event)
+    public void zeroCalibrate(String owner, TrcEvent completionEvent)
     {
         globalTracer.traceInfo(moduleName, "Zero calibrate all subsystems.");
-        TrcSubsystem.zeroCalibrateAll(owner, event);
+        TrcSubsystem.zeroCalibrateAll(owner, completionEvent);
     }   //zeroCalibrate
 
     /**
-     * This method retracts all appendages for robot high speed travelling.
+     * This method retracts all appendages for robot high speed traveling.
      */
     public void turtle()
     {
@@ -405,42 +451,152 @@ public class Robot
     }   //turtle
 
     /**
+     * This method relocalizes the robot using vision. This method assumes vision and relocalize
+     * is enabled.
+     *
+     * @return true if vision sees AprilTag and relocalize successfully, false otherwise.
+     */
+    private boolean relocalizeRobot()
+    {
+        boolean seenAprilTag = false;
+        TrcPose2D robotPose = robotBase.driveBase.getFieldPosition();
+        long currTimestampMilli = System.currentTimeMillis();
+        trcVisionRelocalize.addTimedPose(currTimestampMilli, robotPose);
+        // Assume we are using Limelight to detect AprilTag.
+        double limelightYaw = -robotPose.angle;
+        limelightYaw = (limelightYaw + 180.0) % 360.0;
+        if (limelightYaw < 0) limelightYaw += 360.0;
+        limelightYaw -= 180.0;
+        vision.limelightVision.updateRobotHeading(limelightYaw);
+        TrcVisionTargetInfo<FtcLimelightVision.DetectedObject> aprilTagObj =
+            vision.getLimelightDetectedObject(FtcLimelightVision.ResultType.Fiducial, null, null, -1);
+
+        if (aprilTagObj != null)
+        {
+            seenAprilTag = true;
+            TrcPose2D robotVel = robotBase.driveBase.getRobotVelocity();
+            TrcPose2D relocalizedPose =
+                Math.hypot(robotVel.x, robotVel.y) > 0.01 || Math.abs(robotVel.angle) > 1.0?
+                    trcVisionRelocalize.getRelocalizedPose(
+                        aprilTagObj.detectedObj.timestamp, aprilTagObj.detectedObj.robotPose, robotPose):
+                    aprilTagObj.detectedObj.robotPose;
+
+            robotBase.driveBase.setFieldPosition(relocalizedPose);
+            globalTracer.traceDebug(
+                moduleName,
+                "VisionRelocalize: TimeMilli=%d, Relocalize %s->%s, VisionPose[%d](time=%d, pose=%s)",
+                currTimestampMilli, robotPose, relocalizedPose, (int)aprilTagObj.detectedObj.objId,
+                (long)aprilTagObj.detectedObj.timestamp, aprilTagObj.detectedObj.robotPose);
+        }
+
+        if (ledIndicator != null)
+        {
+            ledIndicator.setStatusPattern(LEDIndicator.RED_APRILTAG, false);
+            ledIndicator.setStatusPattern(LEDIndicator.BLUE_APRILTAG, false);
+            if (seenAprilTag)
+            {
+                ledIndicator.setStatusPattern(
+                    (int) aprilTagObj.detectedObj.objId == RobotParams.Game.RED_APRILTAG_ID?
+                        LEDIndicator.RED_APRILTAG:
+                    (int) aprilTagObj.detectedObj.objId == RobotParams.Game.BLUE_APRILTAG_ID?
+                        LEDIndicator.BLUE_APRILTAG: LEDIndicator.NOT_FOUND,
+                    true);
+            }
+        }
+
+        return seenAprilTag;
+    }   //relocalizeRobot
+
+    /**
+     * This method sets the relocalization mode.
+     *
+     * @param relocalizationMode specifies the relocalization mode.
+     */
+    public void setRelocalizationMode(RelocalizationMode relocalizationMode)
+    {
+        if (vision != null && RobotParams.Preferences.visionRelocalizeEnabled && trcVisionRelocalize != null)
+        {
+            globalTracer.traceInfo(moduleName, "setRelocalizationMode to " + relocalizationMode);
+            this.relocalizationMode = relocalizationMode;
+        }
+    }   //setRelocalizationMode
+
+    /**
+     * This method returns the relative pose from the shooter to the target.
+     *
+     * @return relative pose from the shooter to the target.
+     */
+    public TrcPose2D getShooterToTargetPose()
+    {
+        TrcPose2D goalFieldPose =
+            FtcAuto.autoChoices.alliance == FtcAuto.Alliance.Red?
+                RobotParams.Game.RED_GOAL_POSE: RobotParams.Game.BLUE_GOAL_POSE;
+
+        TrcPose2D robotFieldPose = robotBase.driveBase.getFieldPosition();
+        TrcPose2D shooterFieldPose = robotFieldPose.addRelativePose(Shooter.robotToShooterPose);
+
+        TrcPose2D targetPose = goalFieldPose.relativeTo(shooterFieldPose);
+        // targetPose angle should be the robot's bearing to target.
+        targetPose.angle = Math.toDegrees(Math.atan2(targetPose.x, targetPose.y));
+        globalTracer.traceDebug(
+            moduleName, "robotPose=%s, shooterPose=%s, goalPose=%s, targetPose=%s",
+            robotFieldPose, shooterFieldPose, goalFieldPose, targetPose);
+
+        return targetPose;
+    }   //getShooterDistanceToTarget
+
+    /**
      * This method sets the robot's starting position according to the autonomous choices.
      *
      * @param autoChoices specifies all the auto choices.
      */
     public void setRobotStartPosition(FtcAuto.AutoChoices autoChoices)
     {
+        TrcPose2D startPose = adjustPoseByAlliance(
+            autoChoices.alliance, false,
+            autoChoices.startPos == FtcAuto.AutoStartPos.Left?
+                RobotParams.Game.STARTPOSE_BLUE_LEFT: RobotParams.Game.STARTPOSE_BLUE_RIGHT);
+            robotBase.driveBase.setFieldPosition(startPose);
     }   //setRobotStartPosition
 
     /**
-     * This method adjusts the given pose in the red alliance to be the specified alliance.
+     * This method adjusts the given pose in the blue alliance to be the specified alliance.
      *
-     * @param x specifies x position in the red alliance in the specified unit.
-     * @param y specifies y position in the red alliance in the specified unit.
-     * @param heading specifies heading in the red alliance in degrees.
      * @param alliance specifies the alliance to be converted to.
      * @param isTileUnit specifies true if x and y are in tile unit, false if in inches.
+     * @param relativePose specifies if the pose is a relative pose.
+     * @param x specifies x position in the blue alliance in the specified unit.
+     * @param y specifies y position in the blue alliance in the specified unit.
+     * @param heading specifies heading in the blue alliance in degrees.
      * @return pose adjusted to be in the specified alliance in inches.
      */
     public TrcPose2D adjustPoseByAlliance(
-        double x, double y, double heading, FtcAuto.Alliance alliance, boolean isTileUnit)
+        FtcAuto.Alliance alliance, boolean isTileUnit, boolean relativePose, double x, double y, double heading)
     {
         TrcPose2D newPose = new TrcPose2D(x, y, heading);
 
-        if (alliance == FtcAuto.Alliance.BLUE_ALLIANCE)
+        if (alliance == FtcAuto.Alliance.Red)
         {
-            // Translate blue alliance pose to red alliance pose.
-            if (RobotParams.Game.fieldIsMirrored)
+            if (relativePose)
             {
-                // Mirrored field.
+                if (!RobotParams.Field.mirroredField)
+                {
+                    newPose.x = -newPose.x;
+                }
+            }
+            // Translate red alliance pose to blue alliance pose.
+            else if (RobotParams.Field.mirroredField)
+            {
+                // Field is mirrored on X axis.
+                // Same X, Flip Y. Heading left becomes right and right becomes left.
                 double angleDelta = (newPose.angle - 90.0)*2.0;
                 newPose.angle -= angleDelta;
                 newPose.y = -newPose.y;
             }
             else
             {
-                // Symmetrical field.
+                // Field is symmetrical.
+                // Flip X, Flip Y. Heading flips 180-degree.
                 newPose.x = -newPose.x;
                 newPose.y = -newPose.y;
                 newPose.angle = (newPose.angle + 180.0) % 360.0;
@@ -449,51 +605,112 @@ public class Robot
 
         if (isTileUnit)
         {
-            newPose.x *= RobotParams.Field.FULL_TILE_INCHES;
-            newPose.y *= RobotParams.Field.FULL_TILE_INCHES;
+            newPose.x *= RobotParams.Field.fullTileInches;
+            newPose.y *= RobotParams.Field.fullTileInches;
         }
 
         return newPose;
     }   //adjustPoseByAlliance
 
     /**
-     * This method adjusts the given pose in the red alliance to be the specified alliance.
+     * This method adjusts the given pose in the blue alliance to be the specified alliance.
      *
-     * @param x specifies x position in the red alliance in tile unit.
-     * @param y specifies y position in the red alliance in tile unit.
-     * @param heading specifies heading in the red alliance in degrees.
      * @param alliance specifies the alliance to be converted to.
+     * @param isTileUnit specifies true if x and y are in tile unit, false if in inches.
+     * @param x specifies x position in the blue alliance in the specified unit.
+     * @param y specifies y position in the blue alliance in the specified unit.
+     * @param heading specifies heading in the blue alliance in degrees.
      * @return pose adjusted to be in the specified alliance in inches.
      */
-    public TrcPose2D adjustPoseByAlliance(double x, double y, double heading, FtcAuto.Alliance alliance)
+    public TrcPose2D adjustPoseByAlliance(
+        FtcAuto.Alliance alliance, boolean isTileUnit, double x, double y, double heading)
     {
-        return adjustPoseByAlliance(x, y, heading, alliance, false);
+        return adjustPoseByAlliance(alliance, isTileUnit, false, x, y, heading);
     }   //adjustPoseByAlliance
 
     /**
-     * This method adjusts the given pose in the red alliance to be the specified alliance.
+     * This method adjusts the given pose in the blue alliance to be the specified alliance.
      *
-     * @param pose specifies pose in the red alliance in the specified unit.
+     * @param alliance specifies the alliance to be converted to.
+     * @param x specifies x position in the blue alliance in tile unit.
+     * @param y specifies y position in the blue alliance in tile unit.
+     * @param heading specifies heading in the blue alliance in degrees.
+     * @return pose adjusted to be in the specified alliance in inches.
+     */
+    public TrcPose2D adjustPoseByAlliance(FtcAuto.Alliance alliance, double x, double y, double heading)
+    {
+        return adjustPoseByAlliance(alliance, false, false, x, y, heading);
+    }   //adjustPoseByAlliance
+
+    /**
+     * This method adjusts the given pose in the blue alliance to be the specified alliance.
+     *
      * @param alliance specifies the alliance to be converted to.
      * @param isTileUnit specifies true if pose is in tile units, false in inches.
+     * @param relativePose specifies if the pose is a relative pose.
+     * @param pose specifies pose in the blue alliance in the specified unit.
      * @return pose adjusted to be in the specified alliance in inches.
      */
-    public TrcPose2D adjustPoseByAlliance(TrcPose2D pose, FtcAuto.Alliance alliance, boolean isTileUnit)
+    public TrcPose2D adjustPoseByAlliance(
+        FtcAuto.Alliance alliance, boolean isTileUnit, boolean relativePose, TrcPose2D pose)
     {
-        return adjustPoseByAlliance(pose.x, pose.y, pose.angle, alliance, isTileUnit);
+        return adjustPoseByAlliance(alliance, isTileUnit, relativePose, pose.x, pose.y, pose.angle);
     }   //adjustPoseByAlliance
 
     /**
-     * This method adjusts the given pose in the red alliance to be the specified alliance.
+     * This method adjusts the given pose in the blue alliance to be the specified alliance.
      *
-     * @param pose specifies pose in the red alliance in tile unit.
      * @param alliance specifies the alliance to be converted to.
+     * @param isTileUnit specifies true if pose is in tile units, false in inches.
+     * @param pose specifies pose in the blue alliance in the specified unit.
      * @return pose adjusted to be in the specified alliance in inches.
      */
-    public TrcPose2D adjustPoseByAlliance(TrcPose2D pose, FtcAuto.Alliance alliance)
+    public TrcPose2D adjustPoseByAlliance(FtcAuto.Alliance alliance, boolean isTileUnit, TrcPose2D pose)
     {
-        return adjustPoseByAlliance(pose, alliance, false);
+        return adjustPoseByAlliance(alliance, isTileUnit, false, pose.x, pose.y, pose.angle);
     }   //adjustPoseByAlliance
+
+    /**
+     * This method adjusts the given pose in the blue alliance to be the specified alliance.
+     *
+     * @param alliance specifies the alliance to be converted to.
+     * @param pose specifies pose in the blue alliance in tile unit.
+     * @return pose adjusted to be in the specified alliance in inches.
+     */
+    public TrcPose2D adjustPoseByAlliance(FtcAuto.Alliance alliance, TrcPose2D pose)
+    {
+        return adjustPoseByAlliance(alliance, false, false, pose.x, pose.y, pose.angle);
+    }   //adjustPoseByAlliance
+
+    /**
+     * This method adjusts the given array of poses in the blue alliance to be the specified alliance.
+     *
+     * @param alliance specifies the alliance to be converted to.
+     * @param isTileUnit specifies true if pose is in tile units, false in inches.
+     * @param relativePose specifies if the pose is a relative pose.
+     * @param poses specifies array of poses in the blue alliance in the specified unit.
+     * @return poses adjusted to be in the specified alliance in inches.
+     */
+    public TrcPose2D[] adjustPathByAlliance(
+        FtcAuto.Alliance alliance, boolean isTileUnit, boolean relativePose, TrcPose2D... poses)
+    {
+        return Stream.of(poses)
+                     .map(pose -> adjustPoseByAlliance(alliance, isTileUnit, relativePose, pose))
+                     .toArray(TrcPose2D[]::new);
+    }   //adjustPathByAlliance
+
+    /**
+     * This method adjusts the given pose by the given x and y offsets.
+     *
+     * @param pose specifies the pose that needs adjustment.
+     * @param xOffset specifies the x offset.
+     * @param yOffset specifies the y offset.
+     * @return adjusted pose.
+     */
+    public TrcPose2D adjustPoseByOffset(TrcPose2D pose, double xOffset, double yOffset)
+    {
+        return pose.addRelativePose(new TrcPose2D(xOffset, yOffset, 0.0));
+    }   //adjustPoseByOffset
 
     /**
      * This method sends the text string to the Driver Station to be spoken using text to speech.

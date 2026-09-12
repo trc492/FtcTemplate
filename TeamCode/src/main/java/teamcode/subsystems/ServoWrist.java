@@ -24,6 +24,7 @@ package teamcode.subsystems;
 
 import ftclib.driverio.FtcDashboard;
 import ftclib.motor.FtcServoActuator;
+import teamcode.Dashboard;
 import trclib.motor.TrcServo;
 import trclib.robotcore.TrcEvent;
 import trclib.subsystem.TrcSubsystem;
@@ -35,12 +36,12 @@ import trclib.subsystem.TrcSubsystem;
  */
 public class ServoWrist extends TrcSubsystem
 {
+    public static final String SUBSYSTEM_NAME = "ServoWrist";
+    private static final boolean NEED_ZERO_CAL = false;
+
     public static class Params
     {
-        public static final String SUBSYSTEM_NAME               = "ServoWrist";
-        public static final boolean NEED_ZERO_CAL               = false;
-
-        public static final String SERVO_NAME                   = Params.SUBSYSTEM_NAME + ".servo";
+        public static final String SERVO_NAME                   = SUBSYSTEM_NAME + ".servo";
         public static final boolean SERVO_INVERTED              = false;
 
         public static final double LOGICAL_MIN_POS              = 0.1;
@@ -49,25 +50,26 @@ public class ServoWrist extends TrcSubsystem
         public static final double PHYSICAL_MAX_POS             = 90.0;     // in degrees
 
         public static final double POS_PRESET_TOLERANCE         = 1.0;      // in degrees
-        public static final double[] tiltPosPresets             = {-110, -90.0, -45.0, 0.0, 45.0, 90.0, 110};
+        public static final double[] posPresets                 = {-110.0, -90.0, -45.0, 0.0, 45.0, 90.0, 110.0};
     }   //class Params
 
     private final FtcDashboard dashboard;
-    public final TrcServo servo;
+    private final TrcServo servo;
+    private double prevWristPower = 0.0;
 
     /**
      * Constructor: Creates an instance of the object.
      */
     public ServoWrist()
     {
-        super(Params.SUBSYSTEM_NAME, Params.NEED_ZERO_CAL);
+        super(SUBSYSTEM_NAME, NEED_ZERO_CAL);
 
         dashboard = FtcDashboard.getInstance();
         FtcServoActuator.Params wristParams = new FtcServoActuator.Params()
             .setPrimaryServo(Params.SERVO_NAME, Params.SERVO_INVERTED)
             .setLogicalPosRange(Params.LOGICAL_MIN_POS, Params.LOGICAL_MAX_POS)
             .setPhysicalPosRange(Params.PHYSICAL_MIN_POS, Params.PHYSICAL_MAX_POS)
-            .setPositionPresets(Params.POS_PRESET_TOLERANCE, Params.tiltPosPresets);
+            .setPositionPresets(Params.POS_PRESET_TOLERANCE, Params.posPresets);
 
         servo = new FtcServoActuator(wristParams).getServo();
     }   //ServoWrist
@@ -98,11 +100,12 @@ public class ServoWrist extends TrcSubsystem
     /**
      * This method starts zero calibrate of the subsystem.
      *
-     * @param owner specifies the owner ID to to claim subsystem ownership, can be null if ownership not required.
-     * @param event specifies an event to signal when zero calibration is done, can be null if not provided.
+     * @param owner specifies the owner ID to check if the caller has ownership of the motor.
+     * @param completionEvent specifies the event to signal when the zero calibration is done,
+     *        can be null if not provided.
      */
     @Override
-    public void zeroCalibrate(String owner, TrcEvent event)
+    public void zeroCalibrate(String owner, TrcEvent completionEvent)
     {
         // No zero calibration needed.
     }   //zeroCalibrate
@@ -117,6 +120,44 @@ public class ServoWrist extends TrcSubsystem
     }   //resetState
 
     /**
+     * This method is called when gamepad analog control is operated on the subsystem.
+     *
+     * @param altFunc specifies true if the gamepad AltFunc button is pressed, false otherwise.
+     * @param inputs specifies an array of analog values.
+     */
+    @Override
+    public void subsystemControl(boolean altFunc, double... inputs)
+    {
+        double power = inputs[0];
+
+        if (power != prevWristPower)
+        {
+            servo.setPower(power);
+            prevWristPower = power;
+        }
+    }   //subsystemControl
+
+    /**
+     * This method is called when a gamepad button is pressed to perform the subsystem action.
+     *
+     * @param pressed specifies true if the gamepad button is pressed, false otherwise.
+     * @param altFunc specifies true if the gamepad AltFunc button is pressed, false otherwise.
+     */
+    @Override
+    public void subsystemAction(boolean pressed, boolean altFunc)
+    {
+    }   //subsystemAction
+
+    /**
+     * This method publishes the NetworkTable entries for the subsystem to the Dashboard.
+     */
+    @Override
+    public void publishToDashboard()
+    {
+        // Not applicable for FTC.
+    }   //publishToDashboard
+
+    /**
      * This method update the dashboard with the subsystem status.
      *
      * @param lineNum specifies the starting line number to print the subsystem status.
@@ -129,24 +170,74 @@ public class ServoWrist extends TrcSubsystem
         if (slowLoop)
         {
             dashboard.displayPrintf(
-                lineNum++, "%s: pos=%.3f/%.3f", Params.SUBSYSTEM_NAME, servo.getPosition(), servo.getLogicalPosition());
+                lineNum++, "%s: pos=%.3f/%.3f", SUBSYSTEM_NAME, servo.getPosition(), servo.getLogicalPosition());
         }
 
         return lineNum;
     }   //updateStatus
 
     /**
-     * This method is called to prep the subsystem for tuning.
+     * This method is called to update subsystem parameter to the Dashboard. This can be used for tuning subsystem
+     * parameters using Dashboard.
      *
-     * @param subComponent specifies the sub-component of the Subsystem to be tuned, can be null if no sub-component.
-     * @param tuneParams specifies tuning parameters.
-     *        tuneParam0 - Logical position min
-     *        tuneParam1 - Logical position max
+     * @param subsystemName specifies the name of the subsystem to be updated.
      */
     @Override
-    public void prepSubsystemForTuning(String subComponent, double... tuneParams)
+    public void updateParamsToDashboard(String subsystemName)
     {
-        servo.setLogicalPosRange(tuneParams[0], tuneParams[1]);
-    }   //prepSubsystemForTuning
+        if (subsystemName.equalsIgnoreCase(Params.SERVO_NAME))
+        {
+            Dashboard.TuneSubsystem.target = Params.LOGICAL_MIN_POS;
+        }
+    }   //updateParamsToDashboard
+
+    /**
+     * This method is called to update subsystem parameters from the Dashboard. This can be used for tuning subsystem
+     * parameters using Dashboard.
+     *
+     * @param subsystemName specifies the name of the subsystem to be updated.
+     */
+    @Override
+    public void updateParamsFromDashboard(String subsystemName)
+    {
+        if (subsystemName.equalsIgnoreCase(Params.SERVO_NAME))
+        {
+            servo.setLogicalPosition(Dashboard.TuneSubsystem.target);
+            servo.tracer.traceInfo(
+                instanceName, "Tune %s: target=%.3f", subsystemName, Dashboard.TuneSubsystem.target);
+        }
+    }   //updateParamsFromDashboard
+
+    /**
+     * This method is called to set the next tune target up from the current target.
+     *
+     * @param subsystemName specifies the name of the subsystem to update its tune target.
+     */
+    @Override
+    public void setNextTuneTargetUp(String subsystemName)
+    {
+        if (subsystemName.equalsIgnoreCase(Params.SERVO_NAME))
+        {
+            double target = Params.LOGICAL_MAX_POS;
+            servo.setLogicalPosition(target);
+            servo.tracer.traceInfo(instanceName, "Tune %s Up: target=%.3f", subsystemName, target);
+        }
+    }   //setNextTuneTargetUp
+
+    /**
+     * This method is called to set the next tune target down from the current target.
+     *
+     * @param subsystemName specifies the name of the subsystem to update its tune target.
+     */
+    @Override
+    public void setNextTuneTargetDown(String subsystemName)
+    {
+        if (subsystemName.equalsIgnoreCase(Params.SERVO_NAME))
+        {
+            double target = Params.LOGICAL_MIN_POS;
+            servo.setLogicalPosition(target);
+            servo.tracer.traceInfo(instanceName, "Tune %s Down: target=%.3f", subsystemName, target);
+        }
+    }   //setNextTuneTargetDown
 
 }   //class ServoWrist

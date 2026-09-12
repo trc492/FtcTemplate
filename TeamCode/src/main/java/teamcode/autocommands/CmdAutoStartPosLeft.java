@@ -22,7 +22,7 @@
 
 package teamcode.autocommands;
 
-import teamcode.FtcAuto;
+import teamcode.FtcAuto.AutoChoices;
 import teamcode.Robot;
 import teamcode.RobotParams;
 import trclib.pathdrive.TrcPose2D;
@@ -42,15 +42,15 @@ public class CmdAutoStartPosLeft implements TrcRobot.RobotCommand
     {
         START,
         SCORE_PRELOAD,
-        GOTO_RING_POS,
-        PICKUP_RING,
+        GOTO_PICKUP_POS,
+        PICKUP_OBJECT,
         GOTO_START_POS,
-        SCORE_RING,
+        SCORE_OBJECT,
         DONE
     }   //enum State
 
     private final Robot robot;
-    private final FtcAuto.AutoChoices autoChoices;
+    private final AutoChoices autoChoices;
     private final TrcTimer timer;
     private final TrcEvent event;
     private final TrcStateMachine<State> sm;
@@ -63,7 +63,7 @@ public class CmdAutoStartPosLeft implements TrcRobot.RobotCommand
      * @param robot specifies the robot object for providing access to various global objects.
      * @param autoChoices specifies the autoChoices object.
      */
-    public CmdAutoStartPosLeft(Robot robot, FtcAuto.AutoChoices autoChoices)
+    public CmdAutoStartPosLeft(Robot robot, AutoChoices autoChoices)
     {
         this.robot = robot;
         this.autoChoices = autoChoices;
@@ -71,12 +71,31 @@ public class CmdAutoStartPosLeft implements TrcRobot.RobotCommand
         timer = new TrcTimer(moduleName);
         event = new TrcEvent(moduleName);
         sm = new TrcStateMachine<>(moduleName);
-        sm.start(State.START);
     }   //CmdAutoStartPosLeft
 
     //
     // Implements the TrcRobot.RobotCommand interface.
     //
+
+    /**
+     * This method starts the RobotCommand. It is called to set the state to start from the beginning. Typically,
+     * you will reset the state machine to the initial state and reset any timers used by the command.
+     */
+    @Override
+    public void start()
+    {
+        sm.start(State.START);
+    }   //start
+
+    /**
+     * This method cancels the command if it is active.
+     */
+    @Override
+    public void cancel()
+    {
+        timer.cancel();
+        sm.stop();
+    }   //cancel
 
     /**
      * This method checks if the current RobotCommand  is running.
@@ -88,16 +107,6 @@ public class CmdAutoStartPosLeft implements TrcRobot.RobotCommand
     {
         return sm.isEnabled();
     }   //isActive
-
-    /**
-     * This method cancels the command if it is active.
-     */
-    @Override
-    public void cancel()
-    {
-        timer.cancel();
-        sm.stop();
-    }   //cancel
 
     /**
      * This method must be called periodically by the caller to drive the command sequence forward.
@@ -120,25 +129,24 @@ public class CmdAutoStartPosLeft implements TrcRobot.RobotCommand
 
         if (state == null)
         {
-            robot.dashboard.displayPrintf(8, "State: disabled or waiting (nextState=" + sm.getNextState() + ")...");
+            robot.dashboard.displayPrintf(15, "State: disabled or waiting (nextState=" + sm.getNextState() + ")...");
         }
         else
         {
-            robot.dashboard.displayPrintf(8, "State: " + state);
+            robot.dashboard.displayPrintf(15, "State: " + state);
             robot.globalTracer.tracePreStateInfo(sm.toString(), state);
             switch (state)
             {
                 case START:
                     // Set robot location according to auto choices.
                     robot.setRobotStartPosition(autoChoices);
-                    startPose = robot.robotDrive.driveBase.getFieldPosition();
-                    // Retrieve auto choice options.
+                    startPose = robot.robotBase.driveBase.getFieldPosition();
                     // Do delay if necessary.
-                    if (autoChoices.delay > 0.0)
+                    if (autoChoices.startDelay > 0.0)
                     {
-                        robot.globalTracer.traceInfo(moduleName, "***** Do delay " + autoChoices.delay + "s.");
-                        timer.set(autoChoices.delay, event);
-                        sm.waitForSingleEvent(event, State.SCORE_PRELOAD);
+                        robot.globalTracer.traceInfo(moduleName, "***** Do delay " + autoChoices.startDelay + "s.");
+                        timer.set(autoChoices.startDelay, event);
+                        sm.waitForEvents(State.SCORE_PRELOAD, event);
                     }
                     else
                     {
@@ -150,35 +158,34 @@ public class CmdAutoStartPosLeft implements TrcRobot.RobotCommand
                     if (autoChoices.scorePreload)
                     {
                         robot.autoShootTask.autoShoot(null, event, autoChoices.useVision, (int[]) null);
-                        sm.waitForSingleEvent(event, State.GOTO_RING_POS);
+                        sm.waitForEvents(State.GOTO_PICKUP_POS, event);
                     }
                     else
                     {
-                        sm.setState(State.GOTO_RING_POS);
+                        sm.setState(State.GOTO_PICKUP_POS);
                     }
                     break;
 
-                case GOTO_RING_POS:
-                    robot.robotDrive.purePursuitDrive.start(
-                        null, event, 0.0, false,
-                        robot.adjustPoseByAlliance(RobotParams.Game.BLUE_PICKUP_RING_POSE, autoChoices.alliance));
-                    sm.waitForSingleEvent(event, State.PICKUP_RING);
+                case GOTO_PICKUP_POS:
+                    robot.robotBase.purePursuitDrive.start(
+                        event, 0.0, false, null,
+                        robot.adjustPoseByAlliance(autoChoices.alliance, RobotParams.Game.BLUE_PICKUP_POSE));
+                    sm.waitForEvents(State.PICKUP_OBJECT, event);
                     break;
 
-                case PICKUP_RING:
-                    robot.autoPickupTask.autoPickup(null, event, autoChoices.useVision);
-                    sm.waitForSingleEvent(event, State.GOTO_START_POS);
+                case PICKUP_OBJECT:
+                    robot.autoPickupTask.autoPickup(null, event, autoChoices.alliance, autoChoices.useVision);
+                    sm.waitForEvents(State.GOTO_START_POS, event);
                     break;
 
                 case GOTO_START_POS:
-                    robot.robotDrive.purePursuitDrive.start(
-                        null, event, 0.0, false, startPose);
-                    sm.waitForSingleEvent(event, State.SCORE_RING);
+                    robot.robotBase.purePursuitDrive.start(event, 0.0, false, null, startPose);
+                    sm.waitForEvents(State.SCORE_OBJECT, event);
                     break;
 
-                case SCORE_RING:
+                case SCORE_OBJECT:
                     robot.autoShootTask.autoShoot(null, event, autoChoices.useVision, (int[]) null);
-                    sm.waitForSingleEvent(event, State.DONE);
+                    sm.waitForEvents(State.DONE, event);
                     break;
 
                 case DONE:
@@ -188,8 +195,8 @@ public class CmdAutoStartPosLeft implements TrcRobot.RobotCommand
                     break;
             }
             robot.globalTracer.tracePostStateInfo(
-                sm.toString(), state, robot.robotDrive.driveBase, robot.robotDrive.pidDrive,
-                robot.robotDrive.purePursuitDrive, null);
+                sm.toString(), state, robot.robotBase.driveBase, robot.robotBase.pidDrive,
+                robot.robotBase.purePursuitDrive, null);
         }
 
         return !sm.isEnabled();

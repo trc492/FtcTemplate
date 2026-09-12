@@ -25,6 +25,7 @@ package teamcode.subsystems;
 import ftclib.driverio.FtcDashboard;
 import ftclib.motor.FtcMotorActuator;
 import ftclib.motor.FtcMotorActuator.MotorType;
+import teamcode.Dashboard;
 import trclib.controller.TrcPidController;
 import trclib.motor.TrcMotor;
 import trclib.robotcore.TrcEvent;
@@ -39,63 +40,75 @@ import trclib.subsystem.TrcSubsystem;
  */
 public class CrServoArm extends TrcSubsystem
 {
+    public static final String SUBSYSTEM_NAME = "CrServoArm";
+    private static final boolean NEED_ZERO_CAL = false;
+
     public static final class Params
     {
-        public static final String SUBSYSTEM_NAME               = "CrServoArm";
-        public static final boolean NEED_ZERO_CAL               = false;
+        public static final MotorType MOTOR_TYPE                = MotorType.CRServo;
 
         public static final String PRIMARY_MOTOR_NAME           = SUBSYSTEM_NAME + ".primary";
-        public static final MotorType PRIMARY_MOTOR_TYPE        = MotorType.CRServo;
         public static final boolean PRIMARY_MOTOR_INVERTED      = false;
+        public static final boolean PRIMARY_MOTOR_VOLTCOMP_ENABLED = true;
+        public static final boolean PRIMARY_MOTOR_BRAKE_ENABLED = false;
 
         public static final String FOLLOWER_MOTOR_NAME          = SUBSYSTEM_NAME + ".follower";
-        public static final MotorType FOLLOWER_MOTOR_TYPE       = MotorType.CRServo;
         public static final boolean FOLLOWER_MOTOR_INVERTED     = true;
+        public static final boolean FOLLOWER_MOTOR_VOLTCOMP_ENABLED = true;
+        public static final boolean FOLLOWER_MOTOR_BRAKE_ENABLED = false;
 
-        public static final String ABSENC_NAME                  = SUBSYSTEM_NAME + ".enc";
+        public static final String ABSENC_NAME                  = SUBSYSTEM_NAME + ".absEnc";
         public static final boolean ABSENC_INVERTED             = true;
-        public static final double ABSENC_ZERO_OFFSET           = 0.949697;
+
+        public static final double POS_PID_TOLERANCE            = 1.0;
+        public static final boolean USE_SOFTWARE_PID            = true;
+        public static final TrcPidController.PidCoefficients posPidCoeffs =
+            new TrcPidController.PidCoefficients(0.0162, 0.0, 0.0, 0.0, 2.0);
 
         public static final double POS_DEG_SCALE                = 360.0;
         public static final double POS_OFFSET                   = 27.0;
-        public static final double POWER_LIMIT                  = 0.25;
-
+        public static final double ABSENC_ZERO_OFFSET           = 0.949697;
         public static final double MIN_POS                      = 27.3;
         public static final double MAX_POS                      = 300.0;
         public static final double TURTLE_POS                   = MIN_POS;
         public static final double TURTLE_DELAY                 = 0.0;
-        public static final double[] posPresets                 = {
-            30.0, 60.0, 90.0, 120.0, 150.0, 180.0, 210.0, 240.0, 270.0};
         public static final double POS_PRESET_TOLERANCE         = 5.0;
+        public static final double[] posPresets                 =
+            {30.0, 60.0, 90.0, 120.0, 150.0, 180.0, 210.0, 240.0, 270.0};
 
-        public static final boolean SOFTWARE_PID_ENABLED        = true;
-        public static final TrcPidController.PidCoefficients posPidCoeffs =
-            new TrcPidController.PidCoefficients(0.0162, 0.0, 0.0, 0.0, 2.0);
-        public static final double POS_PID_TOLERANCE            = 1.0;
-        public static final double GRAVITY_COMP_MAX_POWER       = 0.1675;
+        public static final double POWER_LIMIT                  = 0.25;
+        public static final double GRAVITY_COMP_POWER           = 0.1675;
     }   //class Params
 
     private final FtcDashboard dashboard;
     private final TrcMotor motor;
+    private String tuneSubsystemName = null;
     private Double tuneGravityCompPower = null;
+    private double prevArmPower = 0.0;
 
     /**
      * Constructor: Creates an instance of the object.
      */
     public CrServoArm()
     {
-        super(Params.SUBSYSTEM_NAME, Params.NEED_ZERO_CAL);
+        super(SUBSYSTEM_NAME, NEED_ZERO_CAL);
 
         dashboard = FtcDashboard.getInstance();
         FtcMotorActuator.Params motorParams = new FtcMotorActuator.Params()
-            .setPrimaryMotor(Params.PRIMARY_MOTOR_NAME, Params.PRIMARY_MOTOR_TYPE, Params.PRIMARY_MOTOR_INVERTED)
-            .setFollowerMotor(Params.FOLLOWER_MOTOR_NAME, Params.FOLLOWER_MOTOR_TYPE, Params.FOLLOWER_MOTOR_INVERTED)
+            .setPrimaryMotor(
+                Params.PRIMARY_MOTOR_NAME, Params.MOTOR_TYPE, Params.PRIMARY_MOTOR_INVERTED,
+                Params.PRIMARY_MOTOR_VOLTCOMP_ENABLED, Params.PRIMARY_MOTOR_BRAKE_ENABLED)
+            .addFollowerMotor(
+                Params.FOLLOWER_MOTOR_NAME, Params.MOTOR_TYPE, Params.FOLLOWER_MOTOR_INVERTED,
+                Params.FOLLOWER_MOTOR_VOLTCOMP_ENABLED, Params.FOLLOWER_MOTOR_BRAKE_ENABLED)
             .setExternalEncoder(Params.ABSENC_NAME, Params.ABSENC_INVERTED)
             .setPositionScaleAndOffset(Params.POS_DEG_SCALE, Params.POS_OFFSET, Params.ABSENC_ZERO_OFFSET)
             .setPositionPresets(Params.POS_PRESET_TOLERANCE, Params.posPresets);
         motor = new FtcMotorActuator(motorParams).getMotor();
         motor.setPositionPidParameters(
-            Params.posPidCoeffs, Params.POS_PID_TOLERANCE, Params.SOFTWARE_PID_ENABLED);
+            new TrcMotor.PidParams()
+                .setPidCoefficients(Params.posPidCoeffs)
+                .setPidControlParams(Params.POS_PID_TOLERANCE, Params.USE_SOFTWARE_PID), null);
         motor.setPositionPidPowerComp(this::getGravityComp);
         motor.setSoftPositionLimits(Params.MIN_POS, Params.MAX_POS, false);
     }   //CrServoArm
@@ -113,12 +126,13 @@ public class CrServoArm extends TrcSubsystem
     /**
      * This method calculates the power required to make the arm gravity neutral.
      *
+     * @param motor specifies the motor for determining its gravity comp power.
      * @param currPower specifies the current applied PID power (not used).
      * @return calculated compensation power.
      */
-    private double getGravityComp(double currPower)
+    private double getGravityComp(TrcMotor motor, double currPower)
     {
-        double gravityCompPower = tuneGravityCompPower != null? tuneGravityCompPower: Params.GRAVITY_COMP_MAX_POWER;
+        double gravityCompPower = tuneGravityCompPower != null? tuneGravityCompPower: Params.GRAVITY_COMP_POWER;
         return gravityCompPower * Math.sin(Math.toRadians(motor.getPosition()));
     }   //getGravityComp
 
@@ -138,13 +152,14 @@ public class CrServoArm extends TrcSubsystem
     /**
      * This method starts zero calibrate of the subsystem.
      *
-     * @param owner specifies the owner ID to to claim subsystem ownership, can be null if ownership not required.
-     * @param event specifies an event to signal when zero calibration is done, can be null if not provided.
+     * @param owner specifies the owner ID to check if the caller has ownership of the motor.
+     * @param completionEvent specifies the event to signal when the zero calibration is done,
+     *        can be null if not provided.
      */
     @Override
-    public void zeroCalibrate(String owner, TrcEvent event)
+    public void zeroCalibrate(String owner, TrcEvent completionEvent)
     {
-        // No zero calibration needed.
+        // No zero calibration needed for absolute encoder.
     }   //zeroCalibrate
 
     /**
@@ -155,6 +170,52 @@ public class CrServoArm extends TrcSubsystem
     {
         motor.setPosition(Params.TURTLE_DELAY, Params.TURTLE_POS, true, Params.POWER_LIMIT);
     }   //resetState
+
+    /**
+     * This method is called when gamepad analog control is operated on the subsystem.
+     *
+     * @param altFunc specifies true if the gamepad AltFunc button is pressed, false otherwise.
+     * @param inputs specifies an array of analog values.
+     */
+    @Override
+    public void subsystemControl(boolean altFunc, double... inputs)
+    {
+        double power = inputs[0];
+
+        if (power != prevArmPower)
+        {
+            if (altFunc)
+            {
+                // Manual override.
+                motor.setPower(power);
+            }
+            else
+            {
+                motor.setPidPower(power, Params.POWER_LIMIT, Params.MIN_POS, Params.MAX_POS, true);
+            }
+            prevArmPower = power;
+        }
+    }   //subsystemControl
+
+    /**
+     * This method is called when a gamepad button is pressed to perform the subsystem action.
+     *
+     * @param pressed specifies true if the gamepad button is pressed, false otherwise.
+     * @param altFunc specifies true if the gamepad AltFunc button is pressed, false otherwise.
+     */
+    @Override
+    public void subsystemAction(boolean pressed, boolean altFunc)
+    {
+    }   //subsystemAction
+
+    /**
+     * This method publishes the NetworkTable entries for the subsystem to the Dashboard.
+     */
+    @Override
+    public void publishToDashboard()
+    {
+        // Not applicable for FTC.
+    }   //publishToDashboard
 
     /**
      * This method update the dashboard with the subsystem status.
@@ -170,32 +231,91 @@ public class CrServoArm extends TrcSubsystem
         {
             dashboard.displayPrintf(
                 lineNum++, "%s: power=%.3f, pos=%.3f/%.3f",
-                Params.SUBSYSTEM_NAME, motor.getPower(), motor.getPosition(), motor.getPidTarget());
+                SUBSYSTEM_NAME, motor.getPower(), motor.getPosition(), motor.getPidTarget());
+        }
+        // The following entries need to be updated at fast rate for plotting graphs.
+        if (tuneSubsystemName != null && tuneSubsystemName.equalsIgnoreCase(Params.PRIMARY_MOTOR_NAME))
+        {
+            Dashboard.TuneSubsystem.input = motor.getPosition();
         }
 
         return lineNum;
     }   //updateStatus
 
     /**
-     * This method is called to prep the subsystem for tuning.
+     * This method is called to update subsystem parameter to the Dashboard. This can be used for tuning subsystem
+     * parameters using Dashboard.
      *
-     * @param subComponent specifies the sub-component of the Subsystem to be tuned, can be null if no sub-component.
-     * @param tuneParams specifies tuning parameters.
-     *        tuneParam0 - Kp
-     *        tuneParam1 - Ki
-     *        tuneParam2 - Kd
-     *        tuneParam3 - Kf
-     *        tuneParam4 - iZone
-     *        tuneParam5 - PidTolerance
-     *        tuneParam6 - GravityCompPower
+     * @param subsystemName specifies the name of the subsystem to be updated.
      */
     @Override
-    public void prepSubsystemForTuning(String subComponent, double... tuneParams)
+    public void updateParamsToDashboard(String subsystemName)
     {
-        motor.setPositionPidParameters(
-            tuneParams[0], tuneParams[1], tuneParams[2], tuneParams[3], tuneParams[4], tuneParams[5],
-            MotorArm.Params.SOFTWARE_PID_ENABLED);
-        tuneGravityCompPower = tuneParams[6];
-    }   //prepSubsystemForTuning
+        if (subsystemName.equalsIgnoreCase(Params.PRIMARY_MOTOR_NAME))
+        {
+            Dashboard.TuneSubsystem.pidCoeffs = Params.posPidCoeffs;
+            Dashboard.TuneSubsystem.pidTolerance = Params.POS_PID_TOLERANCE;
+            Dashboard.TuneSubsystem.useSoftwarePid = Params.USE_SOFTWARE_PID;
+            Dashboard.TuneSubsystem.gravityPower = Params.GRAVITY_COMP_POWER;
+            Dashboard.TuneSubsystem.target = Params.MIN_POS;
+        }
+    }   //updateParamsToDashboard
+
+    /**
+     * This method is called to update subsystem parameters from the Dashboard. This can be used for tuning subsystem
+     * parameters using Dashboard.
+     *
+     * @param subsystemName specifies the name of the subsystem to be updated.
+     */
+    @Override
+    public void updateParamsFromDashboard(String subsystemName)
+    {
+        tuneSubsystemName = null;
+        if (subsystemName.equalsIgnoreCase(Params.PRIMARY_MOTOR_NAME))
+        {
+            TrcMotor.PidParams pidParams = new TrcMotor.PidParams()
+                .setPidCoefficients(Dashboard.TuneSubsystem.pidCoeffs)
+                .setPidControlParams(
+                    Dashboard.TuneSubsystem.pidTolerance, Dashboard.TuneSubsystem.useSoftwarePid);
+
+            tuneGravityCompPower = Dashboard.TuneSubsystem.gravityPower;
+            motor.setPositionPidParameters(pidParams, null);
+            motor.setPosition(Dashboard.TuneSubsystem.target);
+            motor.tracer.traceInfo(
+                instanceName, "Tune %s: PidParams=%s, target=%.3f, GravityPower=%.3f",
+                subsystemName, pidParams, Dashboard.TuneSubsystem.target, tuneGravityCompPower);
+            tuneSubsystemName = subsystemName;
+        }
+    }   //updateParamsFromDashboard
+
+    /**
+     * This method is called to set the next tune target up from the current target.
+     *
+     * @param subsystemName specifies the name of the subsystem to update its tune target.
+     */
+    @Override
+    public void setNextTuneTargetUp(String subsystemName)
+    {
+        if (subsystemName.equalsIgnoreCase(Params.PRIMARY_MOTOR_NAME))
+        {
+            double target = motor.presetPositionUp(null, null);
+            motor.tracer.traceInfo(instanceName, "Tune %s Up: target=%.3f", subsystemName, target);
+        }
+    }   //setNextTuneTargetUp
+
+    /**
+     * This method is called to set the next tune target down from the current target.
+     *
+     * @param subsystemName specifies the name of the subsystem to update its tune target.
+     */
+    @Override
+    public void setNextTuneTargetDown(String subsystemName)
+    {
+        if (subsystemName.equalsIgnoreCase(Params.PRIMARY_MOTOR_NAME))
+        {
+            double target = motor.presetPositionDown(null, null);
+            motor.tracer.traceInfo(instanceName, "Tune %s Down: target=%.3f", subsystemName, target);
+        }
+    }   //setNextTuneTargetDown
 
 }   //class CrServoArm

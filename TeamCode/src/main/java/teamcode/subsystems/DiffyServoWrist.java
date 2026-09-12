@@ -38,22 +38,23 @@ import trclib.subsystem.TrcSubsystem;
  */
 public class DiffyServoWrist extends TrcSubsystem
 {
+    public static final String SUBSYSTEM_NAME = "DiffyServoWrist";
+    private static final boolean NEED_ZERO_CAL = false;
+
     public static class Params
     {
-        public static final String SUBSYSTEM_NAME               = "DiffyServoWrist";
-        public static final boolean NEED_ZERO_CAL               = false;
-
-        public static final String SERVO1_NAME                  = Params.SUBSYSTEM_NAME + ".servo1";
+        public static final String SERVO1_NAME                  = SUBSYSTEM_NAME + ".servo1";
         public static final boolean SERVO1_INVERTED             = false;
-        public static final String SERVO2_NAME                  = Params.SUBSYSTEM_NAME + ".servo2";
+
+        public static final String SERVO2_NAME                  = SUBSYSTEM_NAME + ".servo2";
         public static final boolean SERVO2_INVERTED             = !SERVO1_INVERTED;
 
+        public static final double MAX_STEP_RATE                = 300.0;    // deg/sec (max 520)
         public static final double LOGICAL_MIN_POS              = 0.15;
         public static final double LOGICAL_MAX_POS              = 0.85;
         public static final double PHYSICAL_POS_RANGE           = 230.0;
         public static final double TILT_POS_OFFSET              = -20.0;
         public static final double ROTATE_POS_OFFSET            = -1.0;
-        public static final double MAX_STEP_RATE                = 300.0;    // deg/sec (max 520)
 
         public static final double TILT_MIN_POS                 = -90.0;
         public static final double TILT_MAX_POS                 = 90.0;
@@ -61,19 +62,21 @@ public class DiffyServoWrist extends TrcSubsystem
         public static final double ROTATE_MAX_POS               = 90.0;
 
         public static final double POS_PRESET_TOLERANCE         = 1.0;
-        public static final double[] tiltPosPresets             = {-110, -90.0, -45.0, 0.0, 45.0, 90.0, 110};
+        public static final double[] tiltPosPresets             = {-110.0, -90.0, -45.0, 0.0, 45.0, 90.0, 110.0};
         public static final double[] rotatePosPresets           = {-90.0, -45.0, 0.0, 45.0, 90.0};
     }   //class Params
 
     private final FtcDashboard dashboard;
-    public final TrcDifferentialServoWrist diffyWrist;
+    public final TrcDifferentialServoWrist wrist;
+    private double prevTiltPower = 0.0;
+    private double prevRotatePower = 0.0;
 
     /**
      * Constructor: Creates an instance of the object.
      */
     public DiffyServoWrist()
     {
-        super(Params.SUBSYSTEM_NAME, Params.NEED_ZERO_CAL);
+        super(SUBSYSTEM_NAME, NEED_ZERO_CAL);
 
         dashboard = FtcDashboard.getInstance();
         FtcDifferentialServoWrist.Params wristParams = new FtcDifferentialServoWrist.Params()
@@ -85,8 +88,8 @@ public class DiffyServoWrist extends TrcSubsystem
             .setPositionLimits(Params.TILT_MIN_POS, Params.TILT_MAX_POS, Params.ROTATE_MIN_POS, Params.ROTATE_MAX_POS)
             .setPosPresets(Params.POS_PRESET_TOLERANCE, Params.tiltPosPresets, Params.rotatePosPresets);
 
-        diffyWrist = new FtcDifferentialServoWrist(Params.SUBSYSTEM_NAME, wristParams).getWrist();
-        diffyWrist.setPosition(90.0, 0.0);
+        wrist = new FtcDifferentialServoWrist(SUBSYSTEM_NAME, wristParams).getWrist();
+        wrist.setPosition(90.0, 0.0);
     }   //DiffyServoWrist
 
     /**
@@ -96,7 +99,7 @@ public class DiffyServoWrist extends TrcSubsystem
      */
     public double getTiltPosition()
     {
-        return diffyWrist.getTiltPosition();
+        return wrist.getTiltPosition();
     }   //getTiltPosition
 
     /**
@@ -106,7 +109,7 @@ public class DiffyServoWrist extends TrcSubsystem
      */
     public double getRotatePosition()
     {
-        return diffyWrist.getRotatePosition();
+        return wrist.getRotatePosition();
     }   //getRotatePosition
 
     /**
@@ -140,7 +143,7 @@ public class DiffyServoWrist extends TrcSubsystem
         {
             rotatePos = getRotatePosition();
         }
-        diffyWrist.setPosition(owner, delay, tiltPos, rotatePos, completionEvent, timeout);
+        wrist.setPosition(owner, delay, tiltPos, rotatePos, completionEvent, timeout);
     }   //setPosition
 
     /**
@@ -194,7 +197,7 @@ public class DiffyServoWrist extends TrcSubsystem
      */
     public void tiltPresetPositionUp(String owner)
     {
-        diffyWrist.tiltPresetPositionUp(owner);
+        wrist.tiltPresetPositionUp(owner);
     }   //tiltPresetPositionUp
 
     /**
@@ -206,7 +209,7 @@ public class DiffyServoWrist extends TrcSubsystem
      */
     public void tiltPresetPositionDown(String owner)
     {
-        diffyWrist.tiltPresetPositionDown(owner);
+        wrist.tiltPresetPositionDown(owner);
     }   //tiltPresetPositionDown
 
     /**
@@ -218,7 +221,7 @@ public class DiffyServoWrist extends TrcSubsystem
      */
     public void rotatePresetPositionUp(String owner)
     {
-        diffyWrist.rotatePresetPositionUp(owner);
+        wrist.rotatePresetPositionUp(owner);
     }   //rotatePresetPositionUp
 
     /**
@@ -230,7 +233,7 @@ public class DiffyServoWrist extends TrcSubsystem
      */
     public void rotatePresetPositionDown(String owner)
     {
-        diffyWrist.rotatePresetPositionDown(owner);
+        wrist.rotatePresetPositionDown(owner);
     }   //rotatePresetPositionDown
 
     //
@@ -243,17 +246,18 @@ public class DiffyServoWrist extends TrcSubsystem
     @Override
     public void cancel()
     {
-        diffyWrist.cancel();
+        wrist.cancel();
     }   //cancel
 
     /**
      * This method starts zero calibrate of the subsystem.
      *
-     * @param owner specifies the owner ID to to claim subsystem ownership, can be null if ownership not required.
-     * @param event specifies an event to signal when zero calibration is done, can be null if not provided.
+     * @param owner specifies the owner ID to check if the caller has ownership of the motor.
+     * @param completionEvent specifies the event to signal when the zero calibration is done,
+     *        can be null if not provided.
      */
     @Override
-    public void zeroCalibrate(String owner, TrcEvent event)
+    public void zeroCalibrate(String owner, TrcEvent completionEvent)
     {
         // No zero calibration needed.
     }   //zeroCalibrate
@@ -266,6 +270,46 @@ public class DiffyServoWrist extends TrcSubsystem
     {
         setPosition(-90.0, 0.0);
     }   //resetState
+
+    /**
+     * This method is called when gamepad analog control is operated on the subsystem.
+     *
+     * @param altFunc specifies true if the gamepad AltFunc button is pressed, false otherwise.
+     * @param inputs specifies an array of analog values.
+     */
+    @Override
+    public void subsystemControl(boolean altFunc, double... inputs)
+    {
+        double rotatePower = inputs[0];
+        double tiltPower = inputs[1];
+
+        if (rotatePower != prevRotatePower || tiltPower != prevTiltPower)
+        {
+            wrist.setPower(tiltPower, rotatePower);
+            prevRotatePower = rotatePower;
+            prevTiltPower = tiltPower;
+        }
+    }   //subsystemControl
+
+    /**
+     * This method is called when a gamepad button is pressed to perform the subsystem action.
+     *
+     * @param pressed specifies true if the gamepad button is pressed, false otherwise.
+     * @param altFunc specifies true if the gamepad AltFunc button is pressed, false otherwise.
+     */
+    @Override
+    public void subsystemAction(boolean pressed, boolean altFunc)
+    {
+    }   //subsystemAction
+
+    /**
+     * This method publishes the NetworkTable entries for the subsystem to the Dashboard.
+     */
+    @Override
+    public void publishToDashboard()
+    {
+        // Not applicable for FTC.
+    }   //publishToDashboard
 
     /**
      * This method update the dashboard with the subsystem status.
@@ -281,30 +325,57 @@ public class DiffyServoWrist extends TrcSubsystem
         {
             dashboard.displayPrintf(
                 lineNum++, "%s: tilt(pwr/pos)=%.1f/%.1f,rotate(pwr/pos)=%.1f/%.1f",
-                Params.SUBSYSTEM_NAME, diffyWrist.getTiltPower(), diffyWrist.getTiltPosition(),
-                diffyWrist.getRotatePower(), diffyWrist.getRotatePosition());
+                SUBSYSTEM_NAME, wrist.getTiltPower(), wrist.getTiltPosition(), wrist.getRotatePower(),
+                wrist.getRotatePosition());
         }
 
         return lineNum;
     }   //updateStatus
 
     /**
-     * This method is called to prep the subsystem for tuning.
+     * This method is called to update subsystem parameter to the Dashboard. This can be used for tuning subsystem
+     * parameters using Dashboard.
      *
-     * @param subComponent specifies the sub-component of the Subsystem to be tuned, can be null if no sub-component.
-     * @param tuneParams specifies tuning parameters.
-     *        tuneParam0 - Kp
-     *        tuneParam1 - Ki
-     *        tuneParam2 - Kd
-     *        tuneParam3 - Kf
-     *        tuneParam4 - iZone
-     *        tuneParam5 - PidTolerance
-     *        tuneParam6 - GravityCompPower
+     * @param subsystemName specifies the name of the subsystem to be updated.
      */
     @Override
-    public void prepSubsystemForTuning(String subComponent, double... tuneParams)
+    public void updateParamsToDashboard(String subsystemName)
     {
         // DiffyWirst doesn't support tuning.
-    }   //prepSubsystemForTuning
+    }   //updateParamsToDashboard
+
+    /**
+     * This method is called to update subsystem parameters from the Dashboard. This can be used for tuning subsystem
+     * parameters using Dashboard.
+     *
+     * @param subsystemName specifies the name of the subsystem to be updated.
+     */
+    @Override
+    public void updateParamsFromDashboard(String subsystemName)
+    {
+        // DiffyWirst doesn't support tuning.
+    }   //updateParamsFromDashboard
+
+    /**
+     * This method is called to set the next tune target up from the current target.
+     *
+     * @param subsystemName specifies the name of the subsystem to update its tune target.
+     */
+    @Override
+    public void setNextTuneTargetUp(String subsystemName)
+    {
+        // DiffyWirst doesn't support tuning.
+    }   //setNextTuneTargetUp
+
+    /**
+     * This method is called to set the next tune target down from the current target.
+     *
+     * @param subsystemName specifies the name of the subsystem to update its tune target.
+     */
+    @Override
+    public void setNextTuneTargetDown(String subsystemName)
+    {
+        // DiffyWirst doesn't support tuning.
+    }   //setNextTuneTargetDown
 
 }   //class DiffyServoWrist

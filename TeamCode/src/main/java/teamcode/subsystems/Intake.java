@@ -25,6 +25,8 @@ package teamcode.subsystems;
 import ftclib.driverio.FtcDashboard;
 import ftclib.motor.FtcMotorActuator.MotorType;
 import ftclib.subsystem.FtcRollerIntake;
+import teamcode.FtcAuto;
+import teamcode.Robot;
 import trclib.robotcore.TrcEvent;
 import trclib.subsystem.TrcRollerIntake;
 import trclib.subsystem.TrcSubsystem;
@@ -36,22 +38,26 @@ import trclib.subsystem.TrcRollerIntake.TriggerAction;
  */
 public class Intake extends TrcSubsystem
 {
+    public static final String SUBSYSTEM_NAME = "Intake";
+    private static final boolean NEED_ZERO_CAL = false;
+
     public static final class Params
     {
-        public static final String SUBSYSTEM_NAME               = "Intake";
-        public static final boolean NEED_ZERO_CAL               = false;
+        private static final boolean HAS_TWO_MOTORS             = false;
+        private static final boolean HAS_FRONT_SENSOR           = false;
+        private static final boolean HAS_BACK_SENSOR            = true;
 
-        public static final boolean HAS_TWO_MOTORS              = false;
-        public static final boolean HAS_FRONT_SENSOR            = false;
-        public static final boolean HAS_BACK_SENSOR             = true;
+        public static final MotorType MOTOR_TYPE                = MotorType.DcMotor;
 
         public static final String PRIMARY_MOTOR_NAME           = SUBSYSTEM_NAME + ".primary";
-        public static final MotorType PRIMARY_MOTOR_TYPE        = MotorType.DcMotor;
         public static final boolean PRIMARY_MOTOR_INVERTED      = true;
+        public static final boolean PRIMARY_MOTOR_VOLTCOMP_ENABLED = true;
+        public static final boolean PRIMARY_MOTOR_BRAKE_ENABLED = true;
 
         public static final String FOLLOWER_MOTOR_NAME          = SUBSYSTEM_NAME + ".follower";
-        public static final MotorType FOLLOWER_MOTOR_TYPE       = MotorType.DcMotor;
         public static final boolean FOLLOWER_MOTOR_INVERTED     = !PRIMARY_MOTOR_INVERTED;
+        public static final boolean FOLLOWER_MOTOR_VOLTCOMP_ENABLED = true;
+        public static final boolean FOLLOWER_MOTOR_BRAKE_ENABLED= true;
 
         public static final String FRONT_SENSOR_NAME            = SUBSYSTEM_NAME + ".frontSensor";
         public static final boolean FRONT_SENSOR_INVERTED       = false;
@@ -66,26 +72,33 @@ public class Intake extends TrcSubsystem
         public static final double EJECT_FINISH_DELAY           = 0.5;
     }   //class Params
 
+    private final Robot robot;
     private final FtcDashboard dashboard;
     private final TrcRollerIntake intake;
 
     /**
      * Constructor: Creates an instance of the object.
+     *
+     * @param robot specifies the robot object to access other subsystems if necessary.
      */
-    public Intake()
+    public Intake(Robot robot)
     {
-        super(Params.SUBSYSTEM_NAME, Params.NEED_ZERO_CAL);
+        super(SUBSYSTEM_NAME, NEED_ZERO_CAL);
 
+        this.robot = robot;
         dashboard = FtcDashboard.getInstance();
         FtcRollerIntake.Params intakeParams = new FtcRollerIntake.Params()
-            .setPrimaryMotor(Params.PRIMARY_MOTOR_NAME, Params.PRIMARY_MOTOR_TYPE, Params.PRIMARY_MOTOR_INVERTED)
+            .setPrimaryMotor(
+                Params.PRIMARY_MOTOR_NAME, Params.MOTOR_TYPE, Params.PRIMARY_MOTOR_INVERTED,
+                Params.PRIMARY_MOTOR_VOLTCOMP_ENABLED, Params.PRIMARY_MOTOR_BRAKE_ENABLED)
             .setPowerLevels(Params.INTAKE_POWER, Params.EJECT_POWER, Params.RETAIN_POWER)
             .setFinishDelays(Params.INTAKE_FINISH_DELAY, Params.EJECT_FINISH_DELAY);
 
         if (Params.HAS_TWO_MOTORS)
         {
-            intakeParams.setFollowerMotor(
-                Params.FOLLOWER_MOTOR_NAME, Params.FOLLOWER_MOTOR_TYPE, Params.FOLLOWER_MOTOR_INVERTED);
+            intakeParams.addFollowerMotor(
+                Params.FOLLOWER_MOTOR_NAME, Params.MOTOR_TYPE, Params.FOLLOWER_MOTOR_INVERTED,
+                Params.FOLLOWER_MOTOR_VOLTCOMP_ENABLED, Params.FOLLOWER_MOTOR_BRAKE_ENABLED);
         }
 
         if (Params.HAS_FRONT_SENSOR)
@@ -99,7 +112,7 @@ public class Intake extends TrcSubsystem
             intakeParams.setBackDigitalInputTrigger(
                 Params.BACK_SENSOR_NAME, Params.BACK_SENSOR_INVERTED, TriggerAction.FinishOnTrigger, null, null, null);
         }
-        intake = new FtcRollerIntake(Params.SUBSYSTEM_NAME, intakeParams).getIntake();
+        intake = new FtcRollerIntake(SUBSYSTEM_NAME, intakeParams).getIntake();
     }   //Intake
 
     /**
@@ -128,11 +141,12 @@ public class Intake extends TrcSubsystem
     /**
      * This method starts zero calibrate of the subsystem.
      *
-     * @param owner specifies the owner ID to to claim subsystem ownership, can be null if ownership not required.
-     * @param event specifies an event to signal when zero calibration is done, can be null if not provided.
+     * @param owner specifies the owner ID to check if the caller has ownership of the motor.
+     * @param completionEvent specifies the event to signal when the zero calibration is done,
+     *        can be null if not provided.
      */
     @Override
-    public void zeroCalibrate(String owner, TrcEvent event)
+    public void zeroCalibrate(String owner, TrcEvent completionEvent)
     {
         // Intake does not need zero calibration.
     }   //zeroCalibrate
@@ -145,6 +159,84 @@ public class Intake extends TrcSubsystem
     {
         // Intake does not support resetState.
     }   //resetState
+
+    /**
+     * This method is called when gamepad analog control is operated on the subsystem.
+     *
+     * @param altFunc specifies true if the gamepad AltFunc button is pressed, false otherwise.
+     * @param inputs specifies an array of analog values.
+     */
+    @Override
+    public void subsystemControl(boolean altFunc, double... inputs)
+    {
+    }   //subsystemControl
+
+    /**
+     * This method is called when a gamepad button is pressed to perform the subsystem action.
+     *
+     * @param pressed specifies true if the gamepad button is pressed, false otherwise.
+     * @param altFunc specifies true if the gamepad AltFunc button is pressed, false otherwise.
+     */
+    @Override
+    public void subsystemAction(boolean pressed, boolean altFunc)
+    {
+        if (pressed)
+        {
+            if (robot.autoPickupTask != null)
+            {
+                if (robot.autoPickupTask.isActive())
+                {
+                    robot.autoPickupTask.cancel();
+                    robot.globalTracer.traceInfo(instanceName, ">>>>> Cancel Auto Pickup");
+                }
+                else
+                {
+                    robot.autoPickupTask.autoPickup(
+                        instanceName, null, FtcAuto.autoChoices.alliance, !altFunc);
+                    robot.globalTracer.traceInfo(
+                        instanceName, ">>>>> Auto Pickup (useVision=" + !altFunc + ")");
+                }
+            }
+            else
+            {
+                if (altFunc)
+                {
+                    if (robot.intake.getPower() == 0.0)
+                    {
+                        robot.intake.setPower(Params.INTAKE_POWER);
+                        robot.globalTracer.traceInfo(instanceName, ">>>>> Manual Intake");
+                    }
+                    else
+                    {
+                        robot.intake.cancel();
+                        robot.globalTracer.traceInfo(instanceName, ">>>>> Cancel Manual Intake");
+                    }
+                }
+                else
+                {
+                    if (robot.intake.isAutoActive())
+                    {
+                        robot.intake.cancel();
+                        robot.globalTracer.traceInfo(instanceName, ">>>>> Cancel Sensor Intake");
+                    }
+                    else
+                    {
+                        robot.intake.autoIntake(instanceName);
+                        robot.globalTracer.traceInfo(instanceName, ">>>>> Sensor Intake");
+                    }
+                }
+            }
+        }
+    }   //subsystemAction
+
+    /**
+     * This method publishes the NetworkTable entries for the subsystem to the Dashboard.
+     */
+    @Override
+    public void publishToDashboard()
+    {
+        // Not applicable for FTC.
+    }   //publishToDashboard
 
     /**
      * This method update the dashboard with the subsystem status.
@@ -160,23 +252,57 @@ public class Intake extends TrcSubsystem
         {
             dashboard.displayPrintf(
                 lineNum++, "%s: power=%.3f, current=%.3f, hasObject=%s, sensorState=%s/%s, autoActive=%s",
-                Params.SUBSYSTEM_NAME, intake.getPower(), intake.getCurrent(), intake.hasObject(),
-                intake.getFrontTriggerState(), intake.getBackTriggerState(), intake.isAutoActive());
+                SUBSYSTEM_NAME, intake.getPower(), intake.getCurrent(), intake.hasObject(),
+                intake.getFrontSensorState(), intake.getBackSensorState(), intake.isAutoActive());
         }
 
         return lineNum;
     }   //updateStatus
 
     /**
-     * This method is called to prep the subsystem for tuning.
+     * This method is called to update subsystem parameter to the Dashboard. This can be used for tuning subsystem
+     * parameters using Dashboard.
      *
-     * @param subComponent specifies the sub-component of the Subsystem to be tuned, can be null if no sub-component.
-     * @param tuneParams specifies tuning parameters.
+     * @param subsystemName specifies the name of the subsystem to be updated.
      */
     @Override
-    public void prepSubsystemForTuning(String subComponent, double... tuneParams)
+    public void updateParamsToDashboard(String subsystemName)
     {
         // Intake subsystem doesn't need tuning.
-    }   //prepSubsystemForTuning
+    }   //updateParamsToDashboard
+
+    /**
+     * This method is called to update subsystem parameters from the Dashboard. This can be used for tuning subsystem
+     * parameters using Dashboard.
+     *
+     * @param subsystemName specifies the name of the subsystem to be updated.
+     */
+    @Override
+    public void updateParamsFromDashboard(String subsystemName)
+    {
+        // Intake subsystem doesn't need tuning.
+    }   //updateParamsFromDashboard
+
+    /**
+     * This method is called to set the next tune target up from the current target.
+     *
+     * @param subsystemName specifies the name of the subsystem to update its tune target.
+     */
+    @Override
+    public void setNextTuneTargetUp(String subsystemName)
+    {
+        // Intake subsystem doesn't need tuning.
+    }   //setNextTuneTargetUp
+
+    /**
+     * This method is called to set the next tune target down from the current target.
+     *
+     * @param subsystemName specifies the name of the subsystem to update its tune target.
+     */
+    @Override
+    public void setNextTuneTargetDown(String subsystemName)
+    {
+        // Intake subsystem doesn't need tuning.
+    }   //setNextTuneTargetDown
 
 }   //class Intake
