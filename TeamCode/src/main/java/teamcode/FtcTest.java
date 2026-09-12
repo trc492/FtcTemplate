@@ -26,22 +26,26 @@ import androidx.annotation.NonNull;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import ftclib.drivebase.FtcRobotBase;
 import ftclib.drivebase.FtcSwerveBase;
 import ftclib.driverio.FtcChoiceMenu;
+import ftclib.driverio.FtcDashboard;
 import ftclib.driverio.FtcGamepad;
 import ftclib.driverio.FtcMenu;
+import ftclib.driverio.FtcValueMenu;
 import teamcode.vision.Vision;
 import trclib.command.CmdDriveMotorsTest;
 import trclib.command.CmdPidDrive;
+import trclib.command.CmdPurePursuitDrive;
 import trclib.command.CmdTimedDrive;
 import trclib.controller.TrcPidController;
 import trclib.dataprocessor.TrcUtil;
+import trclib.drivebase.TrcDriveBase.MotorIndex;
 import trclib.motor.TrcMotor;
 import trclib.pathdrive.TrcPose2D;
 import trclib.robotcore.TrcDbgTrace;
 import trclib.robotcore.TrcRobot;
 import trclib.subsystem.TrcSubsystem;
+import trclib.timer.TrcElapsedTimer;
 import trclib.timer.TrcTimer;
 
 /**
@@ -55,54 +59,144 @@ public class FtcTest extends FtcTeleOp
     private final String moduleName = getClass().getSimpleName();
     private static final boolean logEvents = false;
     private static final boolean debugPid = false;
-
+    //
+    // Tests.
+    //
     private enum Test
     {
-        SUBSYSTEMS_TEST,
-        DRIVE_MOTORS_TEST,
-        DRIVE_SPEED_TEST,
-        X_TIMED_DRIVE,
-        Y_TIMED_DRIVE,
-        PP_DRIVE,
-        PID_DRIVE,
-        TUNE_PP_DRIVE,
-        TUNE_PID_DRIVE,
-        VISION_TEST,
-        CALIBRATE_SWERVE_STEERING
+        SubsystemsTest,
+        DriveSpeedTest,
+        DriveMotorsTest,
+        XTimedDrive,
+        YTimedDrive,
+        PurePursuitDrive,
+        PidDrive,
+        TuneDriveBasePid,
+        TuneSubsystem,
+        VisionTest,
+        SwerveCalibration
     }   //enum Test
 
     /**
-     * This class stores the test menu choices.
+     * This class encapsulates all test choices for test mode.
      */
     private static class TestChoices
     {
-        Test test = Test.SUBSYSTEMS_TEST;
+        // Standard choice menus.
+        private final FtcChoiceMenu<Test> testMenu;
+        private final FtcValueMenu xTargetMenu;
+        private final FtcValueMenu yTargetMenu;
+        private final FtcValueMenu turnTargetMenu;
+        private final FtcValueMenu drivePowerMenu;
+        private final FtcValueMenu turnPowerMenu;
+        private final FtcValueMenu timedDrivePowerMenu;
+        private final FtcValueMenu timedDriveTimeMenu;
+
+        private Test test = Test.SubsystemsTest;
+        private double driveXTarget = 0.0;
+        private double driveYTarget = 0.0;
+        private double turnTarget = 0.0;
+        private double drivePower = 0.0;
+        private double turnPower = 0.0;
+        private double timedDrivePower = 0.0;
+        private double timedDriveTime = 0.0;
+
+        public TestChoices()
+        {
+            //
+            // Construct menus.
+            //
+            testMenu = new FtcChoiceMenu<>("Tests:", null);
+            xTargetMenu = new FtcValueMenu("xTarget:", testMenu, -12.0, 12.0, 0.5, 4.0, " %.1f ft");
+            yTargetMenu = new FtcValueMenu("yTarget:", xTargetMenu, -12.0, 12.0, 0.5, 4.0, " %.1f ft");
+            turnTargetMenu = new FtcValueMenu("turnTarget:", yTargetMenu, -180.0, 180.0, 5.0, 90.0, " %.0f deg");
+            drivePowerMenu = new FtcValueMenu("Drive power:", turnTargetMenu, -1.0, 1.0, 0.1, 0.5, " %.1f");
+            turnPowerMenu = new FtcValueMenu("Turn power:", drivePowerMenu, -1.0, 1.0, 0.1, 0.5, " %.1f");
+            timedDrivePowerMenu = new FtcValueMenu("Drive power:", testMenu, -1.0, 1.0, 0.1, 0.5, " %.1f");
+            timedDriveTimeMenu = new FtcValueMenu("Drive time:", timedDrivePowerMenu, 0.0, 30.0, 1.0, 5.0, " %.0f sec");
+            //
+            // Populate menus.
+            //
+            testMenu.addChoice("Subsystems test", Test.SubsystemsTest, true);
+            testMenu.addChoice("Drive speed test", Test.DriveSpeedTest, false);
+            testMenu.addChoice("Drive motors test", Test.DriveMotorsTest, false);
+            testMenu.addChoice("X Timed drive", Test.XTimedDrive, false, timedDrivePowerMenu);
+            testMenu.addChoice("Y Timed drive", Test.YTimedDrive, false, timedDrivePowerMenu);
+            testMenu.addChoice("Pure Pursuit Drive", Test.PurePursuitDrive, false, xTargetMenu);
+            testMenu.addChoice("PID drive", Test.PidDrive, false, xTargetMenu);
+            testMenu.addChoice("Tune DriveBase PID", Test.TuneDriveBasePid, false);
+            testMenu.addChoice("Tune Subsystem", Test.TuneSubsystem, false);
+            testMenu.addChoice("Vision test", Test.VisionTest, false);
+            testMenu.addChoice("Calibrate Swerve Steering", Test.SwerveCalibration, false);
+            //
+            // Link Value Menus to their children.
+            //
+            xTargetMenu.setChildMenu(yTargetMenu);
+            yTargetMenu.setChildMenu(turnTargetMenu);
+            turnTargetMenu.setChildMenu(drivePowerMenu);
+            drivePowerMenu.setChildMenu(turnPowerMenu);
+            timedDrivePowerMenu.setChildMenu(timedDriveTimeMenu);
+        }   //TestChoices
+
+        /**
+         * This method displays the Auto Choice menus for selection and stores the choices.
+         */
+        private void fetchChoices(FtcDashboard dashboard)
+        {
+            //
+            // Traverse menus.
+            //
+            FtcMenu.walkMenuTree(testMenu);
+            //
+            // Fetch choices.
+            //
+            test = testMenu.getCurrentChoiceObject();
+            driveXTarget = xTargetMenu.getCurrentValue();
+            driveYTarget = yTargetMenu.getCurrentValue();
+            turnTarget = turnTargetMenu.getCurrentValue();
+            drivePower = drivePowerMenu.getCurrentValue();
+            turnPower = turnPowerMenu.getCurrentValue();
+            timedDrivePower = timedDrivePowerMenu.getCurrentValue();
+            timedDriveTime = timedDriveTimeMenu.getCurrentValue();
+            //
+            // Show choices.
+            //
+            if (dashboard != null)
+            {
+                dashboard.displayPrintf(1, "Test Choices: %s", testChoices);
+            }
+        }   //fetchChoices
 
         @NonNull
         @Override
         public String toString()
         {
-            return "test=\"" + test + "\"";
+            return "test=" + test + "\" " +
+                   "xDistance=" + driveXTarget + " ft " +
+                   "yDistance=" + driveYTarget + " ft " +
+                   "turnDegrees=" + turnTarget + " deg " +
+                   "drivePower=" + drivePower + "\" " +
+                   "turnPower=" + turnPower + "\" " +
+                   "timedDrivePower=" + timedDrivePower + "\" " +
+                   "timedDriveTime=" + timedDriveTime + " sec ";
         }   //toString
-
     }   //class TestChoices
 
-    private final TestChoices testChoices = new TestChoices();
+    private static final TestChoices testChoices = new TestChoices();
+    private static final TrcElapsedTimer loopPerfTimer =
+        RobotParams.Preferences.useLoopPerformanceMonitor? new TrcElapsedTimer("loopPerfMonitor", 2.0): null;
     private TrcRobot.RobotCommand testCommand = null;
-    private boolean teleOpControlEnabled = true;
     // Drive Speed Test.
     private double maxDriveVelocity = 0.0;
     private double maxDriveAcceleration = 0.0;
     private double maxDriveDeceleration = 0.0;
     private double maxTurnVelocity = 0.0;
-    private double prevTime = 0.0;
-    private double prevVelocity = 0.0;
+    private Double prevTime = null;
+    private Double prevVelocity = null;
     // Tune Drive PID.
     private TrcPose2D tuneDriveStartPoint = null;
     private TrcPose2D tuneDriveEndPoint = null;
     private boolean tuneDriveAtEndPoint = false;
-    // Swerve Steering Calibration.
-    private boolean steerCalibrating = false;
     // Vision.
     private boolean fpsMeterEnabled = false;
     private Vision.ColorBlobType testVisionColorBlobType = Vision.ColorBlobType.Any;
@@ -122,19 +216,11 @@ public class FtcTest extends FtcTeleOp
         // TeleOp initialization.
         //
         super.robotInit();
-        //
-        // Test menus.
-        //
-        doTestMenus();
-        // We are tuning subsystems, update Dashboard with the parameters from each subsystem.
-        if (testChoices.test == Test.SUBSYSTEMS_TEST)
-        {
-            TrcSubsystem.updateSubsystemParamsToDashboard(Dashboard.DashboardParams.tuneSubsystemName);
-        }
+        testChoices.fetchChoices(robot.dashboard);
     }   //robotInit
 
     //
-    // Overrides TrcRobot.RobotMode methods.
+    // Extending TrcRobot.RunMode methods in FtcTeleOp.
     //
 
     /**
@@ -147,72 +233,101 @@ public class FtcTest extends FtcTeleOp
     @Override
     public void startMode(TrcRobot.RunMode prevMode, TrcRobot.RunMode nextMode)
     {
+        //
+        // Call TeleOp startMode.
+        //
         super.startMode(prevMode, nextMode);
+        robot.globalTracer.logInfo(moduleName, "TestChoices", "%s", testChoices);
+
         switch (testChoices.test)
         {
-            case DRIVE_MOTORS_TEST:
+            case DriveSpeedTest:
+                maxDriveVelocity = 0.0;
+                maxDriveAcceleration = 0.0;
+                maxDriveDeceleration = 0.0;
+                maxTurnVelocity = 0.0;
+                prevTime = null;
+                prevVelocity = null;
+                break;
+
+            case DriveMotorsTest:
                 if (robot.robotBase != null)
                 {
                     testCommand = new CmdDriveMotorsTest(
                         robot.robotBase.driveBase, robot.robotBase.driveMotors, 5.0, 0.5);
+                    testCommand.start();
                 }
                 break;
 
-            case X_TIMED_DRIVE:
-                if (robot.robotBase != null && robot.robotBase.driveBase.supportsHolonomicDrive())
+            case XTimedDrive:
+            case YTimedDrive:
+                if (robot.robotBase != null &&
+                    (testChoices.test == Test.YTimedDrive || robot.robotBase.driveBase.supportsHolonomicDrive()))
                 {
+                    double xPower, yPower;
+
+                    xPower = yPower = testChoices.drivePower;
+                    if (testChoices.test == Test.XTimedDrive)
+                    {
+                        yPower = 0.0;
+                    }
+                    else
+                    {
+                        xPower = 0.0;
+                    }
                     robot.robotBase.driveBase.resetOdometry();
+                    // robot.robotDrive.driveBase.setGyroAssistEnabled(robot.robotDrive.pidDrive.getTurnPidCtrl());
                     testCommand = new CmdTimedDrive(
-                        robot.robotBase.driveBase, 0.0,
-                        Dashboard.Subsystem_Drivebase.driveBaseParams.driveTime,
-                        Dashboard.Subsystem_Drivebase.driveBaseParams.xDrivePowerLimit, 0.0, 0.0);
-                    robot.dashboard.disableDashboardUpdate();
+                        robot.robotBase.driveBase, 0.0, testChoices.timedDriveTime, xPower, yPower, 0.0);
+                    testCommand.start();
                 }
                 break;
 
-            case Y_TIMED_DRIVE:
-                if (robot.robotBase != null)
-                {
-                    robot.robotBase.driveBase.resetOdometry();
-                    testCommand = new CmdTimedDrive(
-                        robot.robotBase.driveBase, 0.0,
-                        Dashboard.Subsystem_Drivebase.driveBaseParams.driveTime,
-                        0.0, Dashboard.Subsystem_Drivebase.driveBaseParams.yDrivePowerLimit, 0.0);
-                    robot.dashboard.disableDashboardUpdate();
-                }
-                break;
-
-            case PP_DRIVE:
+            case PurePursuitDrive:
                 if (robot.robotBase != null && robot.robotBase.purePursuitDrive != null)
                 {
                     robot.robotBase.driveBase.resetOdometry();
-                    robot.robotBase.purePursuitDrive.setMoveOutputLimit(
-                        Dashboard.Subsystem_Drivebase.driveBaseParams.yDrivePowerLimit);
-                    robot.robotBase.purePursuitDrive.setRotOutputLimit(
-                        Dashboard.Subsystem_Drivebase.driveBaseParams.turnPowerLimit);
-                    robot.robotBase.purePursuitDrive.start(
-                        true, Dashboard.Subsystem_Drivebase.driveBaseParams.profiledMaxDriveVelocity,
-                        Dashboard.Subsystem_Drivebase.driveBaseParams.profiledMaxDriveAcceleration,
-                        Dashboard.Subsystem_Drivebase.driveBaseParams.profiledMaxDriveDeceleration, null,
-                        new TrcPose2D(Dashboard.Subsystem_Drivebase.driveBaseParams.xDriveTarget*12.0,
-                                      Dashboard.Subsystem_Drivebase.driveBaseParams.yDriveTarget*12.0,
-                                      Dashboard.Subsystem_Drivebase.driveBaseParams.turnTarget));
+                    testCommand = new CmdPurePursuitDrive(
+                        robot.robotBase.driveBase,
+                        Dashboard.SubsystemDrivebase.driveBaseParams.xDrivePidCoeffs,
+                        Dashboard.SubsystemDrivebase.driveBaseParams.yDrivePidCoeffs,
+                        Dashboard.SubsystemDrivebase.driveBaseParams.turnPidCoeffs,
+                        Dashboard.SubsystemDrivebase.driveBaseParams.velPidCoeffs);
+
+                    ((CmdPurePursuitDrive) testCommand).startPath(
+                        0.0, true,
+                        Dashboard.SubsystemDrivebase.driveBaseParams.profiledMaxDriveVelocity,
+                        Dashboard.SubsystemDrivebase.driveBaseParams.profiledMaxDriveAcceleration,
+                        Dashboard.SubsystemDrivebase.driveBaseParams.profiledMaxDriveDeceleration,
+                        testChoices.drivePower, testChoices.turnPower,
+                        new TrcPose2D(
+                            testChoices.driveXTarget*12.0,
+                            testChoices.driveYTarget*12.0,
+                            testChoices.turnTarget));
                     robot.robotBase.purePursuitDrive.setTraceLevel(
                         TrcDbgTrace.MsgLevel.INFO, logEvents, debugPid, false);
-                    robot.dashboard.disableDashboardUpdate();
+//                    robot.dashboard.disableDashboardUpdate();
                 }
                 break;
 
-            case PID_DRIVE:
+            case PidDrive:
                 if (robot.robotBase != null && robot.robotBase.pidDrive != null)
                 {
+                    robot.robotBase.driveBase.resetOdometry();
                     testCommand = new CmdPidDrive(robot.robotBase.driveBase, robot.robotBase.pidDrive);
+
+                    ((CmdPidDrive) testCommand).startPath(
+                        0.0, testChoices.drivePower, testChoices.turnPower, null,
+                        new TrcPose2D(
+                            testChoices.driveXTarget*12.0,
+                            testChoices.driveYTarget*12.0,
+                            testChoices.turnTarget));
                     robot.robotBase.pidDrive.setTraceLevel(TrcDbgTrace.MsgLevel.INFO, logEvents, debugPid, false);
-                    robot.dashboard.disableDashboardUpdate();
+//                    robot.dashboard.disableDashboardUpdate();
                 }
                 break;
 
-            case VISION_TEST:
+            case VisionTest:
                 if (robot.vision != null)
                 {
                     if (robot.vision.frontCamAprilTagVision != null)
@@ -235,10 +350,13 @@ public class FtcTest extends FtcTeleOp
                 }
                 break;
 
-            case DRIVE_SPEED_TEST:
-            case TUNE_PP_DRIVE:
-            case TUNE_PID_DRIVE:
-                robot.dashboard.disableDashboardUpdate();
+            case SwerveCalibration:
+                if (robot.robotBase != null && robot.robotBase instanceof FtcSwerveBase)
+                {
+                    robot.globalTracer.traceInfo(moduleName, "Start Swerve Calibration.");
+                    setControlsEnabled(false);
+                    ((FtcSwerveBase) robot.robotBase).startSteeringCalibration();
+                }
                 break;
         }
     }   //startMode
@@ -252,6 +370,26 @@ public class FtcTest extends FtcTeleOp
     @Override
     public void stopMode(TrcRobot.RunMode prevMode, TrcRobot.RunMode nextMode)
     {
+        switch (testChoices.test)
+        {
+            case XTimedDrive:
+            case YTimedDrive:
+                // Cancel GyroAssist in case we turned it on for timed drive.
+                robot.robotBase.driveBase.setGyroAssistEnabled(null);
+                break;
+
+            case SwerveCalibration:
+                if (robot.robotBase != null && robot.robotBase instanceof FtcSwerveBase)
+                {
+                    robot.globalTracer.traceInfo(moduleName, "Stop Swerve Calibration.");
+                    ((FtcSwerveBase) robot.robotBase).stopSteeringCalibration();
+                }
+                break;
+
+            default:
+                break;
+        }
+
         if (testCommand != null)
         {
             testCommand.cancel();
@@ -285,7 +423,7 @@ public class FtcTest extends FtcTeleOp
         //
         switch (testChoices.test)
         {
-            case DRIVE_SPEED_TEST:
+            case DriveSpeedTest:
                 if (robot.robotBase != null)
                 {
                     double currTime = TrcTimer.getCurrentTime();
@@ -293,9 +431,9 @@ public class FtcTest extends FtcTeleOp
                     double velocity = TrcUtil.magnitude(velPose.x, velPose.y);
                     double acceleration = 0.0;
                     double deceleration = 0.0;
-                    double deltaTime = currTime - prevTime;
+                    Double deltaTime = prevTime == null? null: currTime - prevTime;
 
-                    if (prevTime != 0.0)
+                    if (deltaTime != null)
                     {
                         if (velocity > prevVelocity)
                         {
@@ -330,17 +468,35 @@ public class FtcTest extends FtcTeleOp
                     prevTime = currTime;
                     prevVelocity = velocity;
 
-                    robot.dashboard.displayPrintf(lineNum++, "Drive Vel: (%.1f/%.1f)", velocity, maxDriveVelocity);
-                    robot.dashboard.displayPrintf(
-                        lineNum++, "Drive Accel: (%.1f/%.1f)", acceleration, maxDriveAcceleration);
-                    robot.dashboard.displayPrintf(
-                        lineNum++, "Drive Decel: (%.1f/%.1f)", deceleration, maxDriveDeceleration);
-                    robot.dashboard.displayPrintf(
-                        lineNum++, "Turn Vel: (%.1f/%.1f)", velPose.angle, maxTurnVelocity);
+                    if (slowPeriodicLoop)
+                    {
+                        robot.dashboard.displayPrintf(lineNum++, "Drive Vel: (%.1f/%.1f)", velocity, maxDriveVelocity);
+                        robot.dashboard.displayPrintf(
+                            lineNum++, "Drive Accel: (%.1f/%.1f)", acceleration, maxDriveAcceleration);
+                        robot.dashboard.displayPrintf(
+                            lineNum++, "Drive Decel: (%.1f/%.1f)", deceleration, maxDriveDeceleration);
+                        robot.dashboard.displayPrintf(
+                            lineNum++, "Turn Vel: (%.1f/%.1f)", velPose.angle, maxTurnVelocity);
+                    }
                 }
                 break;
 
-            case TUNE_PP_DRIVE:
+            case XTimedDrive:
+            case YTimedDrive:
+                if (slowPeriodicLoop && robot.robotBase != null)
+                {
+                    robot.dashboard.displayPrintf(
+                        lineNum++, "RobotPose=%s", robot.robotBase.driveBase.getFieldPosition());
+                    robot.dashboard.displayPrintf(
+                        lineNum++, "rawEnc=fl:%.0f,fr:%.0f,bl:%.0f,br:%.0f",
+                        robot.robotBase.driveMotors[MotorIndex.FrontLeft.value].getPosition(),
+                        robot.robotBase.driveMotors[MotorIndex.FrontRight.value].getPosition(),
+                        robot.robotBase.driveMotors[MotorIndex.BackLeft.value].getPosition(),
+                        robot.robotBase.driveMotors[MotorIndex.BackRight.value].getPosition());
+                }
+                break;
+
+            case TuneDriveBasePid:
                 if (robot.robotBase != null && robot.robotBase.purePursuitDrive != null)
                 {
                     robot.dashboard.putNumber(
@@ -352,118 +508,84 @@ public class FtcTest extends FtcTeleOp
                     robot.dashboard.putNumber(
                         "targetPosition", robot.robotBase.purePursuitDrive.getPathPositionTarget());
                 }
+                // Intentionally falling through.
+            case PurePursuitDrive:
+            case PidDrive:
+                if (robot.robotBase != null && slowPeriodicLoop)
+                {
+                    TrcPidController xPidCtrl = null, yPidCtrl = null, turnPidCtrl = null;
+
+                    if ((testChoices.test == Test.PurePursuitDrive || testChoices.test == Test.TuneDriveBasePid) &&
+                        robot.robotBase.purePursuitDrive != null)
+                    {
+                        xPidCtrl = robot.robotBase.purePursuitDrive.getXPosPidCtrl();
+                        yPidCtrl = robot.robotBase.purePursuitDrive.getYPosPidCtrl();
+                        turnPidCtrl = robot.robotBase.purePursuitDrive.getTurnPidCtrl();
+                    }
+                    else if (testChoices.test == Test.PidDrive && robot.robotBase.pidDrive != null)
+                    {
+                        xPidCtrl = robot.robotBase.pidDrive.getXPidCtrl();
+                        yPidCtrl = robot.robotBase.pidDrive.getYPidCtrl();
+                        turnPidCtrl = robot.robotBase.pidDrive.getTurnPidCtrl();
+                    }
+
+                    robot.dashboard.displayPrintf(
+                        lineNum++, "RobotPose=%s", robot.robotBase.driveBase.getFieldPosition());
+                    if (xPidCtrl != null)
+                    {
+                        xPidCtrl.displayPidInfo(lineNum);
+                        lineNum += 2;
+                    }
+                    if (yPidCtrl != null)
+                    {
+                        yPidCtrl.displayPidInfo(lineNum);
+                        lineNum += 2;
+                    }
+                    if (turnPidCtrl != null)
+                    {
+                        turnPidCtrl.displayPidInfo(lineNum);
+                        lineNum += 2;
+                    }
+                }
+                break;
+
+            case VisionTest:
+                if (robot.vision != null && slowPeriodicLoop)
+                {
+                    lineNum = robot.vision.updateStatus(lineNum, true);
+                }
+                break;
+
+            case SwerveCalibration:
+                if (robot.robotBase != null && robot.robotBase instanceof FtcSwerveBase && slowPeriodicLoop)
+                {
+                    FtcSwerveBase swerveBase = (FtcSwerveBase) robot.robotBase;
+                    swerveBase.runSteeringCalibration();
+                    swerveBase.displaySteerZeroCalibration(lineNum);
+                }
                 break;
 
             default:
                 break;
         }
         //
-        // Allow TeleOp to run so we can control the robot in subsystem test or drive speed test modes.
+        // Call super.runPeriodic only if you need TeleOp control of the robot for some tests.
         //
-        allowAnalogControl = allowTeleOp();
-        super.periodic(elapsedTime, slowPeriodicLoop);
-
-        if (slowPeriodicLoop)
+        if (testChoices.test == Test.SubsystemsTest || testChoices.test == Test.TuneSubsystem ||
+            testChoices.test == Test.VisionTest || testChoices.test == Test.DriveSpeedTest)
         {
-            switch (testChoices.test)
-            {
-                case X_TIMED_DRIVE:
-                case Y_TIMED_DRIVE:
-                    if (robot.robotBase != null)
-                    {
-                        robot.dashboard.displayPrintf(
-                            lineNum++, "Timed Drive: %.0f sec", Dashboard.Subsystem_Drivebase.driveBaseParams.driveTime);
-                        robot.dashboard.displayPrintf(
-                            lineNum++, "RobotPose=%s", robot.robotBase.driveBase.getFieldPosition());
-                        robot.dashboard.displayPrintf(
-                            lineNum++, "rawEnc=lf:%.0f,rf:%.0f,lb:%.0f,rb:%.0f",
-                            robot.robotBase.driveMotors[FtcRobotBase.INDEX_FRONT_LEFT].getPosition(),
-                            robot.robotBase.driveMotors[FtcRobotBase.INDEX_FRONT_RIGHT].getPosition(),
-                            robot.robotBase.driveMotors[FtcRobotBase.INDEX_BACK_LEFT].getPosition(),
-                            robot.robotBase.driveMotors[FtcRobotBase.INDEX_BACK_RIGHT].getPosition());
-                    }
-                    break;
+            super.periodic(elapsedTime, true);
+        }
 
-                case PP_DRIVE:
-                case PID_DRIVE:
-                case TUNE_PP_DRIVE:
-                case TUNE_PID_DRIVE:
-                    if (robot.robotBase != null)
-                    {
-                        TrcPidController xPidCtrl = null, yPidCtrl = null, turnPidCtrl = null;
-
-                        if ((testChoices.test == Test.PID_DRIVE || testChoices.test == Test.TUNE_PID_DRIVE) &&
-                            robot.robotBase.pidDrive != null)
-                        {
-                            xPidCtrl = robot.robotBase.pidDrive.getXPidCtrl();
-                            yPidCtrl = robot.robotBase.pidDrive.getYPidCtrl();
-                            turnPidCtrl = robot.robotBase.pidDrive.getTurnPidCtrl();
-                        }
-                        else if ((testChoices.test == Test.PP_DRIVE || testChoices.test == Test.TUNE_PP_DRIVE) &&
-                                 robot.robotBase.purePursuitDrive != null)
-                        {
-                            xPidCtrl = robot.robotBase.purePursuitDrive.getXPosPidCtrl();
-                            yPidCtrl = robot.robotBase.purePursuitDrive.getYPosPidCtrl();
-                            turnPidCtrl = robot.robotBase.purePursuitDrive.getTurnPidCtrl();
-                        }
-
-                        robot.dashboard.displayPrintf(
-                            lineNum++, "RobotPose=%s", robot.robotBase.driveBase.getFieldPosition());
-
-                        if (xPidCtrl != null)
-                        {
-                            robot.dashboard.putNumber("xPidPos", xPidCtrl.getCurrentInput());
-                            robot.dashboard.putNumber("xPidTarget", xPidCtrl.getPositionSetpoint());
-                            xPidCtrl.displayPidInfo(lineNum);
-                            lineNum += 2;
-                        }
-                        if (yPidCtrl != null)
-                        {
-                            robot.dashboard.putNumber("yPidPos", yPidCtrl.getCurrentInput());
-                            robot.dashboard.putNumber("yPidTarget", yPidCtrl.getPositionSetpoint());
-                            yPidCtrl.displayPidInfo(lineNum);
-                            lineNum += 2;
-                        }
-                        if (turnPidCtrl != null)
-                        {
-                            robot.dashboard.putNumber("turnPidPos", turnPidCtrl.getCurrentInput());
-                            robot.dashboard.putNumber("turnPidTarget", turnPidCtrl.getPositionSetpoint());
-                            turnPidCtrl.displayPidInfo(lineNum);
-                            lineNum += 2;
-                        }
-                    }
-                    break;
-
-                case VISION_TEST:
-                    lineNum = doVisionTest(lineNum);
-                    break;
-
-                case CALIBRATE_SWERVE_STEERING:
-                    if (robot.robotBase != null && (robot.robotBase instanceof FtcSwerveBase) && steerCalibrating)
-                    {
-                        FtcSwerveBase swerveDrive = (FtcSwerveBase) robot.robotBase;
-                        swerveDrive.runSteeringCalibration();
-                        swerveDrive.displaySteerZeroCalibration(lineNum);
-                    }
-                    break;
-
-                default:
-                    break;
-            }
+        if (loopPerfTimer != null)
+        {
+            loopPerfTimer.recordPeriodTime();
+            robot.dashboard.displayPrintf(
+                14, "Period: %.3f(%.3f/%.3f)",
+                loopPerfTimer.getAverageElapsedTime(), loopPerfTimer.getMinElapsedTime(),
+                loopPerfTimer.getMaxElapsedTime());
         }
     }   //periodic
-
-    /**
-     * This method is called to determine if Test mode is allowed to do teleop control of the robot.
-     *
-     * @return true to allow and false otherwise.
-     */
-    private boolean allowTeleOp()
-    {
-        return teleOpControlEnabled &&
-               (testChoices.test == Test.SUBSYSTEMS_TEST || testChoices.test == Test.VISION_TEST ||
-                testChoices.test == Test.DRIVE_SPEED_TEST);
-    }   //allowTeleOp
 
     /**
      * This method tunes the drive motors velocity control as well as steering PID if it's a Swerve Drive Base.
@@ -486,8 +608,8 @@ public class FtcTest extends FtcTeleOp
             velocity = -velocity;
         }
 
-        if (Dashboard.Subsystem_Drivebase.driveBaseParams.driveMotorVelControlEnabled &&
-            Dashboard.Subsystem_Drivebase.driveBaseParams.driveMotorVelPidCoeffs != null)
+        if (Dashboard.SubsystemDrivebase.driveBaseParams.driveMotorVelControlEnabled &&
+            Dashboard.SubsystemDrivebase.driveBaseParams.driveMotorVelPidCoeffs != null)
         {
             // DriveMotor velocity control is enabled, let's tune DriveMotor velocity PID.
             for (TrcMotor motor: robot.robotBase.driveMotors)
@@ -515,7 +637,11 @@ public class FtcTest extends FtcTeleOp
         // In addition to or instead of the gamepad controls handled by FtcTeleOp, we can add to or override the
         // FtcTeleOp gamepad actions.
         //
-        robot.dashboard.displayPrintf(15, "Driver: %s=%s", button, pressed? "Pressed": "Released");
+        if (traceButtonEvents)
+        {
+            robot.globalTracer.traceInfo(moduleName, "##### button=" + button + ", pressed=" + pressed);
+        }
+        robot.dashboard.displayPrintf(15, "Driver: " + button + "=" + (pressed? "pressed": "released"));
         switch (button)
         {
             case A:
@@ -527,25 +653,35 @@ public class FtcTest extends FtcTeleOp
                 break;
 
             case DpadUp:
-                if (testChoices.test == Test.SUBSYSTEMS_TEST)
+                if (testChoices.test == Test.SubsystemsTest)
                 {
                     if (RobotParams.Preferences.tuneDriveBase && robot.robotBase != null)
                     {
                         // We are controlling drive base motors, make sure TeleOp doesn't interfere.
                         if (pressed)
                         {
-                            teleOpControlEnabled = false;
-                            tuneDriveMotors(Dashboard.Subsystem_Drivebase.driveBaseParams.driveMotorMaxVelocity, 0.0);
+                            setControlsEnabled(false);
+                            tuneDriveMotors(Dashboard.SubsystemDrivebase.driveBaseParams.driveMotorMaxVelocity, 0.0);
                         }
                         else
                         {
                             robot.robotBase.cancel();
-                            teleOpControlEnabled = true;
+                            setControlsEnabled(true);
                         }
                     }
                     passToTeleOp = false;
                 }
-                else if (testChoices.test == Test.VISION_TEST && robot.vision != null)
+                else if (testChoices.test == Test.TuneSubsystem)
+                {
+                    if (pressed)
+                    {
+                        TrcSubsystem.setSubsystemTuneTargetUp(Dashboard.TuneSubsystem.subsystemName);
+                        robot.globalTracer.traceInfo(
+                            moduleName, ">>>>> SetTuneTargetUp: " + Dashboard.TuneSubsystem.subsystemName);
+                    }
+                    passToTeleOp = false;
+                }
+                else if (testChoices.test == Test.VisionTest && robot.vision != null)
                 {
                     if (pressed)
                     {
@@ -570,41 +706,51 @@ public class FtcTest extends FtcTeleOp
                 break;
 
             case DpadDown:
-                if (testChoices.test == Test.SUBSYSTEMS_TEST)
+                if (testChoices.test == Test.SubsystemsTest)
                 {
                     if (RobotParams.Preferences.tuneDriveBase && robot.robotBase != null)
                     {
                         // We are controlling drive base motors, make sure TeleOp doesn't interfere.
                         if (pressed)
                         {
-                            teleOpControlEnabled = false;
-                            tuneDriveMotors(Dashboard.Subsystem_Drivebase.driveBaseParams.driveMotorMaxVelocity, 180.0);
+                            setControlsEnabled(false);
+                            tuneDriveMotors(Dashboard.SubsystemDrivebase.driveBaseParams.driveMotorMaxVelocity, 180.0);
                         }
                         else
                         {
                             robot.robotBase.cancel();
-                            teleOpControlEnabled = true;
+                            setControlsEnabled(true);
                         }
+                    }
+                    passToTeleOp = false;
+                }
+                else if (testChoices.test == Test.TuneSubsystem)
+                {
+                    if (pressed)
+                    {
+                        TrcSubsystem.setSubsystemTuneTargetDown(Dashboard.TuneSubsystem.subsystemName);
+                        robot.globalTracer.traceInfo(
+                            moduleName, ">>>>> SetTuneTargetDown: " + Dashboard.TuneSubsystem.subsystemName);
                     }
                     passToTeleOp = false;
                 }
                 break;
 
             case DpadLeft:
-                if (testChoices.test == Test.SUBSYSTEMS_TEST)
+                if (testChoices.test == Test.SubsystemsTest)
                 {
                     if (RobotParams.Preferences.tuneDriveBase && robot.robotBase != null)
                     {
                         // We are controlling drive base motors, make sure TeleOp doesn't interfere.
                         if (pressed)
                         {
-                            teleOpControlEnabled = false;
-                            tuneDriveMotors(Dashboard.Subsystem_Drivebase.driveBaseParams.driveMotorMaxVelocity, 270.0);
+                            setControlsEnabled(false);
+                            tuneDriveMotors(Dashboard.SubsystemDrivebase.driveBaseParams.driveMotorMaxVelocity, 270.0);
                         }
                         else
                         {
                             robot.robotBase.cancel();
-                            teleOpControlEnabled = true;
+                            setControlsEnabled(true);
                         }
                     }
                     passToTeleOp = false;
@@ -612,25 +758,25 @@ public class FtcTest extends FtcTeleOp
                 break;
 
             case DpadRight:
-                if (testChoices.test == Test.SUBSYSTEMS_TEST)
+                if (testChoices.test == Test.SubsystemsTest)
                 {
                     if (RobotParams.Preferences.tuneDriveBase && robot.robotBase != null)
                     {
                         // We are controlling drive base motors, make sure TeleOp doesn't interfere.
                         if (pressed)
                         {
-                            teleOpControlEnabled = false;
-                            tuneDriveMotors(Dashboard.Subsystem_Drivebase.driveBaseParams.driveMotorMaxVelocity, 90.0);
+                            setControlsEnabled(false);
+                            tuneDriveMotors(Dashboard.SubsystemDrivebase.driveBaseParams.driveMotorMaxVelocity, 90.0);
                         }
                         else
                         {
                             robot.robotBase.cancel();
-                            teleOpControlEnabled = true;
+                            setControlsEnabled(true);
                         }
                     }
                     passToTeleOp = false;
                 }
-                else if (testChoices.test == Test.VISION_TEST && robot.vision != null &&
+                else if (testChoices.test == Test.VisionTest && robot.vision != null &&
                          robot.vision.backCamColorBlobVision != null)
                 {
                     if (pressed)
@@ -660,10 +806,30 @@ public class FtcTest extends FtcTeleOp
                 break;
 
             case Start:
-                if (testChoices.test == Test.TUNE_PP_DRIVE || testChoices.test == Test.TUNE_PID_DRIVE)
+                if (testChoices.test == Test.TuneSubsystem)
                 {
-                    if (robot.robotBase != null &&
-                        (robot.robotBase.purePursuitDrive != null || robot.robotBase.pidDrive != null))
+                    if (pressed)
+                    {
+                        if (driverAltFunc)
+                        {
+                            TrcSubsystem.updateSubsystemParamsToDashboard(Dashboard.TuneSubsystem.subsystemName);
+                            robot.globalTracer.traceInfo(
+                                moduleName,
+                                ">>>>> Update Dashboard with subsystem tune params.");
+                        }
+                        else
+                        {
+                            TrcSubsystem.updateSubsystemParamsFromDashboard(Dashboard.TuneSubsystem.subsystemName);
+                            robot.globalTracer.traceInfo(
+                                moduleName,
+                                ">>>>> Update subsystem tune params from Dashboard and Start subsystem tuning.");
+                        }
+                    }
+                    passToTeleOp = false;
+                }
+                else if (testChoices.test == Test.TuneDriveBasePid)
+                {
+                    if (robot.robotBase != null && robot.robotBase.purePursuitDrive != null)
                     {
                         if (pressed)
                         {
@@ -674,95 +840,49 @@ public class FtcTest extends FtcTeleOp
                                 tuneDriveStartPoint = robot.robotBase.driveBase.getFieldPosition();
                                 tuneDriveEndPoint = tuneDriveStartPoint.addRelativePose(
                                     new TrcPose2D(
-                                        Dashboard.Subsystem_Drivebase.driveBaseParams.xDriveTarget*12.0,
-                                        Dashboard.Subsystem_Drivebase.driveBaseParams.yDriveTarget*12.0,
-                                        Dashboard.Subsystem_Drivebase.driveBaseParams.turnTarget));
+                                        testChoices.driveXTarget*12.0,
+                                        testChoices.driveYTarget*12.0,
+                                        testChoices.turnTarget));
                             }
-
-                            if (testChoices.test == Test.TUNE_PP_DRIVE && robot.robotBase.purePursuitDrive != null)
-                            {
-                                robot.robotBase.purePursuitDrive.start(
-                                    false,
-                                    Dashboard.Subsystem_Drivebase.driveBaseParams.profiledMaxDriveVelocity,
-                                    Dashboard.Subsystem_Drivebase.driveBaseParams.profiledMaxDriveAcceleration,
-                                    Dashboard.Subsystem_Drivebase.driveBaseParams.profiledMaxDriveDeceleration,
-                                    null,
-                                    tuneDriveAtEndPoint ? tuneDriveStartPoint : tuneDriveEndPoint);
-                            }
-                            else if (robot.robotBase.pidDrive != null)
-                            {
-                                robot.robotBase.pidDrive.setAbsoluteTarget(
-                                    tuneDriveAtEndPoint ? tuneDriveStartPoint : tuneDriveEndPoint, true);
-                                TrcDbgTrace.globalTraceInfo(
-                                    moduleName, "PidDrivePose=" + robot.robotBase.pidDrive.getAbsoluteTargetPose());
-                            }
+                            // In FTC, the PID controllers used by PurePursuit are accessible in Dashboard.
+                            // So there is no need to update PurePursuit with new PID coefficients from Dashboard.
+                            TrcPose2D drivePoint = tuneDriveAtEndPoint? tuneDriveStartPoint: tuneDriveEndPoint;
+                            robot.robotBase.purePursuitDrive.start(
+                                false,
+                                Dashboard.SubsystemDrivebase.driveBaseParams.profiledMaxDriveVelocity,
+                                Dashboard.SubsystemDrivebase.driveBaseParams.profiledMaxDriveAcceleration,
+                                Dashboard.SubsystemDrivebase.driveBaseParams.profiledMaxDriveDeceleration,
+                                null, drivePoint);
+                            robot.globalTracer.traceInfo(moduleName, ">>>>> Pid Drive to ", drivePoint);
                             tuneDriveAtEndPoint = !tuneDriveAtEndPoint;
                         }
                         else
                         {
-                            robot.robotBase.cancel();
+                            robot.robotBase.purePursuitDrive.cancel();
                         }
                         passToTeleOp = false;
                     }
                 }
-                else if (testChoices.test == Test.PID_DRIVE)
+                else if (testChoices.test == Test.VisionTest)
                 {
-                    if (robot.robotBase != null && robot.robotBase.pidDrive != null)
+                    if (robot.vision != null)
                     {
                         if (pressed)
                         {
-                            robot.robotBase.driveBase.resetOdometry();
-                            ((CmdPidDrive) testCommand).startPath(
-                                0.0, Dashboard.Subsystem_Drivebase.driveBaseParams.yDrivePowerLimit, null,
-                                new TrcPose2D(
-                                    Dashboard.Subsystem_Drivebase.driveBaseParams.xDriveTarget*12.0,
-                                    Dashboard.Subsystem_Drivebase.driveBaseParams.yDriveTarget*12.0,
-                                    Dashboard.Subsystem_Drivebase.driveBaseParams.turnTarget));
+                            fpsMeterEnabled = !fpsMeterEnabled;
+                            robot.vision.setFpsMeterEnabled(fpsMeterEnabled);
+                            robot.globalTracer.traceInfo(moduleName, "fpsMeterEnabled = %s", fpsMeterEnabled);
                         }
+                        passToTeleOp = false;
                     }
                 }
-                else if (testChoices.test == Test.SUBSYSTEMS_TEST)
-                {
-                    if (pressed)
-                    {
-                        TrcSubsystem.updateSubsystemParamsFromDashboard(Dashboard.DashboardParams.tuneSubsystemName);
-                    }
-                    passToTeleOp = false;
-                }
-                else if (testChoices.test == Test.VISION_TEST && robot.vision != null)
-                {
-                    if (pressed)
-                    {
-                        fpsMeterEnabled = !fpsMeterEnabled;
-                        robot.vision.setFpsMeterEnabled(fpsMeterEnabled);
-                        robot.globalTracer.traceInfo(moduleName, "fpsMeterEnabled = %s", fpsMeterEnabled);
-                    }
-                    passToTeleOp = false;
-                }
-                else if (testChoices.test == Test.CALIBRATE_SWERVE_STEERING)
-                {
-                    if (pressed && robot.robotBase != null && robot.robotBase instanceof FtcSwerveBase)
-                    {
-                        FtcSwerveBase swerveDrive = (FtcSwerveBase) robot.robotBase;
+                break;
 
-                        steerCalibrating = !steerCalibrating;
-                        if (steerCalibrating)
-                        {
-                            // Start steer calibration.
-                            swerveDrive.startSteeringCalibration();
-                        }
-                        else
-                        {
-                            // Stop steer calibration.
-                            swerveDrive.stopSteeringCalibration();
-                        }
-                    }
-                    passToTeleOp = false;
-                }
+            default:
                 break;
         }
         //
-        // If the control was not processed by this method, pass it back to TeleOp.
+        // If the button event was not processed by this method, pass it back to TeleOp.
         //
         if (passToTeleOp)
         {
@@ -784,7 +904,11 @@ public class FtcTest extends FtcTeleOp
         // In addition to or instead of the gamepad controls handled by FtcTeleOp, we can add to or override the
         // FtcTeleOp gamepad actions.
         //
-        robot.dashboard.displayPrintf(15, "Operator: %s=%s", button, pressed? "Pressed": "Released");
+        if (traceButtonEvents)
+        {
+            robot.globalTracer.traceInfo(moduleName, "##### button=" + button + ", pressed=" + pressed);
+        }
+        robot.dashboard.displayPrintf(15, "Operator: " + button + "=" + (pressed? "pressed": "released"));
         switch (button)
         {
             case A:
@@ -793,93 +917,22 @@ public class FtcTest extends FtcTeleOp
             case Y:
             case LeftBumper:
             case RightBumper:
-                break;
-
             case DpadUp:
-                if (testChoices.test == Test.SUBSYSTEMS_TEST && Dashboard.DashboardParams.tuneSubsystemName != null)
-                {
-                    if (pressed)
-                    {
-                    }
-                    passToTeleOp = false;
-                }
-                break;
-
             case DpadDown:
-                if (testChoices.test == Test.SUBSYSTEMS_TEST && Dashboard.DashboardParams.tuneSubsystemName != null)
-                {
-                    if (pressed)
-                    {
-                    }
-                    passToTeleOp = false;
-                }
-                break;
-
             case DpadLeft:
             case DpadRight:
             case Back:
             case Start:
+            default:
                 break;
         }
         //
-        // If the control was not processed by this method, pass it back to TeleOp.
+        // If the button event was not processed by this method, pass it back to TeleOp.
         //
         if (passToTeleOp)
         {
             super.operatorButtonEvent(button, pressed);
         }
     }   //operatorButtonEvent
-
-    /**
-     * This method creates and displays the test menus and record the selected choices.
-     */
-    private void doTestMenus()
-    {
-        //
-        // Create menus.
-        //
-        FtcChoiceMenu<Test> testMenu = new FtcChoiceMenu<>("Tests:", null);
-        //
-        // Populate menus.
-        //
-        testMenu.addChoice("Subsystems test", Test.SUBSYSTEMS_TEST, false);
-        testMenu.addChoice("Drive motors test", Test.DRIVE_MOTORS_TEST, false);
-        testMenu.addChoice("Drive speed test", Test.DRIVE_SPEED_TEST, false);
-        testMenu.addChoice("X Timed drive", Test.X_TIMED_DRIVE, false);
-        testMenu.addChoice("Y Timed drive", Test.Y_TIMED_DRIVE, false);
-        testMenu.addChoice("Pure Pursuit Drive", Test.PP_DRIVE, false);
-        testMenu.addChoice("PID drive", Test.PID_DRIVE, false);
-        testMenu.addChoice("Tune PurePursuit Drive", Test.TUNE_PP_DRIVE, false);
-        testMenu.addChoice("Tune PID Drive", Test.TUNE_PID_DRIVE, false);
-        testMenu.addChoice("Vision test", Test.VISION_TEST, false);
-        testMenu.addChoice("Calibrate Swerve Steering", Test.CALIBRATE_SWERVE_STEERING, false);
-        //
-        // Traverse menus.
-        //
-        FtcMenu.walkMenuTree(testMenu);
-        //
-        // Fetch choices.
-        //
-        testChoices.test = testMenu.getCurrentChoiceObject();
-        //
-        // Show choices.
-        //
-        robot.dashboard.displayPrintf(1, "Test Choices: %s", testChoices);
-    }   //doTestMenus
-
-    /**
-     * This method calls vision code to detect target objects and display their info.
-     *
-     * @param lineNum specifies the starting line number to print the subsystem status.
-     */
-    private int doVisionTest(int lineNum)
-    {
-        if (robot.vision != null)
-        {
-            lineNum = robot.vision.updateStatus(lineNum, true);
-        }
-
-        return lineNum;
-    }   //doVisionTest
 
 }   //class FtcTest

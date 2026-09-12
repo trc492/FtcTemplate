@@ -61,25 +61,29 @@ public class Robot
 
     private final String moduleName = getClass().getSimpleName();
     // Global objects.
+    public final TrcDbgTrace globalTracer = TrcDbgTrace.getGlobalTracer();
     public final FtcOpMode opMode;
-    public final TrcDbgTrace globalTracer;
     public final FtcDashboard dashboard;
     public static FtcMatchInfo matchInfo = null;
-    private static TrcPose2D endOfAutoRobotPose = null;
     // Robot Drive.
     public DriveBase robotDriveBase;
     public FtcRobotBase.RobotInfo robotInfo;
     public FtcRobotBase robotBase;
+    private static TrcPose2D endOfAutoRobotPose = null;
     // Sensors and indicators.
     public FtcRobotBattery battery;
     public LEDIndicator ledIndicator;
-    // Vision subsystems.
+    // Vision.
     public Vision vision;
-    public TrcVisionRelocalize trcVisionRelocalize = null;
     private RelocalizationMode relocalizationMode = RelocalizationMode.Disabled;
-    // Subsystems.
-    // Autotasks.
-    public TrcPose2D relocalizedRobotPose = null;
+    public TrcVisionRelocalize trcVisionRelocalize = null;
+    //
+    // Other subsystems.
+    //
+
+    //
+    // Auto Tasks.
+    //
 
     /**
      * Constructor: Create an instance of the object.
@@ -91,18 +95,21 @@ public class Robot
     {
         // Initialize global objects.
         opMode = FtcOpMode.getInstance();
-        globalTracer = TrcDbgTrace.getGlobalTracer();
         dashboard = FtcDashboard.getInstance();
         speak("Init starting");
-        // Create and initialize Robot Base.
-        robotDriveBase = new DriveBase();
+
+        // Create and initialize DriveBase and RobotInfo. This must be done early because subsequent components may
+        // require it.
+        robotDriveBase = new DriveBase(this);
         robotInfo = robotDriveBase.getRobotInfo();
         robotBase = robotDriveBase.getRobotBase();
+
         // Create and initialize sensors and indicators.
         battery = RobotParams.Preferences.useBatteryMonitor? new FtcRobotBattery(): null;
         ledIndicator = RobotParams.Preferences.useLED && robotInfo.indicatorNames != null?
             new LEDIndicator(robotInfo.indicatorNames): null;
-        // Create and initialize vision subsystems.
+
+        // Create and initialize Vision subsystem.
         if (RobotParams.Preferences.useVision && robotInfo.camInfos != null &&
             (RobotParams.Preferences.useLimelightVision ||
              RobotParams.Preferences.useWebcamAprilTagVision ||
@@ -114,6 +121,11 @@ public class Robot
                 trcVisionRelocalize = new TrcVisionRelocalize(100);
             }
         }
+
+        //
+        // Create and initialize other subsystems.
+        //
+
         // If robotType is VisionOnly, the robot controller is disconnected from the robot for testing vision.
         // In this case, we should not instantiate any robot hardware.
         if (RobotParams.Preferences.robotType != DriveBase.RobotType.VisionOnly)
@@ -121,8 +133,6 @@ public class Robot
             if (RobotParams.Preferences.useSubsystems)
             {
                 // Create subsystems.
-
-                // Create autotasks.
 
                 // Zero calibrate all subsystems only in Auto or if TeleOp is run standalone without prior Auto.
                 // There is no reason to zero calibrate again if Auto was run right before TeleOp.
@@ -133,6 +143,7 @@ public class Robot
             }
         }
         speak("Init complete");
+
         Dashboard.DashboardParams.updateDashboardEnabled = RobotParams.Preferences.updateDashboard;
         if (Dashboard.DashboardParams.updateDashboardEnabled)
         {
@@ -319,59 +330,56 @@ public class Robot
     }   //turtle
 
     /**
-     * This method relocalizes the robot using vision.
+     * This method relocalizes the robot using vision. This method assumes vision and relocalize
+     * is enabled.
      *
      * @return true if vision sees AprilTag and relocalize successfully, false otherwise.
      */
-    public boolean relocalizeRobot()
+    private boolean relocalizeRobot()
     {
         boolean seenAprilTag = false;
+        TrcPose2D robotPose = robotBase.driveBase.getFieldPosition();
+        long currTimestampMilli = System.currentTimeMillis();
+        trcVisionRelocalize.addTimedPose(currTimestampMilli, robotPose);
+        // Assume we are using Limelight to detect AprilTag.
+        double limelightYaw = -robotPose.angle;
+        limelightYaw = (limelightYaw + 180.0) % 360.0;
+        if (limelightYaw < 0) limelightYaw += 360.0;
+        limelightYaw -= 180.0;
+        vision.limelightVision.updateRobotHeading(limelightYaw);
+        TrcVisionTargetInfo<FtcLimelightVision.DetectedObject> aprilTagObj =
+            vision.getLimelightDetectedObject(FtcLimelightVision.ResultType.Fiducial, null, null, -1);
 
-        if (vision != null && RobotParams.Preferences.visionRelocalizeEnabled && trcVisionRelocalize != null)
+        if (aprilTagObj != null)
         {
-            TrcPose2D robotPose = robotBase.driveBase.getFieldPosition();
-            long currTimestampMilli = System.currentTimeMillis();
-            trcVisionRelocalize.addTimedPose(currTimestampMilli, robotPose);
-            // Assume we are using Limelight to detect AprilTag.
-            double limelightYaw = -robotPose.angle;
-            limelightYaw = (limelightYaw + 180.0) % 360.0;
-            if (limelightYaw < 0) limelightYaw += 360.0;
-            limelightYaw -= 180.0;
-            vision.limelightVision.updateRobotHeading(limelightYaw);
-            TrcVisionTargetInfo<FtcLimelightVision.DetectedObject> aprilTagObj =
-                vision.getLimelightDetectedObject(FtcLimelightVision.ResultType.Fiducial, null, null, -1);
+            seenAprilTag = true;
+            TrcPose2D robotVel = robotBase.driveBase.getRobotVelocity();
+            TrcPose2D relocalizedPose =
+                Math.hypot(robotVel.x, robotVel.y) > 0.01 || Math.abs(robotVel.angle) > 1.0?
+                    trcVisionRelocalize.getRelocalizedPose(
+                        aprilTagObj.detectedObj.timestamp, aprilTagObj.detectedObj.robotPose, robotPose):
+                    aprilTagObj.detectedObj.robotPose;
 
-            if (aprilTagObj != null)
+            robotBase.driveBase.setFieldPosition(relocalizedPose);
+            globalTracer.traceDebug(
+                moduleName,
+                "VisionRelocalize: TimeMilli=%d, Relocalize %s->%s, VisionPose[%d](time=%d, pose=%s)",
+                currTimestampMilli, robotPose, relocalizedPose, (int)aprilTagObj.detectedObj.objId,
+                (long)aprilTagObj.detectedObj.timestamp, aprilTagObj.detectedObj.robotPose);
+        }
+
+        if (ledIndicator != null)
+        {
+            ledIndicator.setStatusPattern(LEDIndicator.RED_APRILTAG, false);
+            ledIndicator.setStatusPattern(LEDIndicator.BLUE_APRILTAG, false);
+            if (seenAprilTag)
             {
-                seenAprilTag = true;
-                TrcPose2D robotVel = robotBase.driveBase.getRobotVelocity();
-                TrcPose2D relocalizedPose =
-                    Math.hypot(robotVel.x, robotVel.y) > 0.01 || Math.abs(robotVel.angle) > 1.0?
-                        trcVisionRelocalize.getRelocalizedPose(
-                            aprilTagObj.detectedObj.timestamp, aprilTagObj.detectedObj.robotPose, robotPose):
-                        aprilTagObj.detectedObj.robotPose;
-
-                robotBase.driveBase.setFieldPosition(relocalizedPose);
-                globalTracer.traceDebug(
-                    moduleName,
-                    "VisionRelocalize: TimeMilli=%d, Relocalize %s->%s, VisionPose[%d](time=%d, pose=%s)",
-                    currTimestampMilli, robotPose, relocalizedPose, (int)aprilTagObj.detectedObj.objId,
-                    (long)aprilTagObj.detectedObj.timestamp, aprilTagObj.detectedObj.robotPose);
-            }
-
-            if (ledIndicator != null)
-            {
-                ledIndicator.setStatusPattern(LEDIndicator.RED_APRILTAG, false);
-                ledIndicator.setStatusPattern(LEDIndicator.BLUE_APRILTAG, false);
-                if (seenAprilTag)
-                {
-                    ledIndicator.setStatusPattern(
-                        (int) aprilTagObj.detectedObj.objId == RobotParams.Game.RED_APRILTAG_ID?
-                            LEDIndicator.RED_APRILTAG:
-                        (int) aprilTagObj.detectedObj.objId == RobotParams.Game.BLUE_APRILTAG_ID?
-                            LEDIndicator.BLUE_APRILTAG: LEDIndicator.NOT_FOUND,
-                        true);
-                }
+                ledIndicator.setStatusPattern(
+                    (int) aprilTagObj.detectedObj.objId == RobotParams.Game.RED_APRILTAG_ID?
+                        LEDIndicator.RED_APRILTAG:
+                    (int) aprilTagObj.detectedObj.objId == RobotParams.Game.BLUE_APRILTAG_ID?
+                        LEDIndicator.BLUE_APRILTAG: LEDIndicator.NOT_FOUND,
+                    true);
             }
         }
 
@@ -385,8 +393,11 @@ public class Robot
      */
     public void setRelocalizationMode(RelocalizationMode relocalizationMode)
     {
-        globalTracer.traceInfo(moduleName, "setRelocalizationMode to " + relocalizationMode);
-        this.relocalizationMode = relocalizationMode;
+        if (vision != null && RobotParams.Preferences.visionRelocalizeEnabled && trcVisionRelocalize != null)
+        {
+            globalTracer.traceInfo(moduleName, "setRelocalizationMode to " + relocalizationMode);
+            this.relocalizationMode = relocalizationMode;
+        }
     }   //setRelocalizationMode
 
     /**
@@ -396,25 +407,30 @@ public class Robot
      */
     public void setRobotStartPosition(FtcAuto.AutoChoices autoChoices)
     {
+        TrcPose2D startPose = adjustPoseByAlliance(
+            autoChoices.alliance, false,
+            autoChoices.startPos == FtcAuto.AutoStartPos.Left?
+                RobotParams.Game.STARTPOSE_BLUE_LEFT: RobotParams.Game.STARTPOSE_BLUE_RIGHT);
+            robotBase.driveBase.setFieldPosition(startPose);
     }   //setRobotStartPosition
 
     /**
-     * This method adjusts the given pose in the red alliance to be the specified alliance.
+     * This method adjusts the given pose in the blue alliance to be the specified alliance.
      *
-     * @param x specifies x position in the red alliance in the specified unit.
-     * @param y specifies y position in the red alliance in the specified unit.
-     * @param heading specifies heading in the red alliance in degrees.
      * @param alliance specifies the alliance to be converted to.
      * @param isTileUnit specifies true if x and y are in tile unit, false if in inches.
      * @param relativePose specifies if the pose is a relative pose.
+     * @param x specifies x position in the blue alliance in the specified unit.
+     * @param y specifies y position in the blue alliance in the specified unit.
+     * @param heading specifies heading in the blue alliance in degrees.
      * @return pose adjusted to be in the specified alliance in inches.
      */
     public TrcPose2D adjustPoseByAlliance(
-        double x, double y, double heading, FtcAuto.Alliance alliance, boolean isTileUnit, boolean relativePose)
+        FtcAuto.Alliance alliance, boolean isTileUnit, boolean relativePose, double x, double y, double heading)
     {
         TrcPose2D newPose = new TrcPose2D(x, y, heading);
 
-        if (alliance == FtcAuto.Alliance.Blue)
+        if (alliance == FtcAuto.Alliance.Red)
         {
             if (relativePose)
             {
@@ -423,7 +439,7 @@ public class Robot
                     newPose.x = -newPose.x;
                 }
             }
-            // Translate blue alliance pose to red alliance pose.
+            // Translate red alliance pose to blue alliance pose.
             else if (RobotParams.Field.mirroredField)
             {
                 // Field is mirrored on X axis.
@@ -452,82 +468,104 @@ public class Robot
     }   //adjustPoseByAlliance
 
     /**
-     * This method adjusts the given pose in the red alliance to be the specified alliance.
+     * This method adjusts the given pose in the blue alliance to be the specified alliance.
      *
-     * @param x specifies x position in the red alliance in the specified unit.
-     * @param y specifies y position in the red alliance in the specified unit.
-     * @param heading specifies heading in the red alliance in degrees.
      * @param alliance specifies the alliance to be converted to.
      * @param isTileUnit specifies true if x and y are in tile unit, false if in inches.
+     * @param x specifies x position in the blue alliance in the specified unit.
+     * @param y specifies y position in the blue alliance in the specified unit.
+     * @param heading specifies heading in the blue alliance in degrees.
      * @return pose adjusted to be in the specified alliance in inches.
      */
     public TrcPose2D adjustPoseByAlliance(
-        double x, double y, double heading, FtcAuto.Alliance alliance, boolean isTileUnit)
+        FtcAuto.Alliance alliance, boolean isTileUnit, double x, double y, double heading)
     {
-        return adjustPoseByAlliance(x, y, heading, alliance, isTileUnit, false);
+        return adjustPoseByAlliance(alliance, isTileUnit, false, x, y, heading);
     }   //adjustPoseByAlliance
 
     /**
-     * This method adjusts the given pose in the red alliance to be the specified alliance.
+     * This method adjusts the given pose in the blue alliance to be the specified alliance.
      *
-     * @param x specifies x position in the red alliance in tile unit.
-     * @param y specifies y position in the red alliance in tile unit.
-     * @param heading specifies heading in the red alliance in degrees.
      * @param alliance specifies the alliance to be converted to.
+     * @param x specifies x position in the blue alliance in tile unit.
+     * @param y specifies y position in the blue alliance in tile unit.
+     * @param heading specifies heading in the blue alliance in degrees.
      * @return pose adjusted to be in the specified alliance in inches.
      */
-    public TrcPose2D adjustPoseByAlliance(double x, double y, double heading, FtcAuto.Alliance alliance)
+    public TrcPose2D adjustPoseByAlliance(FtcAuto.Alliance alliance, double x, double y, double heading)
     {
-        return adjustPoseByAlliance(x, y, heading, alliance, false, false);
+        return adjustPoseByAlliance(alliance, false, false, x, y, heading);
     }   //adjustPoseByAlliance
 
     /**
-     * This method adjusts the given pose in the red alliance to be the specified alliance.
+     * This method adjusts the given pose in the blue alliance to be the specified alliance.
      *
-     * @param pose specifies pose in the red alliance in the specified unit.
      * @param alliance specifies the alliance to be converted to.
      * @param isTileUnit specifies true if pose is in tile units, false in inches.
      * @param relativePose specifies if the pose is a relative pose.
+     * @param pose specifies pose in the blue alliance in the specified unit.
      * @return pose adjusted to be in the specified alliance in inches.
      */
     public TrcPose2D adjustPoseByAlliance(
-        TrcPose2D pose, FtcAuto.Alliance alliance, boolean isTileUnit, boolean relativePose)
+        FtcAuto.Alliance alliance, boolean isTileUnit, boolean relativePose, TrcPose2D pose)
     {
-        return adjustPoseByAlliance(pose.x, pose.y, pose.angle, alliance, isTileUnit, relativePose);
+        return adjustPoseByAlliance(alliance, isTileUnit, relativePose, pose.x, pose.y, pose.angle);
     }   //adjustPoseByAlliance
 
     /**
-     * This method adjusts the given pose in the red alliance to be the specified alliance.
+     * This method adjusts the given pose in the blue alliance to be the specified alliance.
      *
-     * @param pose specifies pose in the red alliance in the specified unit.
      * @param alliance specifies the alliance to be converted to.
      * @param isTileUnit specifies true if pose is in tile units, false in inches.
+     * @param pose specifies pose in the blue alliance in the specified unit.
      * @return pose adjusted to be in the specified alliance in inches.
      */
-    public TrcPose2D adjustPoseByAlliance(TrcPose2D pose, FtcAuto.Alliance alliance, boolean isTileUnit)
+    public TrcPose2D adjustPoseByAlliance(FtcAuto.Alliance alliance, boolean isTileUnit, TrcPose2D pose)
     {
-        return adjustPoseByAlliance(pose.x, pose.y, pose.angle, alliance, isTileUnit, false);
+        return adjustPoseByAlliance(alliance, isTileUnit, false, pose.x, pose.y, pose.angle);
     }   //adjustPoseByAlliance
 
+    /**
+     * This method adjusts the given pose in the blue alliance to be the specified alliance.
+     *
+     * @param alliance specifies the alliance to be converted to.
+     * @param pose specifies pose in the blue alliance in tile unit.
+     * @return pose adjusted to be in the specified alliance in inches.
+     */
+    public TrcPose2D adjustPoseByAlliance(FtcAuto.Alliance alliance, TrcPose2D pose)
+    {
+        return adjustPoseByAlliance(alliance, false, false, pose.x, pose.y, pose.angle);
+    }   //adjustPoseByAlliance
+
+    /**
+     * This method adjusts the given array of poses in the blue alliance to be the specified alliance.
+     *
+     * @param alliance specifies the alliance to be converted to.
+     * @param isTileUnit specifies true if pose is in tile units, false in inches.
+     * @param relativePose specifies if the pose is a relative pose.
+     * @param poses specifies array of poses in the blue alliance in the specified unit.
+     * @return poses adjusted to be in the specified alliance in inches.
+     */
     public TrcPose2D[] adjustPathByAlliance(
         FtcAuto.Alliance alliance, boolean isTileUnit, boolean relativePose, TrcPose2D... poses)
     {
         return Stream.of(poses)
-                     .map(pose -> adjustPoseByAlliance(pose, alliance, isTileUnit, relativePose))
+                     .map(pose -> adjustPoseByAlliance(alliance, isTileUnit, relativePose, pose))
                      .toArray(TrcPose2D[]::new);
     }   //adjustPathByAlliance
 
     /**
-     * This method adjusts the given pose in the red alliance to be the specified alliance.
+     * This method adjusts the given pose by the given x and y offsets.
      *
-     * @param pose specifies pose in the red alliance in tile unit.
-     * @param alliance specifies the alliance to be converted to.
-     * @return pose adjusted to be in the specified alliance in inches.
+     * @param pose specifies the pose that needs adjustment.
+     * @param xOffset specifies the x offset.
+     * @param yOffset specifies the y offset.
+     * @return adjusted pose.
      */
-    public TrcPose2D adjustPoseByAlliance(TrcPose2D pose, FtcAuto.Alliance alliance)
+    public TrcPose2D adjustPoseByOffset(TrcPose2D pose, double xOffset, double yOffset)
     {
-        return adjustPoseByAlliance(pose.x, pose.y, pose.angle, alliance, false, false);
-    }   //adjustPoseByAlliance
+        return pose.addRelativePose(new TrcPose2D(xOffset, yOffset, 0.0));
+    }   //adjustPoseByOffset
 
     /**
      * This method sends the text string to the Driver Station to be spoken using text to speech.

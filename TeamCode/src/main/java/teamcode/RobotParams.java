@@ -24,7 +24,7 @@ package teamcode;
 
 import android.annotation.SuppressLint;
 
-import teamcode.subsystems.DriveBase;
+import teamcode.subsystems.DriveBase.RobotType;
 import trclib.pathdrive.TrcPose2D;
 
 /**
@@ -41,9 +41,10 @@ public class RobotParams
     public static class Preferences
     {
         // Global config
-        public static final DriveBase.RobotType robotType       = DriveBase.RobotType.MecanumRobot;
+        public static final RobotType robotType                 = RobotType.MecanumRobot;
         public static final boolean inCompetition               = false;
         public static final boolean useTraceLog                 = true;
+        public static final boolean useLoopPerformanceMonitor   = true;
         public static final boolean useBatteryMonitor           = false;
         // Driver feedback
         // Status Update: Dashboard Update may affect robot loop time, don't do it when in competition.
@@ -62,28 +63,28 @@ public class RobotParams
         public static final boolean showVisionView              = false;    // For both HDMI and Dashboard
         public static final boolean showVisionStat              = false;    // For HDMI
         public static final boolean streamWebcamToDashboard     = false;
-        // Master switches for Subsystems
+        // Subsystem Switches
         public static final boolean useSubsystems               = true;
         // Drive Base Subsystem
-        public static final boolean useDriveBase                = true;
+        public static final boolean useDriveBase                = false;
         public static final boolean showDriveBaseStatus         = false;
         public static final boolean showPidDrive                = false;
         public static final boolean showDriveBaseGraph          = false;
         public static final boolean tuneDriveBase               = false;
-        public static final boolean tuneSteerPowerComp          = false;
         // Other Subsystems
         // Auto Tasks
     }   //class Preferences
 
     /**
-     * This class contains miscellaneous robot info.
+     * This class contains Robot parameters.
      */
     public static class Robot
     {
         @SuppressLint("SdCardPath")
         public static final String teamFolderPath               = "/sdcard/FIRST/ftc3543";
         public static final String logFolderPath                = teamFolderPath + "/tracelogs";
-        public static final String purePursuitPathFile          = teamFolderPath + "/PurePursuitPath.csv";
+        public static final String purePursuitPathFile1         = teamFolderPath + "/PurePursuitPath1.csv";
+        public static final String purePursuitPathFile2         = teamFolderPath + "/PurePursuitPath2.csv";
         public static final String steerZeroCalFile             = teamFolderPath + "/SteerZeroCalibration.txt";
         public static final double ROBOT_LENGTH                 = 18.0;     //inches
         public static final double ROBOT_WIDTH                  = 18.0;     //inches
@@ -94,13 +95,18 @@ public class RobotParams
      */
     public static class Game
     {
+        //
         // Game elapsed times.
+        //
         public static final double AUTO_PERIOD                  = 30.0;     // 30 seconds auto period
         public static final double TELEOP_PERIOD                = 120.0;    // 2 minutes teleop period
         public static final double PARKING_TIME                 = 10.0;
         public static final double ENDGAME_THRESHOLD            = TELEOP_PERIOD - PARKING_TIME;
+        //
         // AprilTag locations.
-        public static final TrcPose2D[] aprilTagPoses           = new TrcPose2D[] {
+        //
+        public static final TrcPose2D[] aprilTagPoses           = new TrcPose2D[]
+        {
             new TrcPose2D(0.0, 0.0, 0.0),   // TagId 1
             new TrcPose2D(0.0, 0.0, 0.0),   // TagId 2
             new TrcPose2D(0.0, 0.0, 0.0),   // TagId 3
@@ -108,7 +114,16 @@ public class RobotParams
         };
         public static final int BLUE_APRILTAG_ID                = 20;
         public static final int RED_APRILTAG_ID                 = 24;
-        // Robot start locations.
+        //
+        // Robot starting locations.
+        //
+        public static final double STARTPOS_X                       = 1.5 * Field.fullTileInches;
+        public static final double STARTPOS_Y                       = Field.halfFieldInches - Robot.ROBOT_LENGTH/2.0;
+        public static final TrcPose2D STARTPOSE_BLUE_LEFT           = new TrcPose2D(STARTPOS_X, STARTPOS_Y, 180.0);
+        public static final TrcPose2D STARTPOSE_BLUE_RIGHT          = new TrcPose2D(-STARTPOS_X, STARTPOS_Y, 180.0);
+        //
+        // Game element locations.
+        //
     }   //class Game
 
     /**

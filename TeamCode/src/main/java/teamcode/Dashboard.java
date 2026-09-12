@@ -26,6 +26,7 @@ import com.acmerobotics.dashboard.config.Config;
 
 import teamcode.subsystems.DriveBase;
 import teamcode.vision.Vision;
+import trclib.controller.TrcPidController;
 import trclib.drivebase.TrcDriveBase;
 import trclib.driverio.TrcGameController;
 import trclib.vision.TrcOpenCvColorBlobPipeline;
@@ -39,13 +40,12 @@ public class Dashboard
     public static class DashboardParams
     {
         public static boolean updateDashboardEnabled = RobotParams.Preferences.updateDashboard;
-        public static String tuneSubsystemName = "";
         public static FtcAuto.Alliance alliance = FtcAuto.Alliance.Blue;
         public static FtcAuto.AutoChoices autoChoices = FtcAuto.autoChoices;
     }   //class DashboardParams
 
     @Config
-    public static class Subsystem_Drivebase
+    public static class SubsystemDrivebase
     {
         public static TrcDriveBase.BaseParams driveBaseParams = DriveBase.MecanumRobotInfo.baseParams;
         public static TrcGameController.DriveMode driveMode = TrcGameController.DriveMode.Arcade;
@@ -54,12 +54,32 @@ public class Dashboard
         public static double driveNormalScale = 1.0;
         public static double turnSlowScale = 0.3;
         public static double turnNormalScale = 0.5;
-    }   //class Subsystem_Drivebase
+    }   //class SubsystemDrivebase
 
     @Config
-    public static class Subsystem_Vision
+    public static class SubsystemVision
     {
         public static TrcOpenCvColorBlobPipeline.PipelineParams colorBlobVision = Vision.colorBlobPipelineParams;
-    }   //class Subsystem_Vision
+    }   //class SubsystemVision
 
+    @Config
+    public static class TuneSubsystem
+    {
+        public static String subsystemName = "";
+        public static TrcPidController.PidCoefficients pidCoeffs = null;
+        public static double pidTolerance = 0.0;
+        public static boolean useSoftwarePid = false;
+        public static double gravityPower = 0.0;
+        public static double input = 0.0;
+        public static double target = 0.0;
+    }   //class TuneSubsystem
+
+    @Config
+    public static class TuneShootTable
+    {
+        public static double targetDistance = 0.0;
+        public static double shootMotor1Velocity = 2000.0;  // in RPM
+        public static double panAngle = 0.0;                // in degrees
+        public static double tiltAngle = 26.0;              // in degrees
+    }   //class TuneShootTable
 }   //class Dashboard

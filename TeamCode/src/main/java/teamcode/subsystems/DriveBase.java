@@ -31,12 +31,16 @@ import ftclib.drivebase.FtcSwerveBase;
 import ftclib.driverio.FtcDashboard;
 import ftclib.motor.FtcMotorActuator;
 import ftclib.sensor.GoBildaPinpointDriver;
+import teamcode.Dashboard;
+import teamcode.FtcAuto;
+import teamcode.Robot;
 import teamcode.RobotParams;
 import teamcode.indicators.LEDIndicator;
 import teamcode.vision.Vision;
 import trclib.controller.TrcPidController;
 import trclib.dataprocessor.TrcUtil;
 import trclib.drivebase.TrcDriveBase;
+import trclib.drivebase.TrcDriveBase.MotorIndex;
 import trclib.drivebase.TrcSwerveDrive;
 import trclib.motor.TrcMotor;
 import trclib.robotcore.TrcEvent;
@@ -47,7 +51,7 @@ import trclib.subsystem.TrcSubsystem;
  */
 public class DriveBase extends TrcSubsystem
 {
-    private static final String SUBSYSTEM_NAME = "DriveBase";
+    public static final String SUBSYSTEM_NAME = "DriveBase";
     private static final boolean NEED_ZERO_CAL = false;
 
     /**
@@ -68,7 +72,7 @@ public class DriveBase extends TrcSubsystem
     }   //enum RobotType
 
     /**
-     * This class contains the Swerve Drive Base Parameters.
+     * This class contains the Swerve Robot Parameters.
      */
     public static class SwerveRobotInfo extends FtcSwerveBase.SwerveInfo
     {
@@ -127,7 +131,7 @@ public class DriveBase extends TrcSubsystem
     }   //class SwerveRobotInfo
 
     /**
-     * This class contains the Mecanum Drive Base Parameters.
+     * This class contains the Mecanum Robot Parameters.
      */
     public static class MecanumRobotInfo extends FtcRobotBase.RobotInfo
     {
@@ -223,16 +227,21 @@ public class DriveBase extends TrcSubsystem
         }   //VisionOnlyInfo
     }   //class VisionOnlyInfo
 
+    private final Robot robot;
     private final FtcDashboard dashboard;
     private final FtcRobotBase.RobotInfo robotInfo;
     private final FtcRobotBase robotBase;
 
     /**
-     * Constructor: Create an instance of the object.
+     * Constructor: Creates an instance of the object.
+     *
+     * @param robot specifies the robot object to access other subsystems if necessary.
      */
-    public DriveBase()
+    public DriveBase(Robot robot)
     {
         super(SUBSYSTEM_NAME, NEED_ZERO_CAL);
+
+        this.robot = robot;
         dashboard = FtcDashboard.getInstance();
         switch (RobotParams.Preferences.robotType)
         {
@@ -274,7 +283,7 @@ public class DriveBase extends TrcSubsystem
     }   //getRobotInfo
 
     /**
-     * This method returns the created DriveBase object.
+     * This method returns the created RobotBase object.
      *
      * @return created robot drive.
      */
@@ -302,11 +311,12 @@ public class DriveBase extends TrcSubsystem
     /**
      * This method starts zero calibrate of the subsystem.
      *
-     * @param owner specifies the owner ID to to claim subsystem ownership, can be null if ownership not required.
-     * @param event specifies an event to signal when zero calibration is done, can be null if not provided.
+     * @param owner specifies the owner ID to check if the caller has ownership of the motor.
+     * @param completionEvent specifies the event to signal when the zero calibration is done,
+     *        can be null if not provided.
      */
     @Override
-    public void zeroCalibrate(String owner, TrcEvent event)
+    public void zeroCalibrate(String owner, TrcEvent completionEvent)
     {
         // DriveBase does not need zero calibration.
     }   //zeroCalibrate
@@ -321,13 +331,103 @@ public class DriveBase extends TrcSubsystem
     }   //resetState
 
     /**
-     * This method publishes the FRC NetworkTable entries for the subsystem to the Dashboard.
-     * Not applicable for FTC.
+     * This method is called when gamepad analog control is operated on the subsystem.
+     *
+     * @param altFunc specifies true if the gamepad AltFunc button is pressed, false otherwise.
+     * @param inputs specifies an array of analog values.
+     */
+    @Override
+    public void subsystemControl(boolean altFunc, double... inputs)
+    {
+        if (robotBase.driveBase.supportsHolonomicDrive())
+        {
+            robotBase.driveBase.holonomicDrive(
+                null, inputs[0], inputs[1], inputs[2], robotBase.driveBase.getDriveGyroAngle());
+        }
+        else
+        {
+            robotBase.driveBase.arcadeDrive(inputs[1], inputs[2]);
+        }
+
+        if (dashboard.isDashboardUpdateEnabled() && RobotParams.Preferences.showDriveBaseStatus)
+        {
+            dashboard.displayPrintf(
+                14, "RobotDrive: Power=(x=%.2f,y=%.2f,rot=%.2f),Mode:%s",
+                inputs[0], inputs[1], inputs[2], robotBase.driveBase.getDriveOrientation());
+        }
+    }   //subsystemControl
+
+    /**
+     * This method is called when a gamepad button is pressed to perform the subsystem action.
+     *
+     * @param pressed specifies true if the gamepad button is pressed, false otherwise.
+     * @param altFunc specifies true if the gamepad AltFunc button is pressed, false otherwise.
+     */
+    @Override
+    public void subsystemAction(boolean pressed, boolean altFunc)
+    {
+        if (pressed)
+        {
+            if (altFunc)
+            {
+                if (robotBase.driveBase.isGyroAssistEnabled())
+                {
+                    robotBase.driveBase.setGyroAssistEnabled(null);
+                    robot.globalTracer.traceInfo(instanceName, ">>>>> Disabling GyroAssist.");
+                }
+                else
+                {
+                    robotBase.driveBase.setGyroAssistEnabled(robotBase.purePursuitDrive.getTurnPidCtrl());
+                    robot.globalTracer.traceInfo(instanceName, ">>>>> Enabling GyroAssist.");
+                }
+            }
+            else if (robotBase.driveBase.supportsHolonomicDrive())
+            {
+                // Toggle between field or robot oriented driving, only applicable for holonomic drive base.
+                if (robotBase.driveBase.getDriveOrientation() != TrcDriveBase.DriveOrientation.Field)
+                {
+                    setDriveOrientation(TrcDriveBase.DriveOrientation.Field);
+                    robot.globalTracer.traceInfo(instanceName, ">>>>> Enabling FIELD mode.");
+                }
+                else
+                {
+                    setDriveOrientation(TrcDriveBase.DriveOrientation.Robot);
+                    robot.globalTracer.traceInfo(instanceName, ">>>>> Enabling ROBOT mode.");
+                }
+            }
+        }
+    }   //subsystemAction
+
+    /**
+     * This method sets the drive orientation mode and updates the LED to indicate so.
+     *
+     * @param orientation specifies the drive orientation (FIELD, ROBOT, INVERTED).
+     */
+    public void setDriveOrientation(TrcDriveBase.DriveOrientation orientation)
+    {
+        robot.globalTracer.traceInfo(instanceName, "driveOrientation=" + orientation);
+        robotBase.driveBase.setDriveOrientation(orientation, false);
+
+        if (orientation == TrcDriveBase.DriveOrientation.Field)
+        {
+            robot.robotBase.driveBase.setFieldForwardHeading(
+                Dashboard.DashboardParams.alliance == FtcAuto.Alliance.Red? 0.0: 180.0);
+        }
+
+        if (robot.ledIndicator != null)
+        {
+            robot.ledIndicator.setDriveOrientation(orientation);
+        }
+    }   //setDriveOrientation
+
+    /**
+     * This method publishes the NetworkTable entries for the subsystem to the Dashboard.
      */
     @Override
     public void publishToDashboard()
     {
-    }   //pubishToDashboard
+        // Not applicable for FTC.
+    }   //publishToDashboard
 
     /**
      * This method update the dashboard with the subsystem status.
@@ -349,26 +449,26 @@ public class DriveBase extends TrcSubsystem
             dashboard.displayPrintf(lineNum++, "Robot: %s", robotBase.driveBase.getFieldPosition());
             dashboard.displayPrintf(
                 lineNum++, "DriveEnc: fl=%.0f,fr=%.0f,bl=%.0f,br=%.0f",
-                robotBase.driveMotors[FtcRobotBase.INDEX_FRONT_LEFT].getPosition(),
-                robotBase.driveMotors[FtcRobotBase.INDEX_FRONT_RIGHT].getPosition(),
-                robotBase.driveMotors[FtcRobotBase.INDEX_BACK_LEFT].getPosition(),
-                robotBase.driveMotors[FtcRobotBase.INDEX_BACK_RIGHT].getPosition());
+                robotBase.driveMotors[MotorIndex.FrontLeft.value].getPosition(),
+                robotBase.driveMotors[MotorIndex.FrontRight.value].getPosition(),
+                robotBase.driveMotors[MotorIndex.BackLeft.value].getPosition(),
+                robotBase.driveMotors[MotorIndex.BackRight.value].getPosition());
 
             if (robotBase instanceof FtcSwerveBase)
             {
                 FtcSwerveBase swerveDrive = (FtcSwerveBase) robotBase;
                 dashboard.displayPrintf(
                     lineNum++, "SteerEnc: fl=%.2f, fr=%.2f, bl=%.2f, br=%.2f",
-                    swerveDrive.steerEncoders[FtcRobotBase.INDEX_FRONT_LEFT].getScaledPosition(),
-                    swerveDrive.steerEncoders[FtcRobotBase.INDEX_FRONT_RIGHT].getScaledPosition(),
-                    swerveDrive.steerEncoders[FtcRobotBase.INDEX_BACK_LEFT].getScaledPosition(),
-                    swerveDrive.steerEncoders[FtcRobotBase.INDEX_BACK_RIGHT].getScaledPosition());
+                    swerveDrive.steerEncoders[MotorIndex.FrontLeft.value].getScaledPosition(),
+                    swerveDrive.steerEncoders[MotorIndex.FrontRight.value].getScaledPosition(),
+                    swerveDrive.steerEncoders[MotorIndex.BackLeft.value].getScaledPosition(),
+                    swerveDrive.steerEncoders[MotorIndex.BackRight.value].getScaledPosition());
                 dashboard.displayPrintf(
                     lineNum++, "SteerRaw: fl=%.2f, fr=%.2f, bl=%.2f, br=%.2f",
-                    swerveDrive.steerEncoders[FtcRobotBase.INDEX_FRONT_LEFT].getRawPosition(),
-                    swerveDrive.steerEncoders[FtcRobotBase.INDEX_FRONT_RIGHT].getRawPosition(),
-                    swerveDrive.steerEncoders[FtcRobotBase.INDEX_BACK_LEFT].getRawPosition(),
-                    swerveDrive.steerEncoders[FtcRobotBase.INDEX_BACK_RIGHT].getRawPosition());
+                    swerveDrive.steerEncoders[MotorIndex.FrontLeft.value].getRawPosition(),
+                    swerveDrive.steerEncoders[MotorIndex.FrontRight.value].getRawPosition(),
+                    swerveDrive.steerEncoders[MotorIndex.BackLeft.value].getRawPosition(),
+                    swerveDrive.steerEncoders[MotorIndex.BackRight.value].getRawPosition());
             }
 
             if (robotBase.gyro != null)
