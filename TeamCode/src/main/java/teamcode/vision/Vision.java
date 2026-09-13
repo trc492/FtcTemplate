@@ -25,8 +25,11 @@ package teamcode.vision;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.vision.VisionProcessor;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+import org.firstinspires.ftc.vision.apriltag.AprilTagSingleDetection;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,6 +46,7 @@ import teamcode.Robot;
 import teamcode.RobotParams;
 import teamcode.indicators.LEDIndicator;
 import trclib.pathdrive.TrcPose2D;
+import trclib.pathdrive.TrcPose3D;
 import trclib.robotcore.TrcDbgTrace;
 import trclib.vision.TrcHomographyMapper;
 import trclib.vision.TrcOpenCvColorBlobPipeline;
@@ -509,9 +513,14 @@ public class Vision
         if (aprilTagInfo != null && robot.ledIndicator != null)
         {
             robot.ledIndicator.setAprilTagPatternsOff();
-            robot.ledIndicator.setStatusPattern(
-                aprilTagInfo.detectedObj.aprilTagDetection.id == RobotParams.Game.BLUE_APRILTAG_ID?
-                    LEDIndicator.BLUE_APRILTAG: LEDIndicator.RED_APRILTAG, true);
+            if (aprilTagInfo.detectedObj.aprilTagDetection instanceof AprilTagSingleDetection)
+            {
+                AprilTagSingleDetection singleDet =
+                    (AprilTagSingleDetection) aprilTagInfo.detectedObj.aprilTagDetection;
+                robot.ledIndicator.setStatusPattern(
+                    singleDet.id == RobotParams.Game.BLUE_APRILTAG_ID?
+                        LEDIndicator.BLUE_APRILTAG: LEDIndicator.RED_APRILTAG, true);
+            }
         }
 
         if (lineNum != -1)
@@ -528,27 +537,46 @@ public class Vision
      * This method calculates the robot's absolute field location with the detected AprilTagInfo.
      *
      * @param aprilTagInfo specifies the detected AprilTag info.
+     * @param camPose3d specifies the camera pose on the robot, can be null if not provided in which case the returned
+     *        pose is the camera field pose.
      * @return robot field location.
      */
-    public TrcPose2D getRobotFieldPose(TrcVisionTargetInfo<FtcVisionAprilTag.DetectedObject> aprilTagInfo)
+    public TrcPose2D getRobotFieldPose(
+        TrcVisionTargetInfo<FtcVisionAprilTag.DetectedObject> aprilTagInfo, TrcPose3D camPose3d)
     {
         TrcPose2D robotPose = null;
 
-        if (aprilTagInfo != null)
+        if (aprilTagInfo != null && aprilTagInfo.detectedObj.aprilTagDetection.robotPose != null)
         {
-            TrcPose2D aprilTagFieldPose =
-                RobotParams.Game.aprilTagPoses[aprilTagInfo.detectedObj.aprilTagDetection.id - 1];
-            TrcPose2D camPoseOnBot = new TrcPose2D(
-                frontCamInfo.camPose.x, frontCamInfo.camPose.y, frontCamInfo.camPose.yaw);
-            robotPose = aprilTagFieldPose.addRelativePose(aprilTagInfo.objPose.invert())
-                                         .addRelativePose(camPoseOnBot.invert());
+            Pose3D cameraFieldPose3d = aprilTagInfo.detectedObj.aprilTagDetection.robotPose;
+            Position position = cameraFieldPose3d.getPosition();
+            double ftcYaw = cameraFieldPose3d.getOrientation().getYaw();
+
+            if (camPose3d != null)
+            {
+                double robotFtcYawDeg = ftcYaw + camPose3d.yaw;
+                double robotFtcYawRad = Math.toRadians(robotFtcYawDeg);
+                double cosYaw = Math.cos(robotFtcYawRad);
+                double sinYaw = Math.sin(robotFtcYawRad);
+                double robotToCamFieldX = camPose3d.x * sinYaw + camPose3d.y * cosYaw;
+                double robotToCamFieldY = -camPose3d.x * cosYaw + camPose3d.y * sinYaw;
+                double robotFieldX = position.x - robotToCamFieldX;
+                double robotFieldY = position.y - robotToCamFieldY;
+                double robotTrcHeading = (90.0 - ftcYaw) - camPose3d.yaw;
+
+                robotPose = new TrcPose2D(robotFieldX, robotFieldY, robotTrcHeading);
+            }
+            else
+            {
+                // If camPose3d is null, return the raw camera field pose translated to TrcLib convention
+                robotPose = new TrcPose2D(position.x, position.y, 90.0 - ftcYaw);
+            }
+
             tracer.traceInfo(
                 moduleName,
-                "AprilTagId=" + aprilTagInfo.detectedObj.aprilTagDetection.id +
-                ", aprilTagFieldPose=" + aprilTagFieldPose +
-                ", aprilTagPoseFromCamera=" + aprilTagInfo.objPose +
-                ", cameraPose=" + camPoseOnBot +
-                ", robotPose=%s" + robotPose);
+                "robotPose3d=" + aprilTagInfo.detectedObj.aprilTagDetection.robotPose +
+                    ", camPose3d=" + camPose3d +
+                    ", trcRobotPose=" + robotPose);
         }
 
         return robotPose;
@@ -557,9 +585,12 @@ public class Vision
     /**
      * This method uses vision to find an AprilTag and uses the AprilTag's absolute field location and its relative
      * position from the camera to calculate the robot's absolute field location.
+     *
+     * @param camPose3d specifies the camera pose on the robot, can be null if not provided in which case the returned
+     *        pose is the camera field pose.
      * @return robot field location.
      */
-    public TrcPose2D getRobotFieldPose()
+    public TrcPose2D getRobotFieldPose(TrcPose3D camPose3d)
     {
         TrcPose2D robotPose = null;
 
@@ -580,7 +611,7 @@ public class Vision
 
             if (aprilTagInfo != null)
             {
-                robotPose = getRobotFieldPose(aprilTagInfo);
+                robotPose = getRobotFieldPose(aprilTagInfo, camPose3d);
             }
         }
 
