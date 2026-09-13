@@ -22,7 +22,7 @@
 
 package teamcode.autocommands;
 
-import teamcode.FtcAuto;
+import teamcode.FtcAuto.AutoChoices;
 import teamcode.Robot;
 import trclib.robotcore.TrcEvent;
 import trclib.robotcore.TrcRobot;
@@ -43,7 +43,7 @@ public class CmdAuto implements TrcRobot.RobotCommand
     }   //enum State
 
     private final Robot robot;
-    private final FtcAuto.AutoChoices autoChoices;
+    private final AutoChoices autoChoices;
     private final TrcTimer timer;
     private final TrcEvent event;
     private final TrcStateMachine<State> sm;
@@ -54,7 +54,7 @@ public class CmdAuto implements TrcRobot.RobotCommand
      * @param robot specifies the robot object for providing access to various global objects.
      * @param autoChoices specifies the autoChoices object.
      */
-    public CmdAuto(Robot robot, FtcAuto.AutoChoices autoChoices)
+    public CmdAuto(Robot robot, AutoChoices autoChoices)
     {
         this.robot = robot;
         this.autoChoices = autoChoices;
