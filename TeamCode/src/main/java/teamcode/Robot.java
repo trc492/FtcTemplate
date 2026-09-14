@@ -228,19 +228,19 @@ public class Robot
 
                 if (RobotParams.Preferences.useServoExtender)
                 {
-                    servoExtenderSubsystem = new ServoExtender(this);
+                    servoExtenderSubsystem = new ServoExtender();
                     servoExtender = servoExtenderSubsystem.getServo();
                 }
 
                 if (RobotParams.Preferences.useServoClaw)
                 {
-                    servoClawSubsystem = new ServoClaw(this);
+                    servoClawSubsystem = new ServoClaw();
                     servoClaw = servoClawSubsystem.getClaw();
                 }
 
                 if (RobotParams.Preferences.useLatch)
                 {
-                    latchSubsystem = new Latch(this);
+                    latchSubsystem = new Latch();
                     latch = latchSubsystem.getServo();
                 }
 

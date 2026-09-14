@@ -36,7 +36,7 @@ import trclib.subsystem.TrcSubsystem;
  * tilted to one extreme end, the wrist cannot rotate. If the wrist is in the middle tilt position, it will have
  * maximum rotation range and vice versa.
  */
-public class DiffyServoWrist extends TrcSubsystem
+public class DiffyServoWrist extends TrcSubsystem<DiffyServoWrist.Action>
 {
     public static final String SUBSYSTEM_NAME = "DiffyServoWrist";
     private static final boolean NEED_ZERO_CAL = false;
@@ -65,6 +65,14 @@ public class DiffyServoWrist extends TrcSubsystem
         public static final double[] tiltPosPresets             = {-110.0, -90.0, -45.0, 0.0, 45.0, 90.0, 110.0};
         public static final double[] rotatePosPresets           = {-90.0, -45.0, 0.0, 45.0, 90.0};
     }   //class Params
+
+    public enum Action
+    {
+        TiltPresetPosUp,
+        TiltPresetPosDown,
+        RotatePresetPosUp,
+        RotatePresetPosDown
+    }   //enum Action
 
     private final FtcDashboard dashboard;
     public final TrcDifferentialServoWrist wrist;
@@ -292,15 +300,49 @@ public class DiffyServoWrist extends TrcSubsystem
     }   //subsystemControl
 
     /**
-     * This method is called when a gamepad button is pressed to perform the subsystem action.
+     * This method is called to perform the subsystem action.
      *
-     * @param pressed specifies true if the gamepad button is pressed, false otherwise.
-     * @param altFunc specifies true if the gamepad AltFunc button is pressed, false otherwise.
+     * @param action specifies the subsystem action to perform.
+     * @param context specifies the context object for the action.
      */
     @Override
-    public void subsystemAction(boolean pressed, boolean altFunc)
+    public void subsystemAction(Action action, Object context)
     {
+        Double target = null;
+
+        if (action == Action.TiltPresetPosUp)
+        {
+            tiltPresetPositionUp(null);
+            wrist.tracer.traceInfo(instanceName, ">>>>> DiffyWristTilt position up.");
+        }
+        else if (action == Action.TiltPresetPosDown)
+        {
+            tiltPresetPositionDown(null);
+            wrist.tracer.traceInfo(instanceName, ">>>>> DiffyWristTilt position down.");
+        }
+        else if (action == Action.RotatePresetPosUp)
+        {
+            rotatePresetPositionUp(null);
+            wrist.tracer.traceInfo(instanceName, ">>>>> DiffyWristRotate position up.");
+        }
+        else if (action == Action.RotatePresetPosDown)
+        {
+            rotatePresetPositionDown(null);
+            wrist.tracer.traceInfo(instanceName, ">>>>> DiffyWristRotate position down.");
+        }
     }   //subsystemAction
+
+    /**
+     * This method is called to perform the subsystem tune action.
+     *
+     * @param action specifies the subsystem tune action to perform.
+     * @param tuneSubsystemName specifies the subsystem object to tune.
+     */
+    @Override
+    public void tuneSubsystem(TuneAction action, String tuneSubsystemName)
+    {
+        // DiffyWirst doesn't support tuning.
+    }   //tuneSubsystem
 
     /**
      * This method publishes the NetworkTable entries for the subsystem to the Dashboard.
@@ -355,27 +397,5 @@ public class DiffyServoWrist extends TrcSubsystem
     {
         // DiffyWirst doesn't support tuning.
     }   //updateParamsFromDashboard
-
-    /**
-     * This method is called to set the next tune target up from the current target.
-     *
-     * @param subsystemName specifies the name of the subsystem to update its tune target.
-     */
-    @Override
-    public void setNextTuneTargetUp(String subsystemName)
-    {
-        // DiffyWirst doesn't support tuning.
-    }   //setNextTuneTargetUp
-
-    /**
-     * This method is called to set the next tune target down from the current target.
-     *
-     * @param subsystemName specifies the name of the subsystem to update its tune target.
-     */
-    @Override
-    public void setNextTuneTargetDown(String subsystemName)
-    {
-        // DiffyWirst doesn't support tuning.
-    }   //setNextTuneTargetDown
 
 }   //class DiffyServoWrist

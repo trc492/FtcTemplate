@@ -36,7 +36,7 @@ import trclib.subsystem.TrcRollerIntake.TriggerAction;
  * This class implements an Intake Subsystem. This implementation consists of one or two motors and optionally a
  * front and/or back digital sensor(s) that can detect object entering/exiting the intake.
  */
-public class Intake extends TrcSubsystem
+public class Intake extends TrcSubsystem<Intake.Action>
 {
     public static final String SUBSYSTEM_NAME = "Intake";
     private static final boolean NEED_ZERO_CAL = false;
@@ -71,6 +71,13 @@ public class Intake extends TrcSubsystem
         public static final double INTAKE_FINISH_DELAY          = 0.0;
         public static final double EJECT_FINISH_DELAY           = 0.5;
     }   //class Params
+
+    public enum Action
+    {
+        ToggleAutoPickup,
+        ToggleManualIntake,
+        ToggleSensorIntake
+    }   //enum Action
 
     private final Robot robot;
     private final FtcDashboard dashboard;
@@ -172,62 +179,74 @@ public class Intake extends TrcSubsystem
     }   //subsystemControl
 
     /**
-     * This method is called when a gamepad button is pressed to perform the subsystem action.
+     * This method is called to perform the subsystem action.
      *
-     * @param pressed specifies true if the gamepad button is pressed, false otherwise.
-     * @param altFunc specifies true if the gamepad AltFunc button is pressed, false otherwise.
+     * @param action specifies the subsystem action to perform.
+     * @param context specifies the context object for the action.
      */
     @Override
-    public void subsystemAction(boolean pressed, boolean altFunc)
+    public void subsystemAction(Action action, Object context)
     {
-        if (pressed)
+        switch (action)
         {
-            if (robot.autoPickupTask != null)
-            {
+            case ToggleAutoPickup:
                 if (robot.autoPickupTask.isActive())
                 {
                     robot.autoPickupTask.cancel();
-                    robot.globalTracer.traceInfo(instanceName, ">>>>> Cancel Auto Pickup");
+                    intake.tracer.traceInfo(instanceName, ">>>>> Cancel Auto Pickup.");
                 }
                 else
                 {
+                    boolean useVision = context != null && (Boolean) context;
+
                     robot.autoPickupTask.autoPickup(
-                        instanceName, null, FtcAuto.autoChoices.alliance, !altFunc);
-                    robot.globalTracer.traceInfo(
-                        instanceName, ">>>>> Auto Pickup (useVision=" + !altFunc + ")");
+                        instanceName, null, FtcAuto.autoChoices.alliance, useVision);
+                    intake.tracer.traceInfo(
+                        instanceName, ">>>>> Auto Pickup (useVision=" + useVision + ").");
                 }
-            }
-            else
-            {
-                if (altFunc)
+                break;
+
+            case ToggleSensorIntake:
+                if (intake.isAutoActive())
                 {
-                    if (robot.intake.getPower() == 0.0)
-                    {
-                        robot.intake.setPower(Params.INTAKE_POWER);
-                        robot.globalTracer.traceInfo(instanceName, ">>>>> Manual Intake");
-                    }
-                    else
-                    {
-                        robot.intake.cancel();
-                        robot.globalTracer.traceInfo(instanceName, ">>>>> Cancel Manual Intake");
-                    }
+                    intake.cancel();
+                    intake.tracer.traceInfo(instanceName, ">>>>> Cancel Sensor Intake.");
                 }
                 else
                 {
-                    if (robot.intake.isAutoActive())
-                    {
-                        robot.intake.cancel();
-                        robot.globalTracer.traceInfo(instanceName, ">>>>> Cancel Sensor Intake");
-                    }
-                    else
-                    {
-                        robot.intake.autoIntake(instanceName);
-                        robot.globalTracer.traceInfo(instanceName, ">>>>> Sensor Intake");
-                    }
+                    intake.autoIntake(instanceName);
+                    intake.tracer.traceInfo(instanceName, ">>>>> Sensor Intake.");
                 }
-            }
+                break;
+
+            case ToggleManualIntake:
+                if (intake.getPower() == 0.0)
+                {
+                    intake.setPower(Params.INTAKE_POWER);
+                    intake.tracer.traceInfo(instanceName, ">>>>> Manual Intake.");
+                }
+                else
+                {
+                    intake.cancel();
+                    intake.tracer.traceInfo(instanceName, ">>>>> Cancel Manual Intake.");
+                }
+                break;
+
+            default:
+                break;
         }
     }   //subsystemAction
+
+    /**
+     * This method is called to perform the subsystem tune action.
+     *
+     * @param action specifies the subsystem tune action to perform.
+     * @param tuneSubsystemName specifies the subsystem object to tune.
+     */
+    public void tuneSubsystem(TuneAction action, String tuneSubsystemName)
+    {
+        // Intake subsystem doesn't need tuning.
+    }   //tuneSubsystem
 
     /**
      * This method publishes the NetworkTable entries for the subsystem to the Dashboard.
@@ -282,27 +301,5 @@ public class Intake extends TrcSubsystem
     {
         // Intake subsystem doesn't need tuning.
     }   //updateParamsFromDashboard
-
-    /**
-     * This method is called to set the next tune target up from the current target.
-     *
-     * @param subsystemName specifies the name of the subsystem to update its tune target.
-     */
-    @Override
-    public void setNextTuneTargetUp(String subsystemName)
-    {
-        // Intake subsystem doesn't need tuning.
-    }   //setNextTuneTargetUp
-
-    /**
-     * This method is called to set the next tune target down from the current target.
-     *
-     * @param subsystemName specifies the name of the subsystem to update its tune target.
-     */
-    @Override
-    public void setNextTuneTargetDown(String subsystemName)
-    {
-        // Intake subsystem doesn't need tuning.
-    }   //setNextTuneTargetDown
 
 }   //class Intake

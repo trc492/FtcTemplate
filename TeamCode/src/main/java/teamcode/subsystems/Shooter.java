@@ -47,7 +47,7 @@ import trclib.subsystem.TrcSubsystem;
  * subsystem also supports optionally mounting on a pan and tilt platform. This allows for aiming the shooter at
  * the shooting target.
  */
-public class Shooter extends TrcSubsystem
+public class Shooter extends TrcSubsystem<Shooter.Action>
 {
     public static final String SUBSYSTEM_NAME = "Shooter";
     private static final boolean NEED_ZERO_CAL = false;
@@ -157,6 +157,16 @@ public class Shooter extends TrcSubsystem
         public static double LAUNCH_POS                         = 0.5;
         public static double LAUNCH_DURATION                    = 0.5;  // in seconds
     }   //class LauncherParams
+
+    public enum Action
+    {
+        ToggleAutoShoot,
+        ToggleManualShoot,
+        IncShooterVelocity,
+        DecShooterVelocity,
+        IncShooterVelIncrement,
+        DecShooterVelIncrement
+    }   //enum Action
 
     public static final TrcPose2D robotToShooterPose = new TrcPose2D(0.0, 0.0, 0.0);
 
@@ -464,48 +474,116 @@ public class Shooter extends TrcSubsystem
     }   //subsystemControl
 
     /**
-     * This method is called when a gamepad button is pressed to perform the subsystem action.
+     * This method is called to perform the subsystem action.
      *
-     * @param pressed specifies true if the gamepad button is pressed, false otherwise.
-     * @param altFunc specifies true if the gamepad AltFunc button is pressed, false otherwise.
+     * @param action specifies the subsystem action to perform.
+     * @param context specifies the context object for the action.
      */
     @Override
-    public void subsystemAction(boolean pressed, boolean altFunc)
+    public void subsystemAction(Action action, Object context)
     {
-        if (pressed)
+        switch (action)
         {
-            if (robot.autoShootTask != null)
-            {
-                // Auto Shoot Task is enabled, auto shoot at any AprilTag detected.
+            case ToggleAutoShoot:
                 if (robot.autoShootTask.isActive())
                 {
                     robot.autoShootTask.cancel();
-                    robot.globalTracer.traceInfo(instanceName, ">>>>> Cancel Auto Shoot");
+                    shooter.tracer.traceInfo(instanceName, ">>>>> Cancel Auto Shoot");
                 }
                 else
                 {
-                    robot.autoShootTask.autoShoot(instanceName, null, !altFunc, (int[])null);
-                    robot.globalTracer.traceInfo(instanceName, ">>>>> Auto Shoot");
+                    boolean useVision = context != null && (Boolean) context;
+
+                    robot.autoShootTask.autoShoot(instanceName, null, useVision, (int[]) null);
+                    shooter.tracer.traceInfo(instanceName, ">>>>> Auto Shoot");
                 }
-            }
-            else
-            {
-                // Auto Shoot Task is disabled, shoot manually.
-                if (robot.shooter.isActive())
+                break;
+
+            case ToggleManualShoot:
+                if (shooter.isActive())
                 {
-                    robot.shooter.cancel(instanceName);
-                    robot.globalTracer.traceInfo(instanceName, ">>>>> Cancel Manual Shoot");
+                    shooter.cancel(instanceName);
+                    shooter.tracer.traceInfo(instanceName, ">>>>> Cancel Manual Shoot");
                 }
                 else
                 {
                     robot.shooter.aimShooter(
                         instanceName, robot.shooterSubsystem.shooter1Velocity.getValue(), 0.0, null, null, null, 0.0,
                         robot.shooterSubsystem::shoot, null, Shooter.ShooterMotorParams.OFF_DELAY);
-                    robot.globalTracer.traceInfo(instanceName, ">>>>> Manual Shoot");
+                    shooter.tracer.traceInfo(instanceName, ">>>>> Manual Shoot");
                 }
-            }
+                break;
+
+            case IncShooterVelocity:
+                shooter1Velocity.upValue();
+                Dashboard.TuneShootTable.shootMotor1Velocity = shooter1Velocity.getValue();
+                shooter.tracer.traceInfo(instanceName, ">>>>> Shooter velocity up");
+                break;
+
+            case DecShooterVelocity:
+                shooter1Velocity.downValue();
+                Dashboard.TuneShootTable.shootMotor1Velocity = shooter1Velocity.getValue();
+                shooter.tracer.traceInfo(instanceName, ">>>>> Shooter velocity down");
+                break;
+
+            case IncShooterVelIncrement:
+                shooter1Velocity.upIncrement();
+                shooter.tracer.traceInfo(instanceName, ">>>>> Shooter velocity increment up");
+                break;
+
+            case DecShooterVelIncrement:
+                shooter1Velocity.downIncrement();
+                shooter.tracer.traceInfo(instanceName, ">>>>> Shooter velocity increment down");
+                break;
+
+            default:
+                break;
         }
     }   //subsystemAction
+
+    /**
+     * This method is called to perform subsystem tuning action.
+     *
+     * @param action specifies the subsystem tuning action to perform.
+     * @param tuneSubsystemName specifies the subsystem object to tune.
+     */
+    @Override
+    public void tuneSubsystem(TuneAction action, String tuneSubsystemName)
+    {
+        Double target = null;
+
+        if (tuneSubsystemName.equalsIgnoreCase(ShooterMotorParams.MOTOR1_NAME))
+        {
+            target = action == TuneAction.SetNextTuneTargetUp?
+                shooter1Velocity.upValue(): shooter1Velocity.downValue();
+            shooter.setShooterMotorRPM(target, null);
+        }
+        else if (shooter.shooterMotor2 != null &&
+                 tuneSubsystemName.equalsIgnoreCase(ShooterMotorParams.MOTOR2_NAME))
+        {
+            target = action == TuneAction.SetNextTuneTargetUp?
+                shooter2Velocity.upValue(): shooter2Velocity.downValue();
+            shooter.setShooterMotorRPM(null, target);
+        }
+        else if (shooter.panMotor != null &&
+                 tuneSubsystemName.equalsIgnoreCase(PanMotorParams.MOTOR_NAME))
+        {
+            target = action == TuneAction.SetNextTuneTargetUp?
+                shooter.panMotor.presetPositionUp(null, null): shooter.panMotor.presetPositionDown(null, null);
+        }
+        else if (shooter.tiltMotor != null &&
+                 tuneSubsystemName.equalsIgnoreCase(TiltMotorParams.MOTOR_NAME))
+        {
+            target = action == TuneAction.SetNextTuneTargetUp?
+                shooter.tiltMotor.presetPositionUp(null, null): shooter.tiltMotor.presetPositionDown(null, null);
+        }
+        else if (launcher != null &&
+                 tuneSubsystemName.equalsIgnoreCase(LauncherParams.SERVO_NAME))
+        {
+            target = action == TuneAction.SetNextTuneTargetUp? LauncherParams.LAUNCH_POS: LauncherParams.REST_POS;
+            launcher.setPosition(target);
+        }
+    }   //tuneSubsystem
 
     /**
      * This method publishes the NetworkTable entries for the subsystem to the Dashboard.
@@ -698,87 +776,5 @@ public class Shooter extends TrcSubsystem
                 instanceName, "Tune %s: pidParams=%s, target=%.3f", subsystemName, pidParams, target);
         }
     }   //updateParamsFromDashboard
-
-    /**
-     * This method is called to set the next tune target up from the current target.
-     *
-     * @param subsystemName specifies the name of the subsystem to update its tune target.
-     */
-    @Override
-    public void setNextTuneTargetUp(String subsystemName)
-    {
-        Double target = null;
-
-        if (subsystemName.equalsIgnoreCase(ShooterMotorParams.MOTOR1_NAME))
-        {
-            target = shooter1Velocity.upValue();
-            shooter.setShooterMotorRPM(target, null);
-        }
-        else if (shooter.shooterMotor2 != null && subsystemName.equalsIgnoreCase(ShooterMotorParams.MOTOR2_NAME))
-        {
-            target = shooter2Velocity.upValue();
-            shooter.setShooterMotorRPM(null, target);
-        }
-        else if (shooter.panMotor != null && subsystemName.equalsIgnoreCase(PanMotorParams.MOTOR_NAME))
-        {
-            target = shooter.panMotor.presetPositionUp(null, null);
-        }
-        else if (shooter.tiltMotor != null && subsystemName.equalsIgnoreCase(TiltMotorParams.MOTOR_NAME))
-        {
-            target = shooter.tiltMotor.presetPositionUp(null, null);
-        }
-        else if (launcher != null && subsystemName.equalsIgnoreCase(LauncherParams.SERVO_NAME))
-        {
-            target = LauncherParams.LAUNCH_POS;
-            launcher.setPosition(target);
-        }
-
-        if (target != null)
-        {
-            Dashboard.TuneSubsystem.target = target;
-            shooter.tracer.traceInfo(instanceName, "Tune %s Up: target=%.3f", subsystemName, target);
-        }
-    }   //setNextTuneTargetUp
-
-    /**
-     * This method is called to set the next tune target down from the current target.
-     *
-     * @param subsystemName specifies the name of the subsystem to update its tune target.
-     */
-    @Override
-    public void setNextTuneTargetDown(String subsystemName)
-    {
-        Double target = null;
-
-        if (subsystemName.equalsIgnoreCase(ShooterMotorParams.MOTOR1_NAME))
-        {
-            target = shooter1Velocity.downValue();
-            shooter.setShooterMotorRPM(target, null);
-        }
-        else if (shooter.shooterMotor2 != null && subsystemName.equalsIgnoreCase(ShooterMotorParams.MOTOR2_NAME))
-        {
-            target = shooter2Velocity.downValue();
-            shooter.setShooterMotorRPM(null, target);
-        }
-        else if (shooter.panMotor != null && subsystemName.equalsIgnoreCase(PanMotorParams.MOTOR_NAME))
-        {
-            target = shooter.panMotor.presetPositionDown(null, null);
-        }
-        else if (shooter.tiltMotor != null && subsystemName.equalsIgnoreCase(TiltMotorParams.MOTOR_NAME))
-        {
-            target = shooter.tiltMotor.presetPositionDown(null, null);
-        }
-        else if (launcher != null && subsystemName.equalsIgnoreCase(LauncherParams.SERVO_NAME))
-        {
-            target = LauncherParams.REST_POS;
-            launcher.setPosition(target);
-        }
-
-        if (target != null)
-        {
-            Dashboard.TuneSubsystem.target = target;
-            shooter.tracer.traceInfo(instanceName, "Tune %s Down: target=%.3f", subsystemName, target);
-        }
-    }   //setNextTuneTargetDown
 
 }   //class Shooter

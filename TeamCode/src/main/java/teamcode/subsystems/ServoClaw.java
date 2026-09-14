@@ -30,7 +30,6 @@ import ftclib.driverio.FtcDashboard;
 import ftclib.robotcore.FtcOpMode;
 import ftclib.subsystem.FtcServoClaw;
 import teamcode.Dashboard;
-import teamcode.Robot;
 import trclib.robotcore.TrcEvent;
 import trclib.sensor.TrcTriggerThresholdRange;
 import trclib.subsystem.TrcServoClaw;
@@ -41,7 +40,7 @@ import trclib.subsystem.TrcSubsystem;
  * presence of an object and can auto grab it. The sensor can be either a digital sensor such as touch sensor or beam
  * break sensor) or an analog sensor such as a distance sensor.
  */
-public class ServoClaw extends TrcSubsystem
+public class ServoClaw extends TrcSubsystem<ServoClaw.Action>
 {
     public static final String SUBSYSTEM_NAME = "ServoClaw";
     private static final boolean NEED_ZERO_CAL = false;
@@ -71,21 +70,23 @@ public class ServoClaw extends TrcSubsystem
         public static final double CLOSE_TIME                   = 0.5;
     }   //class Params
 
-    private final Robot robot;
+    public enum Action
+    {
+        ToggleAutoGrab,
+        TogglePos
+    }   //enum Action
+
     private final FtcDashboard dashboard;
     private final Rev2mDistanceSensor analogSensor;
     private final TrcServoClaw claw;
 
     /**
      * Constructor: Creates an instance of the object.
-     *
-     * @param robot specifies the robot object to access other subsystems if necessary.
      */
-    public ServoClaw(Robot robot)
+    public ServoClaw()
     {
         super(SUBSYSTEM_NAME, NEED_ZERO_CAL);
 
-        this.robot = robot;
         dashboard = FtcDashboard.getInstance();
         if (Params.USE_ANALOG_SENSOR)
         {
@@ -192,45 +193,59 @@ public class ServoClaw extends TrcSubsystem
     }   //subsystemControl
 
     /**
-     * This method is called when a gamepad button is pressed to perform the subsystem action.
+     * This method is called to perform the subsystem action.
      *
-     * @param pressed specifies true if the gamepad button is pressed, false otherwise.
-     * @param altFunc specifies true if the gamepad AltFunc button is pressed, false otherwise.
+     * @param action specifies the subsystem action to perform.
+     * @param context specifies the context object for the action.
      */
     @Override
-    public void subsystemAction(boolean pressed, boolean altFunc)
+    public void subsystemAction(Action action, Object context)
     {
-        if (pressed)
+        if (action == Action.ToggleAutoGrab)
         {
-            if (altFunc)
+            if (claw.isAutoActive() || claw.hasObject())
             {
-                if (claw.isClosed())
-                {
-                    claw.open();
-                    robot.globalTracer.traceInfo(instanceName, ">>>>> Opening claws");
-                }
-                else
-                {
-                    claw.close();
-                    robot.globalTracer.traceInfo(instanceName, ">>>>> Closing claws");
-                }
+                claw.cancel();
+                claw.open();
+                claw.tracer.traceInfo(instanceName, ">>>>> Canceling AutoGrab.");
             }
             else
             {
-                if (claw.isAutoActive() || claw.hasObject())
-                {
-                    claw.cancel();
-                    claw.open();
-                    robot.globalTracer.traceInfo(instanceName, ">>>>> Canceling AutoGrab.");
-                }
-                else
-                {
-                    claw.autoGrab(null, 0.0, null, 0.0);
-                    robot.globalTracer.traceInfo(instanceName, ">>>>> Enabling AutoGrab.");
-                }
+                claw.autoGrab(null, 0.0, null, 0.0);
+                claw.tracer.traceInfo(instanceName, ">>>>> Enabling AutoGrab.");
+            }
+        }
+        else if (action == Action.TogglePos)
+        {
+            if (claw.isClosed())
+            {
+                claw.open();
+                claw.tracer.traceInfo(instanceName, ">>>>> Opening claws");
+            }
+            else
+            {
+                claw.close();
+                claw.tracer.traceInfo(instanceName, ">>>>> Closing claws");
             }
         }
     }   //subsystemAction
+
+    /**
+     * This method is called to perform the subsystem tune action.
+     *
+     * @param action specifies the subsystem tune action to perform.
+     * @param tuneSubsystemName specifies the subsystem object to tune.
+     */
+    @Override
+    public void tuneSubsystem(TuneAction action, String tuneSubsystemName)
+    {
+        if (tuneSubsystemName.equalsIgnoreCase(Params.PRIMARY_SERVO_NAME))
+        {
+            double target = action == TuneAction.SetNextTuneTargetUp? Params.OPEN_POS: Params.CLOSE_POS;
+            claw.setPosition(null, 0.0, target, null, 0.0);
+            claw.tracer.traceInfo(instanceName, "Tune %s: target=%.3f", tuneSubsystemName, target);
+        }
+    }   //tuneSubsystem
 
     /**
      * This method publishes the NetworkTable entries for the subsystem to the Dashboard.
@@ -293,37 +308,5 @@ public class ServoClaw extends TrcSubsystem
                 instanceName, "Tune %s: target=%.3f", subsystemName, Dashboard.TuneSubsystem.target);
         }
     }   //updateParamsFromDashboard
-
-    /**
-     * This method is called to set the next tune target up from the current target.
-     *
-     * @param subsystemName specifies the name of the subsystem to update its tune target.
-     */
-    @Override
-    public void setNextTuneTargetUp(String subsystemName)
-    {
-        if (subsystemName.equalsIgnoreCase(Params.PRIMARY_SERVO_NAME))
-        {
-            double target = Params.OPEN_POS;
-            claw.setPosition(null, 0.0, target, null, 0.0);
-            claw.tracer.traceInfo(instanceName, "Tune %s Up: target=%.3f", subsystemName, target);
-        }
-    }   //setNextTuneTargetUp
-
-    /**
-     * This method is called to set the next tune target down from the current target.
-     *
-     * @param subsystemName specifies the name of the subsystem to update its tune target.
-     */
-    @Override
-    public void setNextTuneTargetDown(String subsystemName)
-    {
-        if (subsystemName.equalsIgnoreCase(Params.PRIMARY_SERVO_NAME))
-        {
-            double target = Params.CLOSE_POS;
-            claw.setPosition(null, 0.0, target, null, 0.0);
-            claw.tracer.traceInfo(instanceName, "Tune %s Down: target=%.3f", subsystemName, target);
-        }
-    }   //setNextTuneTargetDown
 
 }   //class ServoClaw

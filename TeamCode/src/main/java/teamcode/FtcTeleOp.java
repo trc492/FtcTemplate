@@ -31,8 +31,16 @@ import ftclib.driverio.FtcGamepad;
 import ftclib.robotcore.FtcOpMode;
 import teamcode.indicators.RumbleIndicator;
 import teamcode.subsystems.CrServoArm;
+import teamcode.subsystems.DiffyServoWrist;
+import teamcode.subsystems.DriveBase;
 import teamcode.subsystems.Elevator;
+import teamcode.subsystems.Intake;
+import teamcode.subsystems.Latch;
 import teamcode.subsystems.MotorArm;
+import teamcode.subsystems.ServoClaw;
+import teamcode.subsystems.ServoExtender;
+import teamcode.subsystems.ServoWrist;
+import teamcode.subsystems.Shooter;
 import teamcode.subsystems.TelescopeArm;
 import teamcode.subsystems.Turret;
 import teamcode.vision.Vision;
@@ -322,31 +330,67 @@ public class FtcTeleOp extends FtcOpMode
             case A:
                 if (robot.shooterSubsystem != null)
                 {
-                    robot.shooterSubsystem.subsystemAction(pressed, driverAltFunc);
+                    if (pressed)
+                    {
+                        if (robot.autoShootTask != null)
+                        {
+                            robot.shooterSubsystem.subsystemAction(Shooter.Action.ToggleAutoShoot, !driverAltFunc);
+                        }
+                        else
+                        {
+                            robot.shooterSubsystem.subsystemAction(Shooter.Action.ToggleManualShoot, null);
+                        }
+                    }
                 }
                 else if (robot.intakeSubsystem != null)
                 {
-                    robot.intakeSubsystem.subsystemAction(pressed, driverAltFunc);
+                    if (pressed)
+                    {
+                        if (robot.autoPickupTask != null)
+                        {
+                            robot.intakeSubsystem.subsystemAction(Intake.Action.ToggleAutoPickup, !driverAltFunc);
+                        }
+                        else
+                        {
+                            if (driverAltFunc)
+                            {
+                                robot.intakeSubsystem.subsystemAction(Intake.Action.ToggleManualIntake, null);
+                            }
+                            else
+                            {
+                                robot.intakeSubsystem.subsystemAction(Intake.Action.ToggleSensorIntake, null);
+                            }
+                        }
+                    }
                 }
-                else if (robot.servoExtender != null)
+                else if (robot.servoExtenderSubsystem != null)
                 {
-                    robot.servoExtenderSubsystem.subsystemAction(pressed, driverAltFunc);
+                    robot.servoExtenderSubsystem.subsystemAction(ServoExtender.Action.TogglePos, null);
                 }
                 else if (robot.servoClawSubsystem != null)
                 {
-                    robot.servoClawSubsystem.subsystemAction(pressed, driverAltFunc);
+                    robot.servoClawSubsystem.subsystemAction(ServoClaw.Action.TogglePos, null);
                 }
                 else if (robot.latchSubsystem != null)
                 {
-                    robot.latchSubsystem.subsystemAction(pressed, driverAltFunc);
+                    robot.latchSubsystem.subsystemAction(Latch.Action.TogglePos, null);
                 }
                 break;
 
             case B:
-                if (robot.robotDriveBase != null && pressed)
+                if (robot.robotDriveBase != null)
                 {
-                    // Set drive orientation mode.
-                    robot.robotDriveBase.subsystemAction(pressed, driverAltFunc);
+                    if (pressed)
+                    {
+                        if (driverAltFunc)
+                        {
+                            robot.robotDriveBase.subsystemAction(DriveBase.Action.ToggleGyroAssist, null);
+                        }
+                        else
+                        {
+                            robot.robotDriveBase.subsystemAction(DriveBase.Action.ToggleDriveMode, null);
+                        }
+                    }
                 }
                 break;
 
@@ -364,20 +408,18 @@ public class FtcTeleOp extends FtcOpMode
                 break;
 
             case DpadUp:
-                if (robot.motorArm != null)
+                if (robot.motorArmSubsystem != null)
                 {
                     if (pressed)
                     {
-                        robot.motorArm.presetPositionUp(null, MotorArm.Params.POWER_LIMIT);
-                        robot.globalTracer.traceInfo(moduleName, ">>>>> MotorArm position up");
+                        robot.motorArmSubsystem.subsystemAction(MotorArm.Action.PresetPosUp, null);
                     }
                 }
-                else if (robot.crServoArm != null)
+                else if (robot.crServoArmSubsystem != null)
                 {
                     if (pressed)
                     {
-                        robot.crServoArm.presetPositionUp(null, CrServoArm.Params.POWER_LIMIT);
-                        robot.globalTracer.traceInfo(moduleName, ">>>>> CrServoArm position up");
+                        robot.crServoArmSubsystem.subsystemAction(CrServoArm.Action.PresetPosUp, null);
                     }
                 }
                 else if (robot.telescopeArm != null)
@@ -386,96 +428,80 @@ public class FtcTeleOp extends FtcOpMode
                     {
                         if (driverAltFunc)
                         {
-                            if (robot.telescopeArm.elbow != null)
-                            {
-                                robot.telescopeArm.elbow.presetPositionUp(
-                                    null, TelescopeArm.ElbowParams.POWER_LIMIT);
-                                robot.globalTracer.traceInfo(moduleName, ">>>>> Telescope elbow position up");
-                            }
+                            robot.telescopeArm.subsystemAction(
+                                TelescopeArm.Action.PresetPosUp, TelescopeArm.ElbowParams.MOTOR_NAME);
                         }
                         else
                         {
-                            robot.telescopeArm.telescope.presetPositionUp(
-                                null, TelescopeArm.TelescopeParams.POWER_LIMIT);
-                            robot.globalTracer.traceInfo(moduleName, ">>>>> Telescope position up");
+                            robot.telescopeArm.subsystemAction(
+                                TelescopeArm.Action.PresetPosUp, TelescopeArm.TelescopeParams.MOTOR_NAME);
                         }
                     }
                 }
-                else if (robot.elevator != null)
+                else if (robot.elevatorSubsystem != null)
                 {
                     if (pressed)
                     {
-                        robot.elevator.presetPositionUp(null, Elevator.Params.POWER_LIMIT);
-                        robot.globalTracer.traceInfo(moduleName, ">>>>> Elevator position up");
+                        robot.elevatorSubsystem.subsystemAction(Elevator.Action.PresetPosUp, null);
                     }
                 }
-                else if (robot.turret != null)
+                else if (robot.turretSubsystem != null)
                 {
                     if (pressed)
                     {
-                        robot.turret.presetPositionUp(null, Turret.Params.POWER_LIMIT);
-                        robot.globalTracer.traceInfo(moduleName, ">>>>> Turret position up");
+                        robot.turretSubsystem.subsystemAction(Turret.Action.PresetPosUp, null);
                     }
                 }
                 else if (robot.diffyWrist != null)
                 {
                     if (pressed)
                     {
-                        robot.diffyWrist.tiltPresetPositionUp(null);
-                        robot.globalTracer.traceInfo(moduleName, ">>>>> DiffyWristTilt position up");
+                        robot.diffyWrist.subsystemAction(DiffyServoWrist.Action.TiltPresetPosUp, null);
                     }
                 }
-                else if (robot.servoWrist != null)
+                else if (robot.servoWristSubsystem != null)
                 {
                     if (pressed)
                     {
-                        robot.servoWrist.presetPositionUp(null);
-                        robot.globalTracer.traceInfo(moduleName, ">>>>> ServoWrist position up");
+                        robot.servoWristSubsystem.subsystemAction(ServoWrist.Action.PresetPosUp, null);
                     }
                 }
-                else if (robot.servoExtender != null)
+                else if (robot.servoExtenderSubsystem != null)
                 {
                     if (pressed)
                     {
-                        robot.servoExtender.presetPositionUp(null);
-                        robot.globalTracer.traceInfo(moduleName, ">>>>> ServoExtender position up");
+                        robot.servoExtenderSubsystem.subsystemAction(ServoExtender.Action.PresetPosUp, null);
                     }
                 }
-                else if (robot.latch != null)
+                else if (robot.latchSubsystem != null)
                 {
                     if (pressed)
                     {
-                        robot.latch.presetPositionUp(null);
-                        robot.globalTracer.traceInfo(moduleName, ">>>>> Latch position up");
+                        robot.latchSubsystem.subsystemAction(Latch.Action.PresetPosUp, null);
                     }
                 }
-                else if (robot.shooter != null)
+                else if (robot.shooterSubsystem != null)
                 {
                     if (pressed)
                     {
-                        robot.shooterSubsystem.shooter1Velocity.upValue();
-                        Dashboard.TuneShootTable.shootMotor1Velocity =
-                            robot.shooterSubsystem.shooter1Velocity.getValue();
-                        robot.globalTracer.traceInfo(moduleName, ">>>>> Shooter velocity up");
+                        robot.shooterSubsystem.subsystemAction(Shooter.Action.IncShooterVelocity, null);
                     }
                 }
                 break;
 
             case DpadDown:
-                if (robot.motorArm != null)
+                if (robot.motorArmSubsystem != null)
                 {
                     if (pressed)
                     {
-                        robot.motorArm.presetPositionDown(null, MotorArm.Params.POWER_LIMIT);
-                        robot.globalTracer.traceInfo(moduleName, ">>>>> MotorArm position down");
+                        robot.motorArmSubsystem.subsystemAction(MotorArm.Action.PresetPosDown, null);
                     }
                 }
-                else if (robot.crServoArm != null)
+                else if (robot.crServoArmSubsystem != null)
                 {
                     if (pressed)
                     {
-                        robot.crServoArm.presetPositionDown(null, CrServoArm.Params.POWER_LIMIT);
-                        robot.globalTracer.traceInfo(moduleName, ">>>>> CrServoArm position down");
+                        robot.crServoArmSubsystem.subsystemAction(CrServoArm.Action.PresetPosDown, null);
                     }
                 }
                 else if (robot.telescopeArm != null)
@@ -484,77 +510,63 @@ public class FtcTeleOp extends FtcOpMode
                     {
                         if (driverAltFunc)
                         {
-                            if (robot.telescopeArm.elbow != null)
-                            {
-                                robot.telescopeArm.elbow.presetPositionDown(
-                                    null, TelescopeArm.ElbowParams.POWER_LIMIT);
-                                robot.globalTracer.traceInfo(moduleName, ">>>>> Telescope elbow position down");
-                            }
+                            robot.telescopeArm.subsystemAction(
+                                TelescopeArm.Action.PresetPosDown, TelescopeArm.ElbowParams.MOTOR_NAME);
                         }
                         else
                         {
-                            robot.telescopeArm.telescope.presetPositionDown(
-                                null, TelescopeArm.TelescopeParams.POWER_LIMIT);
-                            robot.globalTracer.traceInfo(moduleName, ">>>>> Telescope position down");
+                            robot.telescopeArm.subsystemAction(
+                                TelescopeArm.Action.PresetPosDown, TelescopeArm.TelescopeParams.MOTOR_NAME);
                         }
                     }
                 }
-                else if (robot.elevator != null)
+                else if (robot.elevatorSubsystem != null)
                 {
                     if (pressed)
                     {
-                        robot.elevator.presetPositionDown(null, Elevator.Params.POWER_LIMIT);
-                        robot.globalTracer.traceInfo(moduleName, ">>>>> Elevator position down");
+                        robot.elevatorSubsystem.subsystemAction(Elevator.Action.PresetPosDown, null);
                     }
                 }
-                else if (robot.turret != null)
+                else if (robot.turretSubsystem != null)
                 {
                     if (pressed)
                     {
-                        robot.turret.presetPositionDown(null, Turret.Params.POWER_LIMIT);
-                        robot.globalTracer.traceInfo(moduleName, ">>>>> Turret position down");
+                        robot.turretSubsystem.subsystemAction(Turret.Action.PresetPosDown, null);
                     }
                 }
                 else if (robot.diffyWrist != null)
                 {
                     if (pressed)
                     {
-                        robot.diffyWrist.tiltPresetPositionDown(null);
-                        robot.globalTracer.traceInfo(moduleName, ">>>>> DiffyWristTilt position down");
+                        robot.diffyWrist.subsystemAction(DiffyServoWrist.Action.TiltPresetPosDown, null);
                     }
                 }
-                else if (robot.servoWrist != null)
+                else if (robot.servoWristSubsystem != null)
                 {
                     if (pressed)
                     {
-                        robot.servoWrist.presetPositionDown(null);
-                        robot.globalTracer.traceInfo(moduleName, ">>>>> ServoWrist position down");
+                        robot.servoWristSubsystem.subsystemAction(ServoWrist.Action.PresetPosDown, null);
                     }
                 }
-                else if (robot.servoExtender != null)
+                else if (robot.servoExtenderSubsystem != null)
                 {
                     if (pressed)
                     {
-                        robot.servoExtender.presetPositionDown(null);
-                        robot.globalTracer.traceInfo(moduleName, ">>>>> ServoExtender position down");
+                        robot.servoExtenderSubsystem.subsystemAction(ServoExtender.Action.PresetPosDown, null);
                     }
                 }
-                else if (robot.latch != null)
+                else if (robot.latchSubsystem != null)
                 {
                     if (pressed)
                     {
-                        robot.latch.presetPositionDown(null);
-                        robot.globalTracer.traceInfo(moduleName, ">>>>> Latch position down");
+                        robot.latchSubsystem.subsystemAction(Latch.Action.PresetPosDown, null);
                     }
                 }
-                else if (robot.shooter != null)
+                else if (robot.shooterSubsystem != null)
                 {
                     if (pressed)
                     {
-                        robot.shooterSubsystem.shooter1Velocity.downValue();
-                        Dashboard.TuneShootTable.shootMotor1Velocity =
-                            robot.shooterSubsystem.shooter1Velocity.getValue();
-                        robot.globalTracer.traceInfo(moduleName, ">>>>> Shooter velocity down");
+                        robot.shooterSubsystem.subsystemAction(Shooter.Action.DecShooterVelocity, null);
                     }
                 }
                 break;
@@ -564,16 +576,14 @@ public class FtcTeleOp extends FtcOpMode
                 {
                     if (pressed)
                     {
-                        robot.diffyWrist.rotatePresetPositionDown(null);
-                        robot.globalTracer.traceInfo(moduleName, ">>>>> DiffyWristRotate position down");
+                        robot.diffyWrist.subsystemAction(DiffyServoWrist.Action.RotatePresetPosDown, null);
                     }
                 }
-                else if (robot.shooter != null)
+                else if (robot.shooterSubsystem != null)
                 {
                     if (pressed)
                     {
-                        robot.shooterSubsystem.shooter1Velocity.downIncrement();
-                        robot.globalTracer.traceInfo(moduleName, ">>>>> Shooter velocity increment down");
+                        robot.shooterSubsystem.subsystemAction(Shooter.Action.DecShooterVelIncrement, null);
                     }
                 }
                 break;
@@ -583,16 +593,14 @@ public class FtcTeleOp extends FtcOpMode
                 {
                     if (pressed)
                     {
-                        robot.diffyWrist.rotatePresetPositionUp(null);
-                        robot.globalTracer.traceInfo(moduleName, ">>>>> DiffyWristRotate position up");
+                        robot.diffyWrist.subsystemAction(DiffyServoWrist.Action.RotatePresetPosUp, null);
                     }
                 }
-                else if (robot.shooter != null)
+                else if (robot.shooterSubsystem != null)
                 {
                     if (pressed)
                     {
-                        robot.shooterSubsystem.shooter1Velocity.upIncrement();
-                        robot.globalTracer.traceInfo(moduleName, ">>>>> Shooter velocity increment up");
+                        robot.shooterSubsystem.subsystemAction(Shooter.Action.IncShooterVelIncrement, null);
                     }
                 }
                 break;

@@ -721,7 +721,8 @@ public class FtcTest extends FtcTeleOp
                 {
                     if (pressed)
                     {
-                        TrcSubsystem.setSubsystemTuneTargetUp(Dashboard.TuneSubsystem.subsystemName);
+                        TrcSubsystem.performTuneSubsystemAction(
+                            TrcSubsystem.TuneAction.SetNextTuneTargetUp, Dashboard.TuneSubsystem.subsystemName);
                         robot.globalTracer.traceInfo(
                             moduleName, ">>>>> SetTuneTargetUp: " + Dashboard.TuneSubsystem.subsystemName);
                     }
@@ -774,7 +775,8 @@ public class FtcTest extends FtcTeleOp
                 {
                     if (pressed)
                     {
-                        TrcSubsystem.setSubsystemTuneTargetDown(Dashboard.TuneSubsystem.subsystemName);
+                        TrcSubsystem.performTuneSubsystemAction(
+                            TrcSubsystem.TuneAction.SetNextTuneTargetDown, Dashboard.TuneSubsystem.subsystemName);
                         robot.globalTracer.traceInfo(
                             moduleName, ">>>>> SetTuneTargetDown: " + Dashboard.TuneSubsystem.subsystemName);
                     }
