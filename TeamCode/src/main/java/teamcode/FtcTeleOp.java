@@ -30,6 +30,7 @@ import ftclib.drivebase.FtcSwerveBase;
 import ftclib.driverio.FtcGamepad;
 import ftclib.robotcore.FtcOpMode;
 import teamcode.indicators.RumbleIndicator;
+import teamcode.subsystems.DriveBase;
 import teamcode.vision.Vision;
 import trclib.robotcore.TrcDbgTrace;
 import trclib.robotcore.TrcRobot;
@@ -270,10 +271,19 @@ public class FtcTeleOp extends FtcOpMode
                 break;
 
             case B:
-                if (robot.robotDriveBase != null && pressed)
+                if (robot.robotDriveBase != null)
                 {
-                    // Set drive orientation mode.
-                    robot.robotDriveBase.subsystemAction(pressed, driverAltFunc);
+                    if (pressed)
+                    {
+                        if (driverAltFunc)
+                        {
+                            robot.robotDriveBase.subsystemAction(DriveBase.Action.ToggleGyroAssist, null);
+                        }
+                        else
+                        {
+                            robot.robotDriveBase.subsystemAction(DriveBase.Action.ToggleDriveMode, null);
+                        }
+                    }
                 }
                 break;
 
