@@ -583,6 +583,14 @@ public class Shooter extends TrcSubsystem<Shooter.Action>
             target = action == TuneAction.SetNextTuneTargetUp? LauncherParams.LAUNCH_POS: LauncherParams.REST_POS;
             launcher.setPosition(target);
         }
+
+        if (target != null)
+        {
+            Dashboard.TuneSubsystem.target = target;
+            shooter.tracer.traceInfo(
+                instanceName, "Tune %s %s: target=%.3f",
+                tuneSubsystemName, action == TuneAction.SetNextTuneTargetUp? "Up": "Down", target);
+        }
     }   //tuneSubsystem
 
     /**

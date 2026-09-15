@@ -189,7 +189,7 @@ public class Latch extends TrcSubsystem<Latch.Action>
         if (tuneSubsystemName.equalsIgnoreCase(Params.SERVO_NAME))
         {
             double target = action == TuneAction.SetNextTuneTargetUp? Params.LOGICAL_MAX_POS: Params.LOGICAL_MIN_POS;
-            servo.setPosition(target);
+            servo.setLogicalPosition(target);
             servo.tracer.traceInfo(instanceName, "Tune %s: target=%.3f", tuneSubsystemName, target);
         }
     }   //tuneSubsystem

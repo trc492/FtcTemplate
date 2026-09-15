@@ -308,8 +308,6 @@ public class DiffyServoWrist extends TrcSubsystem<DiffyServoWrist.Action>
     @Override
     public void subsystemAction(Action action, Object context)
     {
-        Double target = null;
-
         if (action == Action.TiltPresetPosUp)
         {
             tiltPresetPositionUp(null);

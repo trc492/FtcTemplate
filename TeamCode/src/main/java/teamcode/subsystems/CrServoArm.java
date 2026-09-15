@@ -238,16 +238,10 @@ public class CrServoArm extends TrcSubsystem<CrServoArm.Action>
     @Override
     public void tuneSubsystem(TuneAction action, String tuneSubsystemName)
     {
-        Double target = null;
-
         if (tuneSubsystemName.equalsIgnoreCase(Params.PRIMARY_MOTOR_NAME))
         {
-            target = action == TuneAction.SetNextTuneTargetUp?
+            double target = action == TuneAction.SetNextTuneTargetUp?
                 motor.presetPositionUp(null, null): motor.presetPositionDown(null, null);
-        }
-
-        if (target != null)
-        {
             Dashboard.TuneSubsystem.target = target;
             motor.tracer.traceInfo(
                 instanceName, "Tune %s %s: target=%.3f",
