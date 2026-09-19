@@ -143,10 +143,10 @@ public class FtcTeleOp extends FtcOpMode
         //
         if (robot.vision != null)
         {
-            if (robot.vision.frontCamAprilTagVision != null)
+            if (robot.vision.aprilTagWebcamVision != null)
             {
                 robot.globalTracer.traceInfo(moduleName, "Enabling WebCam AprilTagVision.");
-                robot.vision.setWebcamAprilTagVisionEnabled(true);
+                robot.vision.setAprilTagWebcamVisionEnabled(true);
             }
             else if (robot.vision.limelightVision != null)
             {

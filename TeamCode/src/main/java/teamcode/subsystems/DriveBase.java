@@ -120,7 +120,7 @@ public class DriveBase extends TrcSubsystem<DriveBase.Action>
                     .setPidStallDetectionEnabled(true)
                     .setPidDriveParams(false)
                     .setPurePursuitDriveParams(6.0, true, false)
-                    .setVisionInfo(Vision.frontCamInfo, null, Vision.limelightInfo)
+                    .setVisionInfo(Vision.aprilTagWebcamInfo, null, Vision.limelightInfo)
                     .setIndicators(LEDIndicator.STATUS_LED_NAME, LEDIndicator.COLOR_BLOB_LED_NAME);
             this.setSwerveParams(swerveParams)
                 .setSteerEncoderInfo(
@@ -174,7 +174,7 @@ public class DriveBase extends TrcSubsystem<DriveBase.Action>
                 .setPidStallDetectionEnabled(true)
                 .setPidDriveParams(false)
                 .setPurePursuitDriveParams(6.0, true, false)
-                .setVisionInfo(Vision.frontCamInfo, null, Vision.limelightInfo)
+                .setVisionInfo(Vision.aprilTagWebcamInfo, null, Vision.limelightInfo)
                 .setIndicators(
                     LEDIndicator.STATUS_LED_NAME, LEDIndicator.COLOR_BLOB_LED_NAME);
         }   //MecanumRobotInfo
@@ -229,7 +229,7 @@ public class DriveBase extends TrcSubsystem<DriveBase.Action>
         public VisionOnlyInfo()
         {
             this.setRobotInfo(RobotType.VisionOnly.toString())
-                .setVisionInfo(Vision.frontCamInfo, Vision.backCamInfo, Vision.limelightInfo);
+                .setVisionInfo(Vision.aprilTagWebcamInfo, Vision.colorBlobWebcamInfo, Vision.limelightInfo);
         }   //VisionOnlyInfo
     }   //class VisionOnlyInfo
 

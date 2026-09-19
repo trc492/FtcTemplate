@@ -202,7 +202,7 @@ public class FtcTest extends FtcTeleOp
     private boolean tuneDriveAtEndPoint = false;
     // Vision.
     private boolean fpsMeterEnabled = false;
-    private Vision.ColorBlobType testVisionColorBlobType = Vision.ColorBlobType.Any;
+    private Vision.ColorBlobType testVisionColorBlobType = null;
 
     //
     // Overrides FtcOpMode abstract method.
@@ -333,22 +333,22 @@ public class FtcTest extends FtcTeleOp
             case VisionTest:
                 if (robot.vision != null)
                 {
-                    if (robot.vision.frontCamAprilTagVision != null)
-                    {
-                        robot.globalTracer.traceInfo(moduleName, "Enabling AprilTagVision for Webcam.");
-                        robot.vision.setWebcamAprilTagVisionEnabled(true);
-                    }
-
                     if (robot.vision.limelightVision != null)
                     {
                         robot.globalTracer.traceInfo(moduleName, "Enabling AprilTagVision for Limelight.");
                         robot.vision.setLimelightVisionEnabled(Vision.LimelightPipelineType.AprilTag, true);
                     }
 
-                    if (robot.vision.backCamColorBlobVision != null)
+                    if (robot.vision.aprilTagWebcamVision != null)
                     {
-                        robot.globalTracer.traceInfo(moduleName, "Enabling ColorBlobVision.");
-                        robot.vision.setColorBlobVisionEnabled(Vision.ColorBlobType.Any, true);
+                        robot.globalTracer.traceInfo(moduleName, "Enabling AprilTagVision for Webcam.");
+                        robot.vision.setAprilTagWebcamVisionEnabled(true);
+                    }
+
+                    if (robot.vision.colorBlobWebcamVision != null)
+                    {
+                        robot.globalTracer.traceInfo(moduleName, "Enabling ColorBlobVision for Webcam.");
+                        robot.vision.setColorBlobWebcamVisionEnabled(null, true);
                     }
                 }
                 break;
@@ -732,12 +732,12 @@ public class FtcTest extends FtcTeleOp
                 {
                     if (pressed)
                     {
-                        if (robot.vision.backCamColorBlobVision != null)
+                        if (robot.vision.colorBlobWebcamVision != null)
                         {
                             // Set display to next intermediate Mat in the pipeline.
-                            if (robot.vision.isColorBlobVisionEnabled(Vision.ColorBlobType.Any))
+                            if (robot.vision.isColorBlobWebcamVisionEnabled(null))
                             {
-                                robot.vision.backCamColorBlobVision.getVisionProcessor().getPipeline().setNextVideoOutput();
+                                robot.vision.colorBlobWebcamVision.getVisionProcessor().getPipeline().setNextVideoOutput();
                             }
                         }
                         else if (robot.vision.isLimelightVisionEnabled())
@@ -825,26 +825,26 @@ public class FtcTest extends FtcTeleOp
                     passToTeleOp = false;
                 }
                 else if (testChoices.test == Test.VisionTest && robot.vision != null &&
-                         robot.vision.backCamColorBlobVision != null)
+                         robot.vision.colorBlobWebcamVision != null)
                 {
                     if (pressed)
                     {
-                        if (testVisionColorBlobType == Vision.ColorBlobType.Any)
+                        if (testVisionColorBlobType == null)
                         {
-                            testVisionColorBlobType = Vision.ColorBlobType.RedBlob;
+                            testVisionColorBlobType = Vision.ColorBlobType.Yellow;
                         }
-                        else if (testVisionColorBlobType == Vision.ColorBlobType.RedBlob)
+                        else if (testVisionColorBlobType == Vision.ColorBlobType.Yellow)
                         {
-                            testVisionColorBlobType = Vision.ColorBlobType.BlueBlob;
+                            testVisionColorBlobType = Vision.ColorBlobType.Blue;
                         }
                         else
                         {
-                            testVisionColorBlobType = Vision.ColorBlobType.Any;
+                            testVisionColorBlobType = null;
                         }
 
                         robot.globalTracer.traceInfo(
                             moduleName, ">>>>> Switch ColorBlob Vision to %s", testVisionColorBlobType);
-                        robot.vision.setColorBlobVisionEnabled(testVisionColorBlobType, true);
+                        robot.vision.setColorBlobWebcamVisionEnabled(testVisionColorBlobType, true);
                     }
                     passToTeleOp = false;
                 }

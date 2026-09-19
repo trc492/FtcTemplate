@@ -150,10 +150,7 @@ public class Robot
             new LEDIndicator(robotInfo.indicatorNames): null;
 
         // Create and initialize Vision subsystem.
-        if (RobotParams.Preferences.useVision && robotInfo.camInfos != null &&
-            (RobotParams.Preferences.useLimelightVision ||
-             RobotParams.Preferences.useWebcamAprilTagVision ||
-             RobotParams.Preferences.useColorBlobVision))
+        if (RobotParams.Preferences.useVision && robotInfo.camInfos != null && robotInfo.camInfos.length > 0)
         {
             vision = new Vision(this);
             if (RobotParams.Preferences.visionRelocalizeEnabled && robotBase != null)
@@ -359,16 +356,16 @@ public class Robot
                 vision.setLimelightVisionEnabled(Vision.LimelightPipelineType.AprilTag, false);
             }
 
-            if (vision.isWebcamAprilTagVisionEnabled())
+            if (vision.isAprilTagWebcamVisionEnabled())
             {
                 globalTracer.traceInfo(moduleName, "Disabling Webcam AprilTagVision.");
-                vision.setWebcamAprilTagVisionEnabled(false);
+                vision.setAprilTagWebcamVisionEnabled(false);
             }
 
-            if (vision.backCamColorBlobVision != null)
+            if (vision.colorBlobWebcamVision != null)
             {
-                globalTracer.traceInfo(moduleName, "Disabling ColorBlobVision.");
-                vision.setColorBlobVisionEnabled(Vision.ColorBlobType.Any, false);
+                globalTracer.traceInfo(moduleName, "Disabling Webcam ColorBlobVision.");
+                vision.setColorBlobWebcamVisionEnabled(null, false);
             }
 
             vision.close();

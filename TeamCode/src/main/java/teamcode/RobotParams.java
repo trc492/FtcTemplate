@@ -54,11 +54,11 @@ public class RobotParams
         // Vision
         public static final boolean useVision                   = false;
         public static final boolean showVisionStatus            = false;
-        public static final boolean visionRelocalizeEnabled     = true;
+        public static final boolean visionRelocalizeEnabled     = false;
         public static final boolean useLimelightVision          = false;
         public static final boolean useWebCam                   = false;
         public static final boolean useWebcamAprilTagVision     = false;
-        public static final boolean useColorBlobVision          = false;
+        public static final boolean useWebcamColorBlobVision    = false;
         public static final boolean useSolvePnp                 = false;
         public static final boolean showVisionView              = false;    // For both HDMI and Dashboard
         public static final boolean showVisionStat              = false;    // For HDMI
