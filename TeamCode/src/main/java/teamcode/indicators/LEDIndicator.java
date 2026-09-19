@@ -41,6 +41,7 @@ public class LEDIndicator
     public static final String COLOR_BLOB_LED_NAME = "ColorBlobLED";
     // LED pattern names.
     public static final String APRILTAG_FOUND = "AprilTagFound";
+    public static final String YELLOW_BLOB = "YellowBlob";
     public static final String RED_BLOB = "RedBlob";
     public static final String BLUE_BLOB = "BlueBlob";
     public static final String RED_APRILTAG = "RedAprilTag";
@@ -71,6 +72,7 @@ public class LEDIndicator
     public final TrcPriorityIndicator.Pattern[] colorBlobLEDPatternPriorities =
     {
         // Highest priority.
+        new TrcPriorityIndicator.Pattern(YELLOW_BLOB, TrcGobildaIndicatorLight.GobildaLedPattern.Yellow, 0.25, 0.25),
         new TrcPriorityIndicator.Pattern(RED_BLOB, TrcGobildaIndicatorLight.GobildaLedPattern.Red, 0.25, 0.25),
         new TrcPriorityIndicator.Pattern(BLUE_BLOB, TrcGobildaIndicatorLight.GobildaLedPattern.Blue, 0.25, 0.25),
         new TrcPriorityIndicator.Pattern(OFF, TrcGobildaIndicatorLight.GobildaLedPattern.Black)
