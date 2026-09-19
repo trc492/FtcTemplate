@@ -362,7 +362,7 @@ public class Robot
                 vision.setAprilTagWebcamVisionEnabled(false);
             }
 
-            if (vision.colorBlobWebcamVision != null)
+            if (vision.isColorBlobWebcamVisionEnabled(null))
             {
                 globalTracer.traceInfo(moduleName, "Disabling Webcam ColorBlobVision.");
                 vision.setColorBlobWebcamVisionEnabled(null, false);
